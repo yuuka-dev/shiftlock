@@ -22,6 +22,8 @@ mood.csv
 pc/shiftlock/i18n/inm.py
 # Claude Code の出力（.claude/ は下の「Claude Code」の節で除外済み）
 Claude outputs/
+# 公開前に探す語の一覧（実名・ユーザー名など。tools/publish-public.sh が読む）
+.publish-deny
 
 # ---- Python ----
 .venv/
