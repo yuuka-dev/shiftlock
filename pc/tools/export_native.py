@@ -39,13 +39,20 @@ SHARED = REPO / "native" / "shared"
 VECTORS = REPO / "docs" / "test-vectors"
 
 # 書き出すキー。ネイティブ版が使う文だけに絞る（設定メニューや CLI の説明は持っていかない）
-EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPTION_MARK")
+EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPTION_MARK",
+         # 見張り（shiftlock.Agent）が使う文
+         "PHONE_LATE_PREFIX", "PHONE_OKITA", "RECORDS_YASUMI_PAID", "CONFIRM_HOME_HINT", "CONFIRM_MORE", "CONFIRM_USER",
+         # 強制モードは発動と解除で使う文だけ（宣言・状態表示の文は持っていかない。C# に宣言の入口を作らない）
+         "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
+         "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY")
 PREFIXES = ("TIME_DUR_", "RECORDS_KITAKU", "RECORDS_NERU", "RECORDS_OKITA", "RECORDS_SHUPPATSU", "RECORDS_UNDO_",
-            "CONFIG_", "APP_")
+            "CONFIG_", "APP_",
+            "PHASE_", "AUTOWAKE_", "RECORDS_LATE_", "RECORDS_PAID_", "ABSENCE_", "NOTIFY_", "TICK_", "CAL_")
+SKIP_SUFFIX = "_CTX"   # Claude 向けの文（hook が使う）。ネイティブ版は使わない
 
 
 def _wanted(key: str) -> bool:
-    return key in EXACT or key.startswith(PREFIXES)
+    return (key in EXACT or key.startswith(PREFIXES)) and not key.endswith(SKIP_SUFFIX)
 
 
 def _check_template(key: str, text) -> str:

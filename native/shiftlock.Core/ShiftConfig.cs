@@ -35,6 +35,43 @@ public sealed partial class ShiftConfig
     /// <summary>時間として扱う数の上限（分でも時間でも）．これを超える値は日時の計算があふれるので設定のエラーにする．</summary>
     private const double MaxDuration = 1_000_000;
 
+    /// <summary>既定値（pc/shiftlock/config.py の DEFAULTS と同じ値．lang は除く）．見張りが使う節はここから読む．</summary>
+    private const string DefaultsJson = """
+        {
+         "work_weekdays": ["mon", "tue", "wed", "thu", "fri", "sat"],
+         "start_target": "20:00",
+         "start_latest": "22:30",
+         "prep_minutes": 90,
+         "sleep_target_hours": 5,
+         "sleep_min_hours": 4,
+         "lastcall_minutes": 40,
+         "block_claude_on_hard": true,
+         "no_sleep": [],
+         "usage": {"nag_after_minutes": 120, "nag_every_minutes": 30, "idle_reset_minutes": 20, "game_idle_minutes": 180},
+         "notify": {"phase": "toast", "hard": "popup", "nag": "toast", "speak": false, "sound": {},
+                    "sound_volume": 0.8, "sound_max_seconds": 20},
+         "game_processes": [],
+         "mood_file": "",
+         "shift_end_earliest": "07:00",
+         "home_by_latest": "09:00",
+         "auto_wake": true,
+         "auto_wake_hours": null,
+         "steam_libraries": true,
+         "game_dirs": [],
+         "game_exclude_dirs": [],
+         "game_exclude": ["UnityCrashHandler*", "CrashReport*", "*crashpad*", "unins*", "vc_redist*",
+                          "dxsetup*", "*Redist*", "steamerrorreporter*", "*Setup*"],
+         "calendar": {"ics_url": "", "sources": [], "off_keywords": ["休み", "公休", "有給"],
+                      "work_keywords": ["出勤"], "sync_minutes": 60},
+         "retention": {"days_keep": 60, "log_keep_days": 180, "events_keep_days": 365},
+         "report": {"closing_day": 20, "keep_months": 3},
+         "confirm": {"mode": "ask", "lookback_days": 7, "home_activity_minutes": 60, "okita_means_worked": true},
+         "absence": {"window_shifts": 24, "warn_at": 5},
+         "enforce": {"action": "lock", "duration_hours": 2, "grace_minutes": 15, "relock_minutes": 5,
+                     "max_runs": 6, "boot_grace_minutes": 15, "skip_if_remote": true}
+        }
+        """;
+
     private readonly Dictionary<string, string> _daysOff = new(StringComparer.Ordinal);
     private readonly Dictionary<string, string> _daysWork = new(StringComparer.Ordinal);
     private readonly HashSet<string> _legacyDays = new(StringComparer.Ordinal);
@@ -71,6 +108,16 @@ public sealed partial class ShiftConfig
     public string AutoWakeHoursText { get; private set; } = "4";
 
     public IReadOnlyList<NoSleepRule> NoSleep { get; private set; } = [];
+
+    /// <summary>
+    /// 既定値に shifts.json を重ねたもの（Python の load_config が返す cfg と同じ中身．_dir・_days は無い）．
+    /// 見張りの各段は，Python 版と同じ「その場での読み方」（壊れた値は既定に戻す，など）をするためにここから読む．
+    /// 逆算に使う値（上の StartTarget など）は読み込みで検証済みのプロパティを使う．
+    /// </summary>
+    public JsonObject Raw { get; private set; } = new();
+
+    /// <summary>辞書の節（usage・notify・calendar・retention・report・confirm・enforce・absence）．読み込みで辞書と確かめてある．</summary>
+    public JsonObject Section(string key) => Raw[key] as JsonObject ?? new JsonObject();
 
     /// <summary>休みの例外日（日 → 理由）．手動がカレンダーより優先．</summary>
     public IReadOnlyDictionary<string, string> DaysOff => _daysOff;
@@ -131,6 +178,12 @@ public sealed partial class ShiftConfig
             throw new ConfigException(msg["CONFIG_SOURCES_NOT_LIST"]);
         }
 
+        cfg.Raw = DeepMerge(JsonNode.Parse(DefaultsJson)!.AsObject(), raw);
+        if (cfg.Section("notify")["sound"] is not JsonObject)
+        {
+            cfg.Section("notify")["sound"] = new JsonObject();   // 任意機能の設定ミスで本線を止めない（Python 版と同じ）
+        }
+
         cfg.PrepMinutes = cfg.Number(raw, "prep_minutes", cfg.PrepMinutes);
         cfg.LastcallMinutes = cfg.Number(raw, "lastcall_minutes", cfg.LastcallMinutes);
         cfg.SleepTargetHours = cfg.Number(raw, "sleep_target_hours", cfg.SleepTargetHours);
@@ -178,6 +231,23 @@ public sealed partial class ShiftConfig
     public bool IsLegacyShiftDay(string day) => _legacyDays.Contains(day);
 
     // ---- 読み込みの部品 ----
+
+    /// <summary>config.deep_merge: 辞書どうしは中まで重ね，それ以外は over の値に置き換える．@base を書き換えて返す．</summary>
+    private static JsonObject DeepMerge(JsonObject @base, JsonObject over)
+    {
+        foreach (var (k, v) in over)
+        {
+            if (v is JsonObject o && @base[k] is JsonObject b)
+            {
+                DeepMerge(b, o);
+            }
+            else
+            {
+                @base[k] = v?.DeepClone();
+            }
+        }
+        return @base;
+    }
 
     [GeneratedRegex(@"^(2[0-3]|[01][0-9]|[0-9]):([0-5][0-9]|[0-9])$", RegexOptions.CultureInvariant)]
     private static partial Regex StrictTimeRegex();

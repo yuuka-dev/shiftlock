@@ -30,7 +30,7 @@ def test_messages_have_app_keys_in_both_langs():
     assert ja["RECORDS_KITAKU"].startswith("[shiftlock] ")
     assert list(ja) == sorted(ja)
     # 画面に要らない文（設定メニューや CLI の説明）は書き出さない
-    assert not any(k.startswith(("CLI_", "SETTINGS_", "ENFORCE_")) for k in ja)
+    assert not any(k.startswith(("CLI_", "SETTINGS_")) for k in ja)
     assert "INTENT_LABEL_SEP" in ja and "INTENT_LABEL" in ja
     assert all(k in ("INTENT_LABEL", "INTENT_LABEL_SEP") for k in ja if k.startswith("INTENT_"))
 
@@ -185,3 +185,35 @@ def test_snapshot_vectors_cover_all_phases_and_countdowns():
     assert {c["expect"]["phase"] for c in cases} == set(ja["APP_PHASE"])
     assert {c["expect"]["countdown_key"] for c in cases} - {None} == set(ja["APP_COUNTDOWN"])
     assert all(len(c["expect"]["schedule"]) == 14 for c in cases)
+
+
+TICK_KEYS = (
+    "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
+    "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",
+    "RECORDS_LATE_BAD_DATE", "RECORDS_LATE_YASUMI", "RECORDS_LATE_WORKED", "RECORDS_PAID_SET", "RECORDS_YASUMI_PAID",
+    "ABSENCE_OVER", "CONFIRM_HOME_HINT", "CONFIRM_MORE", "CONFIRM_USER",
+    "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
+    "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY",
+    "NOTIFY_SOUND_MISSING", "TICK_NAG", "TICK_NAG_GAME", "TICK_NAG_PC", "TICK_ENFORCE_ERROR",
+    "TICK_SOUND_CONFIG_ERROR", "TICK_SOUND_NUMBER_ERROR", "CAL_UNSET", "CAL_SKIP", "CAL_FAIL", "CAL_OK",
+)
+
+ENFORCE_EXPORTED = {"ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_WARN", "ENFORCE_WARN_SOON",
+                    "ENFORCE_REWARN", "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY"}
+
+
+def test_tick_keys_are_exported_in_both_langs():
+    """見張り（Agent）が使う文は両方の言語に書き出す"""
+    for lang in ex.LANGS:
+        msgs = ex.build_messages(lang)
+        missing = [k for k in TICK_KEYS if k not in msgs]
+        assert not missing, f"{lang}: {missing}"
+
+
+def test_enforce_declare_and_claude_context_are_not_exported():
+    """強制の宣言・状態表示の文と、Claude 向けの文（*_CTX）は書き出さない（C# に宣言の入口を作らない）"""
+    ja = ex.build_messages("ja")
+    assert not any(k.endswith("_CTX") for k in ja)
+    for k in ("ENFORCE_TERMS", "ENFORCE_DECLARED", "PHASE_SOFT_CTX"):
+        assert k not in ja, k
+    assert {k for k in ja if k.startswith("ENFORCE_")} == ENFORCE_EXPORTED
