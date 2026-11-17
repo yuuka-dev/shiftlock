@@ -21,6 +21,10 @@ public sealed class TickVectorTests
     [Theory]
     [MemberData(nameof(Cases), "sound")]
     public void Sound(VectorCase c) => TickRunner.RunCase(c);
+
+    [Theory]
+    [MemberData(nameof(Cases), "autowake")]
+    public void AutoWake(VectorCase c) => TickRunner.RunCase(c);
 }
 
 /// <summary>tick.json の 1 ケースを通す共通の手順．</summary>

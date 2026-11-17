@@ -241,6 +241,26 @@ def test_tick_sound_vectors():
     assert cases["音量と最長秒数"][0]["sound"] == {"volume": 0.5, "max_seconds": 7}
 
 
+def test_tick_autowake_vectors():
+    """節 autowake: 起きたにするケースと，しないケースが名前どおりに分かれている。events.log のメモは auto HH:MM-HH:MM"""
+    cases = ex.build_vectors()["tick.json"]["autowake"]
+    fired = {c["name"]: any(a["kind"] == "auto_okita" for r in c["expect"]["results"] for a in r["actions"]) for c in cases}
+    yes = {"離席だけ 6 時間（auto_wake の既定）", "「ねる」あり＋離席", "「ねる」だけ（PC は切っていた）",
+           "auto_wake が neru でも「ねる」があれば起きたにする", "auto_wake_hours 3 なら 3 時間で成立",
+           "プロンプト以外の行（k が p でない）は区切らない", "出発の最終までで足りる（そのまま最終出発の通知も出る）",
+           "前日が乗務: home_by_latest の後から数える", "前日が乗務: 帰宅の記録があればそこから数える",
+           "前日が乗務: home_by_latest を変える", "前日が乗務でも休みにしていれば数える", "関西弁"}
+    assert {n for n, f in fired.items() if f} == yes
+    assert len(cases) - len(yes) >= 9
+    by_name = {c["name"]: c["expect"] for c in cases}
+    assert by_name["離席だけ 6 時間（auto_wake の既定）"]["files"]["events.log"] == [
+        "2026-12-07T14:30\t2026-12-07\tokita\tauto 08:10-14:29"]
+    assert by_name["前日が乗務: home_by_latest の後から数える"]["files"]["events.log"][0].endswith("auto 09:00-15:29")
+    assert by_name["前日が乗務: 帰宅の記録があればそこから数える"]["files"]["events.log"][0].endswith("auto 07:05-13:29")
+    kinds = {a["kind"] for c in cases for r in c["expect"]["results"] for a in r["actions"]}
+    assert kinds <= {"auto_okita", "lastcall", "soft", "hard", "go", "go_last"}
+
+
 TICK_KEYS = (
     "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
     "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",

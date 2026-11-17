@@ -87,6 +87,11 @@ public static class Tick
         var actions = new List<TickAction>();
         if (active)
         {
+            var autoMsg = AutoWake.MaybeAutoOkita(cfg, store, m, now);
+            if (autoMsg.Length > 0)
+            {
+                actions.Add(new TickAction(Method(notify, "phase", "toast"), "auto_okita", Title, autoMsg, speak));
+            }
             var (phase, p) = Planner.Current(cfg, store.ShiftStatus(), now);
             if (p is not null && NotifyLog.Once(store, $"{p.Day}:{phase}", now, NotifyLog.Every(phase)))
             {

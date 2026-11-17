@@ -665,6 +665,61 @@ def _tick_sound_rows() -> list:
     ]
 
 
+STATE_WATCH = ("state.json", "events.log")
+
+
+def _tick_autowake_rows() -> list:
+    """自動「起きた」。乗務日は 2026-12-07（月。前日は休み）と 2026-12-02（水。前日も乗務）。
+    離席は usage-pc.json に離席中（gap_start）を置き、戻った回の見張りで区間が確定する形で作る。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    mon, wed, tue = "2026-12-07", "2026-12-02", "2026-12-01"
+
+    def away(since: str) -> dict:
+        """since（"日付T時:分"）から離席中の usage-pc.json。"""
+        return {"usage-pc.json": {"gaps": [], "gap_start": since + ":00"}}
+
+    def back(when: str, idle=30):
+        """when に戻ってきた（触っている）1 回の見張り。"""
+        return _tick_steps((when, idle, 0), watch=STATE_WATCH)
+
+    neru = {"state.json": _state(mon, sleep_at=f"{mon}T08:10")}
+    prompt = '{"t": "2026-12-07T11:00:00", "k": "p"}\n'
+    return [
+        ("離席だけ 6 時間（auto_wake の既定）", {**b, **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+        ("「ねる」あり＋離席", {**b, **neru, **away(f"{mon}T08:12")}, back(f"{mon}T14:30")),
+        ("「ねる」だけ（PC は切っていた）", {**b, **neru}, back(f"{mon}T14:30")),
+        ("auto_wake が neru なら離席だけでは何もしない", {**cfg(auto_wake="neru"), **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+        ("auto_wake が neru でも「ねる」があれば起きたにする", {**cfg(auto_wake="neru"), **neru, **away(f"{mon}T08:12")},
+         back(f"{mon}T14:30")),
+        ("auto_wake が false なら何もしない", {**cfg(auto_wake=False), **neru, **away(f"{mon}T08:12")}, back(f"{mon}T14:30")),
+        ("5 時間 50 分では足りない", {**b, **away(f"{mon}T08:40")}, back(f"{mon}T14:30")),
+        ("auto_wake_hours 3 なら 3 時間で成立", {**cfg(auto_wake_hours=3), **away(f"{mon}T11:20")}, back(f"{mon}T14:30")),
+        ("no_sleep の時間帯で分断されて足りない",
+         {**cfg(no_sleep=[{"weekday": "mon", "from": "11:00", "to": "12:00"}]), **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+        ("Claude Code のプロンプトで区切られて足りない",
+         {**b, **away(f"{mon}T08:10"), "log/claude-2026-12.jsonl": prompt}, back(f"{mon}T14:30")),
+        ("プロンプト以外の行（k が p でない）は区切らない",
+         {**b, **away(f"{mon}T08:10"), "log/claude-2026-12.jsonl": prompt.replace('"p"', '"s"')}, back(f"{mon}T14:30")),
+        ("離席中（触っていない）は判定しない", {**b, **away(f"{mon}T08:10")}, back(f"{mon}T14:30", idle=1500)),
+        ("もう記録がある乗務は何もしない",
+         {**b, **away(f"{mon}T08:10"), "state.json": _state(mon, status="yasumi", at=f"{mon}T06:00")}, back(f"{mon}T14:30")),
+        ("乗務日の 0 時より前は何もしない", {**b, **away("2026-12-06T15:00")}, back("2026-12-06T23:30")),
+        ("出発の最終を過ぎた分は数えない（足りない）", {**b, **away(f"{mon}T11:00")}, back(f"{mon}T17:00")),
+        ("出発の最終までで足りる（そのまま最終出発の通知も出る）", {**b, **away(f"{mon}T10:20")}, back(f"{mon}T17:00")),
+        ("前日が乗務: 出発目安〜home_by_latest の離席は数えない", {**b, **away(f"{tue}T17:00")}, back(f"{wed}T08:00")),
+        ("前日が乗務: home_by_latest の後から数える", {**b, **away(f"{tue}T17:00")}, back(f"{wed}T15:30")),
+        ("前日が乗務: 帰宅の記録があればそこから数える",
+         {**b, **away(f"{tue}T17:00"), "state.json": _state(wed, kitaku=f"{wed}T07:05")}, back(f"{wed}T13:30")),
+        ("前日が乗務: home_by_latest を変える", {**cfg(home_by_latest="07:30"), **away(f"{tue}T17:00")}, back(f"{wed}T13:40")),
+        ("前日が乗務でも休みにしていれば数える",
+         {**b, **away(f"{tue}T22:00"), "state.json": _state(tue, status="yasumi", at=f"{tue}T12:00")}, back(f"{wed}T06:00")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+    ]
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -689,6 +744,7 @@ def build_vectors() -> dict:
             "usage": _cases(_tick_usage_rows(), _expect_tick),
             "notify": _cases(_tick_notify_rows(), _expect_tick),
             "sound": _cases(_tick_sound_rows(), _expect_tick),
+            "autowake": _cases(_tick_autowake_rows(), _expect_tick),
         },
     }
 

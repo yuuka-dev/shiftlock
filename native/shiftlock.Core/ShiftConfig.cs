@@ -113,6 +113,19 @@ public sealed partial class ShiftConfig
     public IReadOnlyList<NoSleepRule> NoSleep { get; private set; } = [];
 
     /// <summary>
+    /// 自動「起きた」に要る睡眠時間（auto_wake_hours．無い・0 なら sleep_min_hours）．数として読めなければ ConfigException．
+    /// </summary>
+    public double AutoWakeHours =>
+        Raw.TryGetPropertyValue("auto_wake_hours", out var v) && IsTruthy(v) ? ToNumber("auto_wake_hours", v) : SleepMinHours;
+
+    /// <summary>乗務の翌朝，家に帰っているはずの時刻（home_by_latest．既定 09:00）を d の日時で．読めなければ ConfigException．</summary>
+    public DateTime HomeByLatest(DateOnly d)
+    {
+        var v = Raw.TryGetPropertyValue("home_by_latest", out var node) ? node : JsonValue.Create("09:00");
+        return TimeUtil.At(d, LooseTime("home_by_latest", v));
+    }
+
+    /// <summary>
     /// 既定値に shifts.json を重ねたもの（Python の load_config が返す cfg と同じ中身．_dir・_days は無い）．
     /// 見張りの各段は，Python 版と同じ「その場での読み方」（壊れた値は既定に戻す，など）をするためにここから読む．
     /// 逆算に使う値（上の StartTarget など）は読み込みで検証済みのプロパティを使う．

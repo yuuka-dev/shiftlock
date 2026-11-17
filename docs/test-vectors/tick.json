@@ -4240,5 +4240,1652 @@
     }
    }
   }
+ ],
+ "autowake": [
+  {
+   "name": "離席だけ 6 時間（auto_wake の既定）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。08:10〜14:29（6時間19分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "status": "okita",
+        "at": "2026-12-07T14:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tokita\tauto 08:10-14:29"
+     ]
+    }
+   }
+  },
+  {
+   "name": "「ねる」あり＋離席",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "sleep_at": "2026-12-07T08:10"
+      }
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:12:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。08:10〜14:29（6時間19分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10",
+        "status": "okita",
+        "at": "2026-12-07T14:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tokita\tauto 08:10-14:29"
+     ]
+    }
+   }
+  },
+  {
+   "name": "「ねる」だけ（PC は切っていた）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "sleep_at": "2026-12-07T08:10"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。08:10〜14:30（6時間20分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10",
+        "status": "okita",
+        "at": "2026-12-07T14:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tokita\tauto 08:10-14:30"
+     ]
+    }
+   }
+  },
+  {
+   "name": "auto_wake が neru なら離席だけでは何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "auto_wake": "neru"
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "auto_wake が neru でも「ねる」があれば起きたにする",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "auto_wake": "neru"
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "sleep_at": "2026-12-07T08:10"
+      }
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:12:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。08:10〜14:29（6時間19分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10",
+        "status": "okita",
+        "at": "2026-12-07T14:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tokita\tauto 08:10-14:29"
+     ]
+    }
+   }
+  },
+  {
+   "name": "auto_wake が false なら何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "auto_wake": false
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "sleep_at": "2026-12-07T08:10"
+      }
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:12:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10"
+       }
+      }
+     },
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "5 時間 50 分では足りない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:40:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "auto_wake_hours 3 なら 3 時間で成立",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "auto_wake_hours": 3
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T11:20:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。11:20〜14:29（3時間9分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "status": "okita",
+        "at": "2026-12-07T14:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tokita\tauto 11:20-14:29"
+     ]
+    }
+   }
+  },
+  {
+   "name": "no_sleep の時間帯で分断されて足りない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "no_sleep": [
+      {
+       "weekday": "mon",
+       "from": "11:00",
+       "to": "12:00"
+      }
+     ]
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "Claude Code のプロンプトで区切られて足りない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    },
+    "log/claude-2026-12.jsonl": "{\"t\": \"2026-12-07T11:00:00\", \"k\": \"p\"}\n"
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "プロンプト以外の行（k が p でない）は区切らない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    },
+    "log/claude-2026-12.jsonl": "{\"t\": \"2026-12-07T11:00:00\", \"k\": \"s\"}\n"
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。08:10〜14:29（6時間19分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "status": "okita",
+        "at": "2026-12-07T14:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tokita\tauto 08:10-14:29"
+     ]
+    }
+   }
+  },
+  {
+   "name": "離席中（触っていない）は判定しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "もう記録がある乗務は何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "status": "yasumi",
+       "at": "2026-12-07T06:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "status": "yasumi",
+        "at": "2026-12-07T06:00"
+       }
+      }
+     },
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "乗務日の 0 時より前は何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-06T15:00:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-06T23:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "出発の最終を過ぎた分は数えない（足りない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T11:00:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T17:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "出発の最終までで足りる（そのまま最終出発の通知も出る）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T10:20:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T17:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。10:20〜16:30（6時間10分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "go_last",
+        "title": "shiftlock",
+        "text": "最終出発 16:30（出庫 17:30）。もう出ないと間に合わないよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "status": "okita",
+        "at": "2026-12-07T17:00"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T17:00\t2026-12-07\tokita\tauto 10:20-16:30"
+     ]
+    }
+   }
+  },
+  {
+   "name": "前日が乗務: 出発目安〜home_by_latest の離席は数えない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-01T17:00:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-02T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null
+    }
+   }
+  },
+  {
+   "name": "前日が乗務: home_by_latest の後から数える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-01T17:00:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-02T15:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。09:00〜15:29（6時間29分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-02": {
+        "status": "okita",
+        "at": "2026-12-02T15:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-02T15:30\t2026-12-02\tokita\tauto 09:00-15:29"
+     ]
+    }
+   }
+  },
+  {
+   "name": "前日が乗務: 帰宅の記録があればそこから数える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-01T17:00:00"
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-02": {
+       "kitaku": "2026-12-02T07:05"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-02T13:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。07:05〜13:29（6時間24分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-02": {
+        "kitaku": "2026-12-02T07:05",
+        "status": "okita",
+        "at": "2026-12-02T13:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-02T13:30\t2026-12-02\tokita\tauto 07:05-13:29"
+     ]
+    }
+   }
+  },
+  {
+   "name": "前日が乗務: home_by_latest を変える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "home_by_latest": "07:30"
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-01T17:00:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-02T13:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。07:30〜13:39（6時間9分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-02": {
+        "status": "okita",
+        "at": "2026-12-02T13:40"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-02T13:40\t2026-12-02\tokita\tauto 07:30-13:39"
+     ]
+    }
+   }
+  },
+  {
+   "name": "前日が乗務でも休みにしていれば数える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-01T22:00:00"
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "yasumi",
+       "at": "2026-12-01T12:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-02T06:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。22:00〜05:59（7時間59分）寝ていたようなので、自動で『起きた』にしておいたよ。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-01": {
+        "status": "yasumi",
+        "at": "2026-12-01T12:00"
+       },
+       "2026-12-02": {
+        "status": "okita",
+        "at": "2026-12-02T06:00"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-02T06:00\t2026-12-02\tokita\tauto 22:00-05:59"
+     ]
+    }
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "gap_start": "2026-12-07T08:10:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう。08:10〜14:29（6時間19分）寝てたっぽいから、自動で『起きた』にしといたで。出発目安 16:00（最終 16:30）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "status": "okita",
+        "at": "2026-12-07T14:30"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tokita\tauto 08:10-14:29"
+     ]
+    }
+   }
+  }
  ]
 }
