@@ -8,7 +8,17 @@
         <MicaBackdrop />
     </Window.SystemBackdrop>
 
+    <!-- 文面はここに書かない（コードから Core の文面を入れる）．色は標準のテーマ資源だけを使う（明るい配色・暗い配色の両方で読めるように）． -->
     <Grid>
+        <Grid.Resources>
+            <Style x:Key="Card" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="{StaticResource OverlayCornerRadius}" />
+                <Setter Property="Padding" Value="16,12" />
+            </Style>
+        </Grid.Resources>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -20,7 +30,82 @@
             </TitleBar.IconSource>
         </TitleBar>
 
-        <!-- 画面の中身（状態・ボタン・予定）はここに置く．ページの移動は無いのでウィンドウに直接置く． -->
-        <StackPanel x:Name="Root" Grid.Row="1" Padding="20" Spacing="8" />
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="20,4,20,20" Spacing="12">
+
+                <!-- 設定が無い・読めないとき -->
+                <InfoBar x:Name="ConfigError" IsClosable="False" IsOpen="False" Severity="Warning" />
+
+                <!-- いまの状態: 現在時刻・フェーズ・残り時間 -->
+                <StackPanel x:Name="StatusPanel" Spacing="2">
+                    <TextBlock
+                        x:Name="NowText"
+                        Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                        Style="{StaticResource CaptionTextBlockStyle}" />
+                    <TextBlock x:Name="PhaseText" Style="{StaticResource TitleTextBlockStyle}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="CountdownText" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <!-- 次の乗務（見出し・就寝の時刻・出発・出庫・記録） -->
+                <Border x:Name="ShiftCard" Style="{StaticResource Card}">
+                    <StackPanel x:Name="ShiftLines" Spacing="4" />
+                </Border>
+
+                <!-- 記録のボタン．4 つとも同じ見た目（どれかを勧めない） -->
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="NeruButton" Grid.Column="0" HorizontalAlignment="Stretch" Click="OnNeru" />
+                    <Button x:Name="OkitaButton" Grid.Column="1" HorizontalAlignment="Stretch" Click="OnOkita" />
+                    <Button x:Name="ShuppatsuButton" Grid.Column="2" HorizontalAlignment="Stretch" Click="OnShuppatsu" />
+                    <Button x:Name="KitakuButton" Grid.Column="3" HorizontalAlignment="Stretch" Click="OnKitaku" />
+                </Grid>
+
+                <!-- 直前に押したボタンの返事と「取り消す」 -->
+                <Grid x:Name="ResultRow" ColumnSpacing="12" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock
+                        x:Name="ResultText"
+                        VerticalAlignment="Center"
+                        IsTextSelectionEnabled="True"
+                        TextWrapping="Wrap" />
+                    <Button
+                        x:Name="UndoButton"
+                        Grid.Column="1"
+                        VerticalAlignment="Top"
+                        Click="OnUndo"
+                        Visibility="Collapsed" />
+                </Grid>
+
+                <!-- 予定（今日から 14 日．7 日ずつ 2 行） -->
+                <Border x:Name="ScheduleCard" Style="{StaticResource Card}">
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="ScheduleTitle" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                        <Grid x:Name="ScheduleGrid" ColumnSpacing="4" RowSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                        </Grid>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

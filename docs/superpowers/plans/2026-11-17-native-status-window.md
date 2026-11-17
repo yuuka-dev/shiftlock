@@ -550,14 +550,14 @@ dotnet new winui -n shiftlock.App -o native/shiftlock.App --packaging Unpackaged
 - Consumes: `ShiftConfig.Load`，`Store`，`Messages.Load`，`Snapshot.Build`・`Lines`・`DayLabel`，`Records.*`，`RecordResult`，`UndoToken`，`AppPaths.DataDir`
 - Produces: `Refresher`（`event Action Changed`．1 分ごとのタイマーと，`DataDir` の `shifts.json`・`state.json`・`days.json`・`calendar.json`・`STOP.txt` の変更を 300 ミリ秒まとめて 1 回にして知らせる．UI スレッドで呼ぶ）
 
-- [ ] **Step 1: 表示を作る．** 並びは設計書 §4 のスケッチのとおり: `Snapshot.Lines` の文，ボタン 4 つ（`APP_BTN_*`），結果の行と「取り消す」，`APP_SCHEDULE` の見出しと `DayLabel` を 7 日ずつ 2 行．色と余白は WinUI の標準のテーマ資源を使い，明るい配色と暗い配色の両方で読めること．時刻の表記は `Snapshot.Lines` の返す文のまま（0 埋め）．
-- [ ] **Step 2: 読み直し．** `Refresher.Changed` とウィンドウが前に来たときに `ShiftConfig.Load` → `Snapshot.Build` をやり直す．
+- [x] **Step 1: 表示を作る．** 並びは設計書 §4 のスケッチのとおり: `Snapshot.Lines` の文，ボタン 4 つ（`APP_BTN_*`），結果の行と「取り消す」，`APP_SCHEDULE` の見出しと `DayLabel` を 7 日ずつ 2 行．色と余白は WinUI の標準のテーマ資源を使い，明るい配色と暗い配色の両方で読めること．時刻の表記は `Snapshot.Lines` の返す文のまま（0 埋め）．
+- [x] **Step 2: 読み直し．** `Refresher.Changed` とウィンドウが前に来たときに `ShiftConfig.Load` → `Snapshot.Build` をやり直す．
   - `FileNotFoundException` → `APP_NO_CONFIG`（`path` は `shifts.json` のフルパス）を出し，ボタン 4 つを押せなくする．文面は `Messages.Load(null)`．
   - `ConfigException` → `APP_BAD_CONFIG`（`err` は例外の文）を出し，ボタン 4 つを押せなくする．
   - それ以外の例外（読み込みの途中でファイルが変わった，など）→ 前の表示を残す．次の機会にやり直す．アプリは落とさない．
-- [ ] **Step 3: ボタン．** 押したら 4 つとも押せなくし，`Records.*` を呼び，`RecordResult.Message` を結果の行に出し，読み直してから押せるように戻す（Review Focus 5）．`Recorded` が真で `Undo` があればそれを覚える．
-- [ ] **Step 4: 取り消す．** 「取り消す」は，覚えている `UndoToken` に対して `Records.CanUndo` が真の間だけ出す（読み直しのたびに確かめる）．押したら `Records.Undo` を呼び，結果を出し，覚えていた `UndoToken` を捨てる．
-- [ ] **Step 5: 動かして確かめる．** 一時フォルダに土台の設定（`lang` を `ja` にした合成の `shifts.json`）を置き，`SHIFTLOCK_DIR` を向けて起動する．次を順に確かめ，画面の写しを 1 枚 `native/README.md` 用に撮る（合成データであること）．
+- [x] **Step 3: ボタン．** 押したら 4 つとも押せなくし，`Records.*` を呼び，`RecordResult.Message` を結果の行に出し，読み直してから押せるように戻す（Review Focus 5）．`Recorded` が真で `Undo` があればそれを覚える．
+- [x] **Step 4: 取り消す．** 「取り消す」は，覚えている `UndoToken` に対して `Records.CanUndo` が真の間だけ出す（読み直しのたびに確かめる）．押したら `Records.Undo` を呼び，結果を出し，覚えていた `UndoToken` を捨てる．
+- [x] **Step 5: 動かして確かめる．** 一時フォルダに土台の設定（`lang` を `ja` にした合成の `shifts.json`）を置き，`SHIFTLOCK_DIR` を向けて起動する．次を順に確かめ，画面の写しを 1 枚 `native/README.md` 用に撮る（合成データであること）．
   1. フェーズ・次の乗務・予定が出る
   2. 4 つのボタンを押すと結果が出て，`state.json` と `events.log` が変わる（`events.log` のメモに `app`）
   3. 「取り消す」で戻る．61 分は待てないので，`state.json` の `undo.at` を手で 2 時間前に書き換えると「取り消す」が消えること
@@ -567,8 +567,8 @@ dotnet new winui -n shiftlock.App -o native/shiftlock.App --packaging Unpackaged
   7. ボタンを素早く 2 回押しても `events.log` に 1 行しか増えない
   8. `lang` を `ja_kansai` に変えると文面が関西弁になる
   9. Windows の配色を暗くしても読める
-- [ ] **Step 6:** `dotnet build native/shiftlock.App -r win-x64` が警告なし，`dotnet test native/shiftlock.Core.Tests` と pytest が全部通る．
-- [ ] **Step 7:** コミット `feat(native): 状態と記録の画面を作る (#38)`
+- [x] **Step 6:** `dotnet build native/shiftlock.App -r win-x64` が警告なし，`dotnet test native/shiftlock.Core.Tests` と pytest が全部通る．
+- [x] **Step 7:** コミット `feat(native): 状態と記録の画面を作る (#38)`
 
 ---
 
