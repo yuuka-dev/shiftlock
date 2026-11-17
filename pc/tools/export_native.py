@@ -25,7 +25,7 @@ import json
 import string
 import sys
 import tempfile
-from datetime import date as Date, datetime
+from datetime import date as Date, datetime, timedelta
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent   # pc/
@@ -394,6 +394,73 @@ def _steps_rows() -> list:
     ]
 
 
+# ---- 画面に出す値 ----
+
+def app_countdown(phase: str, p, now: datetime):
+    """画面の「〜まで あと …」の相手（文面 APP_COUNTDOWN のキー, 時刻）。出さないときは (None, None)。
+    Python 版に同じ表示は無いので、ここが決まりの置き場所（C# の Snapshot が同じ結果を返すことをベクタで確かめる）。
+    相手の時刻を過ぎている・ちょうどのときは出さない（負の残り時間を出さない）。"""
+    if phase == "lastcall":
+        key, to = "lastcall", p.soft_close
+    elif phase == "soft":
+        key, to = "soft", p.hard_close
+    elif phase == "hard":
+        key, to = "hard", p.depart_latest
+    elif phase == "go":
+        key, to = ("go", p.depart_target) if now < p.depart_target else ("go_late", p.depart_latest)
+    elif phase == "go_last":
+        key, to = "go_last", p.start_latest
+    else:
+        return None, None
+    return (key, to) if to > now else (None, None)
+
+
+def _expect_snapshot(cfg, store, inp) -> dict:
+    now = datetime.fromisoformat(inp["now"])
+    status = store.shift_status()
+    phase, cur = sl.current(cfg, status, now)
+    # 「次の乗務」の選び方は commands.status_text と同じ
+    p = cur or sl.target_plan(cfg, now) or next((x for x in sl.plans(cfg, now.date(), back=0) if x.start_latest > now), None)
+    key, to = app_countdown(phase, cur, now)
+    rec = status.get(p.day, {}) if p else {}
+    dd = cfg["_days"]
+    schedule = []
+    for i in range(14):
+        d = now.date() + timedelta(days=i)
+        ds = d.isoformat()
+        work = sl.is_workday(cfg, d)
+        why = dd["work"].get(ds) if work else dd["off"].get(ds)
+        schedule.append({"date": ds, "work": work, "why": why or None, "exception": ds in dd["off"] or ds in dd["work"]})
+    return {"phase": phase, "countdown_key": key, "countdown_to": _iso(to) if to else None,
+            "next_day": p.day if p else None, "record_status": rec.get("status"),
+            "sleep_at": rec.get("sleep_at"), "kitaku": rec.get("kitaku"), "schedule": schedule}
+
+
+def _snapshot_rows() -> list:
+    b = {"shifts.json": _base()}
+    d = "2026-12-01"
+    okita = {**b, "state.json": _state(d, status="okita", at=f"{d}T14:00")}
+    rows = [(f"{hm} {name}", b, {"now": f"{d}T{hm}"}) for hm, name in (
+        ("07:30", "就寝準備"), ("09:00", "就寝目安を過ぎた"), ("12:00", "最低ラインを過ぎた"),
+        ("16:30", "出発の最終ちょうど（残り時間なし）"), ("17:00", "出発の最終を過ぎた（残り時間なし）"),
+        ("18:00", "自由時間（次は翌日）"))]
+    rows += [(f"{hm} 起きた: {name}", okita, {"now": f"{d}T{hm}"}) for hm, name in (
+        ("15:00", "まだ自由時間"), ("15:50", "そろそろ出発"), ("16:05", "出発目安を過ぎた"), ("16:20", "出発の最終が近い"))]
+    rows += [
+        ("金曜 18:00（次は月曜で 24 時間より先）", b, {"now": "2026-12-04T18:00"}),
+        ("work_weekdays が空（次の乗務なし）", {"shifts.json": _base(work_weekdays=[])}, {"now": f"{d}T09:00"}),
+        ("寝た時刻と帰宅がある乗務",
+         {**b, "state.json": _state(d, status="okita", at=f"{d}T14:30", sleep_at=f"{d}T08:10", kitaku=f"{d}T07:05")},
+         {"now": f"{d}T15:00"}),
+        ("休みにした乗務（次の乗務としては出る）",
+         {**b, "state.json": _state(d, status="yasumi", at=f"{d}T06:00")}, {"now": f"{d}T09:00"}),
+        ("例外日: 理由つきの休みと，理由なしの出勤（土曜）",
+         {**b, "days.json": {"off": {"2026-12-03": "用事"}}, "calendar.json": {"sources": {"A": {"work": {"2026-12-05": ""}}}}},
+         {"now": f"{d}T18:00"}),
+    ]
+    return rows
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -410,6 +477,9 @@ def build_vectors() -> dict:
         },
         "records.json": {
             "steps": _cases(_steps_rows(), _expect_steps),
+        },
+        "snapshot.json": {
+            "build": _cases(_snapshot_rows(), _expect_snapshot),
         },
     }
 

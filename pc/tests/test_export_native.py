@@ -176,3 +176,12 @@ def test_do_kitaku_and_neru_default_source_is_claude(tmp_path):
         assert [ln.split("\t")[3] for ln in lines] == ["claude 2026-12-01T08:10", "claude 2026-12-01T08:10"]
     finally:
         M.set_lang(before)
+
+
+def test_snapshot_vectors_cover_all_phases_and_countdowns():
+    """画面の値のベクタが、フェーズ 6 つと残り時間の相手 6 つ（APP_PHASE / APP_COUNTDOWN のキー）を全部通る"""
+    cases = ex.build_vectors()["snapshot.json"]["build"]
+    ja = ex.build_messages("ja")
+    assert {c["expect"]["phase"] for c in cases} == set(ja["APP_PHASE"])
+    assert {c["expect"]["countdown_key"] for c in cases} - {None} == set(ja["APP_COUNTDOWN"])
+    assert all(len(c["expect"]["schedule"]) == 14 for c in cases)

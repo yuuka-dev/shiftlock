@@ -487,8 +487,8 @@ public static class Snapshot {
 - `RecordStatus`・`SleepAt`・`Kitaku` は `state.json` の `shifts[NextPlan.Day]`．
 - `Schedule` は今日から 14 日．`Why` は乗務なら `DaysWork`，休みなら `DaysOff` の理由（空文字は `null`）．`IsException` はその日がどちらかの例外に入っているか．
 
-- [ ] **Step 1: ベクタを書き出す．** `snapshot.json` の節 `build`（`input: {"now"}` → `expect: {"phase", "countdown_key", "countdown_to", "next_day", "record_status", "sleep_at", "kitaku", "schedule": [{"date", "work", "why", "exception"}]}`）．期待値は `export_native.py` の中で Python 版の `current`・`target_plan`・`plans`・`is_workday`・`shift_status` を使って組む．ケース: 12-01 07:30（lastcall）／09:00（soft）／12:00（hard）／17:00（hard．出発の最終を過ぎているので残り時間なし）／`okita` で 15:50（go）／`okita` で 16:05（go_late）／`okita` で 16:20（go_last）／12-01 18:00（free．次は 12-02）／金曜 12-04 18:00（free．次は月曜で 24 時間より先）／`work_weekdays` が空（次の乗務なし）／`sleep_at` と `kitaku` がある乗務／`days.json` に理由つきの休みと，`calendar.json` に理由なしの出勤（土曜）
-- [ ] **Step 2: 失敗するテストを書く**（`SnapshotTests.cs`）．
+- [x] **Step 1: ベクタを書き出す．** `snapshot.json` の節 `build`（`input: {"now"}` → `expect: {"phase", "countdown_key", "countdown_to", "next_day", "record_status", "sleep_at", "kitaku", "schedule": [{"date", "work", "why", "exception"}]}`）．期待値は `export_native.py` の中で Python 版の `current`・`target_plan`・`plans`・`is_workday`・`shift_status` を使って組む．ケース: 12-01 07:30（lastcall）／09:00（soft）／12:00（hard）／17:00（hard．出発の最終を過ぎているので残り時間なし）／`okita` で 15:50（go）／`okita` で 16:05（go_late）／`okita` で 16:20（go_last）／12-01 18:00（free．次は 12-02）／金曜 12-04 18:00（free．次は月曜で 24 時間より先）／`work_weekdays` が空（次の乗務なし）／`sleep_at` と `kitaku` がある乗務／`days.json` に理由つきの休みと，`calendar.json` に理由なしの出勤（土曜）
+- [x] **Step 2: 失敗するテストを書く**（`SnapshotTests.cs`）．
 
 ```csharp
 [Theory] [MemberData(nameof(BuildCases))] public void Build_MatchesPython(VectorCase c)
@@ -500,10 +500,10 @@ public static class Snapshot {
 [Fact] public void DayLabel_Variants()         // 理由つき → "12/03(木) 休み（用事）"，理由なしの例外 → "12/05(土) 乗務*"，例外でない日 → "12/01(火) 乗務"
 ```
 
-- [ ] **Step 3:** `dotnet test` → 失敗．
-- [ ] **Step 4:** 実装する．
-- [ ] **Step 5:** `dotnet test` と pytest が全部通る．
-- [ ] **Step 6:** コミット `feat(native): 画面に出す値をまとめる入口を追加 (#38)`
+- [x] **Step 3:** `dotnet test` → 失敗．
+- [x] **Step 4:** 実装する．
+- [x] **Step 5:** `dotnet test` と pytest が全部通る．
+- [x] **Step 6:** コミット `feat(native): 画面に出す値をまとめる入口を追加 (#38)`
 
 ---
 

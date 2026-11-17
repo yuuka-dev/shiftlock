@@ -1,0 +1,1847 @@
+{
+ "build": [
+  {
+   "name": "07:30 就寝準備",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-01T07:30"
+   },
+   "expect": {
+    "phase": "lastcall",
+    "countdown_key": "lastcall",
+    "countdown_to": "2026-12-01T08:00",
+    "next_day": "2026-12-01",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "09:00 就寝目安を過ぎた",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-01T09:00"
+   },
+   "expect": {
+    "phase": "soft",
+    "countdown_key": "soft",
+    "countdown_to": "2026-12-01T10:30",
+    "next_day": "2026-12-01",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "12:00 最低ラインを過ぎた",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-01T12:00"
+   },
+   "expect": {
+    "phase": "hard",
+    "countdown_key": "hard",
+    "countdown_to": "2026-12-01T16:30",
+    "next_day": "2026-12-01",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "16:30 出発の最終ちょうど（残り時間なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-01T16:30"
+   },
+   "expect": {
+    "phase": "hard",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-01",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "17:00 出発の最終を過ぎた（残り時間なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-01T17:00"
+   },
+   "expect": {
+    "phase": "hard",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-01",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "18:00 自由時間（次は翌日）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-01T18:00"
+   },
+   "expect": {
+    "phase": "free",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-02",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "15:00 起きた: まだ自由時間",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "okita",
+       "at": "2026-12-01T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-01T15:00"
+   },
+   "expect": {
+    "phase": "free",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-01",
+    "record_status": "okita",
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "15:50 起きた: そろそろ出発",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "okita",
+       "at": "2026-12-01T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-01T15:50"
+   },
+   "expect": {
+    "phase": "go",
+    "countdown_key": "go",
+    "countdown_to": "2026-12-01T16:00",
+    "next_day": "2026-12-01",
+    "record_status": "okita",
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "16:05 起きた: 出発目安を過ぎた",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "okita",
+       "at": "2026-12-01T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-01T16:05"
+   },
+   "expect": {
+    "phase": "go",
+    "countdown_key": "go_late",
+    "countdown_to": "2026-12-01T16:30",
+    "next_day": "2026-12-01",
+    "record_status": "okita",
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "16:20 起きた: 出発の最終が近い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "okita",
+       "at": "2026-12-01T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-01T16:20"
+   },
+   "expect": {
+    "phase": "go_last",
+    "countdown_key": "go_last",
+    "countdown_to": "2026-12-01T17:30",
+    "next_day": "2026-12-01",
+    "record_status": "okita",
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "金曜 18:00（次は月曜で 24 時間より先）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-04T18:00"
+   },
+   "expect": {
+    "phase": "free",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-07",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-15",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-16",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-17",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "work_weekdays が空（次の乗務なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-01T09:00"
+   },
+   "expect": {
+    "phase": "free",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": null,
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": false,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "寝た時刻と帰宅がある乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "okita",
+       "at": "2026-12-01T14:30",
+       "sleep_at": "2026-12-01T08:10",
+       "kitaku": "2026-12-01T07:05"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-01T15:00"
+   },
+   "expect": {
+    "phase": "free",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-01",
+    "record_status": "okita",
+    "sleep_at": "2026-12-01T08:10",
+    "kitaku": "2026-12-01T07:05",
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "休みにした乗務（次の乗務としては出る）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "yasumi",
+       "at": "2026-12-01T06:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-01T09:00"
+   },
+   "expect": {
+    "phase": "free",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-01",
+    "record_status": "yasumi",
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  },
+  {
+   "name": "例外日: 理由つきの休みと，理由なしの出勤（土曜）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-03": "用事"
+     }
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "work": {
+        "2026-12-05": ""
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-01T18:00"
+   },
+   "expect": {
+    "phase": "free",
+    "countdown_key": null,
+    "countdown_to": null,
+    "next_day": "2026-12-02",
+    "record_status": null,
+    "sleep_at": null,
+    "kitaku": null,
+    "schedule": [
+     {
+      "date": "2026-12-01",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-02",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-03",
+      "work": false,
+      "why": "用事",
+      "exception": true
+     },
+     {
+      "date": "2026-12-04",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-05",
+      "work": true,
+      "why": null,
+      "exception": true
+     },
+     {
+      "date": "2026-12-06",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-07",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-08",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-09",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-10",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-11",
+      "work": true,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-12",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-13",
+      "work": false,
+      "why": null,
+      "exception": false
+     },
+     {
+      "date": "2026-12-14",
+      "work": true,
+      "why": null,
+      "exception": false
+     }
+    ]
+   }
+  }
+ ]
+}
