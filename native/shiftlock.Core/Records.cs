@@ -136,17 +136,25 @@ public static class Records
     /// 「取り消す」を出してよいか: state.json の undo が token のもの（このアプリが最後に書いた記録）のままで，60 分以内．
     /// Python 版が書いた undo や，例外日を足した事後報告の undo はアプリからは戻さない．
     /// </summary>
-    public static bool CanUndo(Store store, UndoToken token, DateTime now)
+    /// <remarks>state.json が在るのに読めなかったとき（ほかの書き手が置き換えている最中など）は null（わからない．次の機会に確かめる）．</remarks>
+    public static bool? CanUndo(Store store, UndoToken token, DateTime now)
     {
-        var u = JsonFiles.ReadObjectOrEmpty(store.P("state.json"))["undo"] as JsonObject;
-        return ReadUndo(u, now) is { } undo && undo.At == token.At && undo.What.Count > 0 && undo.What[0] == token.What;
+        if (!JsonFiles.TryReadObject(store.P("state.json"), out var state))
+        {
+            return null;
+        }
+        return ReadUndo(state["undo"] as JsonObject, now) is { } undo && Matches(undo, token);
     }
 
-    /// <summary>直前の記録を取り消す（records.undo_fuzzy）．60 分以内の分だけ．強制モードの宣言・実行・解除は戻さない．</summary>
-    public static RecordResult Undo(Store store, Messages m, DateTime now) => Guard(m, () =>
+    /// <summary>
+    /// 直前の記録を取り消す（records.undo_fuzzy）．60 分以内の分だけ．強制モードの宣言・実行・解除は戻さない．
+    /// only を渡すと，state.json の undo がその記録のままのときだけ戻す（画面の「取り消す」用．
+    /// 押すまでの間にほかの書き手が undo を書き換えていたら，その記録は戻さない）．
+    /// </summary>
+    public static RecordResult Undo(Store store, Messages m, DateTime now, UndoToken? only = null) => Guard(m, () =>
     {
         var state = store.ReadStateForWrite();
-        if (ReadUndo(state["undo"] as JsonObject, now) is not { } u)
+        if (ReadUndo(state["undo"] as JsonObject, now) is not { } u || (only is not null && !Matches(u, only)))
         {
             return new RecordResult(Text(m, "RECORDS_UNDO_NOTHING"), false, null);
         }
@@ -169,14 +177,41 @@ public static class Records
         }
         state.Remove("undo");
         store.WriteState(state);
-        store.AppendEvent(now, u.Day, "undo", string.Join(",", u.What));
         var labels = string.Join(m["INTENT_LABEL_SEP"], u.What.Select(w => Label(m, w)));
-        return new RecordResult(Text(m, "RECORDS_UNDO_DONE", ("what", labels)), true, null);
+        var done = new RecordResult(Text(m, "RECORDS_UNDO_DONE", ("what", labels)), true, null);
+        AppendAfterState(store, done, now, u.Day, "undo", string.Join(",", u.What));
+        return done;
     });
 
     // ---- 部品 ----
 
     private sealed record UndoEntry(string Day, JsonObject Prev, string At, IReadOnlyList<string> What);
+
+    /// <summary>state.json は書けたが events.log に足せなかった．Done は「記録できた」としての返事．</summary>
+    private sealed class LogBusyException(RecordResult done, Exception inner) : Exception(inner.Message, inner)
+    {
+        public RecordResult Done { get; } = done;
+    }
+
+    /// <summary>state.json の undo が token の記録（このアプリが書いたもの）のままか．</summary>
+    private static bool Matches(UndoEntry u, UndoToken token) =>
+        u.At == token.At && u.What.Count > 0 && u.What[0] == token.What;
+
+    /// <summary>
+    /// state.json を書いたあとの events.log への追記．ここで失敗しても記録は済んでいるので，
+    /// 「記録できなかった」とは返さない（押し直すと二重になる）．履歴に書けなかったことを返事に添える（Guard）．
+    /// </summary>
+    private static void AppendAfterState(Store store, RecordResult done, DateTime now, string day, string kind, string note)
+    {
+        try
+        {
+            store.AppendEvent(now, day, kind, note);
+        }
+        catch (StateBusyException e)
+        {
+            throw new LogBusyException(done, e);
+        }
+    }
 
     /// <summary>state.json の undo のうち，いま取り消せるもの（60 分以内．例外日を足した事後報告のものは除く）．無ければ null．</summary>
     private static UndoEntry? ReadUndo(JsonObject? u, DateTime now)
@@ -216,8 +251,9 @@ public static class Records
             mutateShift(cur as JsonObject ?? throw new StateBusyException($"state.json の shifts.{day} が辞書ではない"));
         }
         store.WriteState(state);
-        store.AppendEvent(now, eventDay, eventKind, eventNote);
-        return new RecordResult(message, true, new UndoToken(at, what));
+        var done = new RecordResult(message, true, new UndoToken(at, what));
+        AppendAfterState(store, done, now, eventDay, eventKind, eventNote);
+        return done;
     }
 
     /// <summary>乗務の状態を変える（store.set_shift_status）．休み以外にするときは有給の印を外す．</summary>
@@ -260,6 +296,10 @@ public static class Records
         try
         {
             return body();
+        }
+        catch (LogBusyException e)
+        {
+            return e.Done with { Message = e.Done.Message + m["APP_LOG_BUSY"] };
         }
         catch (StateBusyException)
         {

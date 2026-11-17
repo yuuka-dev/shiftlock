@@ -17,6 +17,7 @@
  },
  "APP_DAY_OFF": "休み",
  "APP_DAY_WORK": "乗務",
+ "APP_LOG_BUSY": "（履歴の events.log には書けへんかったわ。記録そのものは残ってるから、押し直さんでええで。）",
  "APP_NEXT_SHIFT": "次の乗務  {day}",
  "APP_NO_CONFIG": "まだ設定がないで（{path} が見つからへん）。",
  "APP_NO_SHIFT": "14 日以内に乗務はないで",

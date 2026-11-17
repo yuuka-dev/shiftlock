@@ -209,26 +209,14 @@ public sealed partial class MainWindow : Window
         NeruButton.IsEnabled = OkitaButton.IsEnabled = ShuppatsuButton.IsEnabled = KitakuButton.IsEnabled = enabled;
 
         // 「取り消す」は，state.json の undo がこのアプリの書いたもののままで 60 分以内の間だけ
-        if (_undo is { } token && !CanUndo(token, now))
+        // （state.json が読めなかっただけのとき = null は，出したままにして次の読み直しで確かめる）
+        if (_undo is { } token && Records.CanUndo(_store, token, now) == false)
         {
             _undo = null;
         }
         UndoButton.Visibility = _undo is null ? Visibility.Collapsed : Visibility.Visible;
         UndoButton.IsEnabled = !_busy;
         ResultRow.Visibility = ResultText.Text.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private bool CanUndo(UndoToken token, DateTime now)
-    {
-        try
-        {
-            return Records.CanUndo(_store, token, now);
-        }
-        catch (Exception)
-        {
-            // 読めなかっただけかもしれないので，今回は出したままにして次の読み直しで確かめる
-            return true;
-        }
     }
 
     // ---- ボタン ----
@@ -251,7 +239,12 @@ public sealed partial class MainWindow : Window
     private void OnUndo(object sender, RoutedEventArgs e)
     {
         var m = _m;
-        Run(() => Records.Undo(_store, m, DateTime.Now));
+        var token = _undo;
+        if (token is not null)
+        {
+            // 覚えている記録だけを戻す（押すまでの間にほかの書き手が書いた記録は戻さない）
+            Run(() => Records.Undo(_store, m, DateTime.Now, token));
+        }
     }
 
     /// <summary>
@@ -274,9 +267,14 @@ public sealed partial class MainWindow : Window
             {
                 result = await Task.Run(work);
             }
+            catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException or ConfigException)
+            {
+                // 押した瞬間に設定が消えた・壊れた．下の Reload がその状態を出す
+            }
             catch (Exception)
             {
-                // 押した瞬間に設定が消えた・壊れた，など．下の Reload がその状態を出す
+                // 想定していない失敗．黙って何も起きなかったように見せない
+                ResultText.Text = _m["APP_STATE_BUSY"];
             }
             if (result is not null)
             {

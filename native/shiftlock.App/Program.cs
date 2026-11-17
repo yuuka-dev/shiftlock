@@ -28,7 +28,14 @@ public static class Program
             AllowSetForegroundWindow(first.ProcessId);
             var args = AppInstance.GetCurrent().GetActivatedEventArgs();
             // STA の上で待つと戻ってこないことがあるので，別スレッドで知らせて終わるのを待つ
-            Task.Run(() => first.RedirectActivationToAsync(args).AsTask()).Wait();
+            try
+            {
+                Task.Run(() => first.RedirectActivationToAsync(args).AsTask()).Wait();
+            }
+            catch (Exception)
+            {
+                // 1 つ目がちょうど終わるところだった，など．エラーの窓を出さずに静かに終わる（もう一度起動すれば出る）
+            }
             return 0;
         }
 

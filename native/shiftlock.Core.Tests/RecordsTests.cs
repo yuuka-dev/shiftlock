@@ -117,6 +117,74 @@ public sealed class RecordsTests
     }
 
     [Fact]
+    public void CanUndo_UnreadableState_IsUnknown()
+    {
+        // ほかの書き手が置き換えている最中に読んだだけで「取り消す」を消さない（わからない = null）
+        using var env = OpenBase();
+        var token = Records.Neru(env.Cfg, env.Store, env.M, Morning).Undo!;
+        using (new FileStream(env.Folder.P("state.json"), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            Assert.Null(Records.CanUndo(env.Store, token, Morning.AddMinutes(1)));
+        }
+        Assert.True(Records.CanUndo(env.Store, token, Morning.AddMinutes(1)));
+    }
+
+    [Fact]
+    public void Undo_WithToken_LeavesOtherWritersRecord()
+    {
+        // 「取り消す」を押すまでの間にほかの書き手（Python 版）が undo を書き換えたら，その記録は戻さない
+        using var env = OpenBase();
+        var token = Records.Neru(env.Cfg, env.Store, env.M, Morning).Undo!;
+        var path = env.Folder.P("state.json");
+        var state = JsonNode.Parse(File.ReadAllBytes(path))!.AsObject();
+        state["undo"]!["at"] = "2026-12-01T08:12";
+        state["undo"]!["what"] = new JsonArray("kitaku");
+        File.WriteAllText(path, state.ToJsonString());
+        var before = File.ReadAllText(path);
+
+        var refused = Records.Undo(env.Store, env.M, Morning.AddMinutes(3), token);
+        Assert.False(refused.Recorded);
+        Assert.Equal(before, File.ReadAllText(path));
+        Assert.Single(env.Events());
+
+        // 自分の記録のままなら戻す
+        using var own = OpenBase();
+        var mine = Records.Neru(own.Cfg, own.Store, own.M, Morning).Undo!;
+        Assert.True(Records.Undo(own.Store, own.M, Morning.AddMinutes(3), mine).Recorded);
+        Assert.Equal(2, own.Events().Length);
+    }
+
+    [Fact]
+    public void LockedEventsLog_StillCountsAsRecorded()
+    {
+        // state.json を書いたあとで events.log に足せなくても「記録できなかった」とは返さない（押し直すと二重になる）
+        using var env = OpenBase();
+        File.WriteAllText(env.Folder.P("events.log"), "");
+        RecordResult r;
+        using (new FileStream(env.Folder.P("events.log"), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            r = Records.Neru(env.Cfg, env.Store, env.M, Morning);
+        }
+        Assert.True(r.Recorded);
+        Assert.EndsWith(env.M["APP_LOG_BUSY"], r.Message);
+        Assert.NotEqual(env.M["APP_LOG_BUSY"], r.Message);
+        var token = Assert.IsType<UndoToken>(r.Undo);
+        Assert.True(Records.CanUndo(env.Store, token, Morning.AddMinutes(1)));
+        Assert.Empty(env.Events());
+
+        // 取り消しも同じ: state.json は戻り，返事は「取り消した」のまま
+        using (new FileStream(env.Folder.P("events.log"), FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            r = Records.Undo(env.Store, env.M, Morning.AddMinutes(1), token);
+        }
+        Assert.True(r.Recorded);
+        Assert.EndsWith(env.M["APP_LOG_BUSY"], r.Message);
+        var after = File.ReadAllText(env.Folder.P("state.json"));
+        Assert.DoesNotContain("sleep_at", after);
+        Assert.DoesNotContain("undo", after);
+    }
+
+    [Fact]
     public void CanUndo_NewerRecordReplacesTheToken()
     {
         using var env = OpenBase();
