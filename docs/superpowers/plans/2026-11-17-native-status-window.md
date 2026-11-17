@@ -577,13 +577,13 @@ dotnet new winui -n shiftlock.App -o native/shiftlock.App --packaging Unpackaged
 **Files:**
 - Modify: `native/README.md`，`docs/data-format.md`，`docs/native-app-plan.md`，`CLAUDE.md`，`README.md`
 
-- [ ] **Step 1: 本番のコピーで見比べる**（設計書 §6 の 3〜5）．`%USERPROFILE%\shift-lock` を scratchpad にコピーし（`log/` は不要），`SHIFTLOCK_DIR` を向けてアプリを起動する．同じコピーに対して Python 版の `status` を実行し（`python3 pc/shiftlock.py status --config <コピー>/shifts.json`），フェーズ・次の乗務の時刻・記録・予定が同じことを確かめる．コピーの上でボタン 4 つと取り消しを押し，Python 版の `status` が結果を読めること，アプリで記録したものを Python 版の「今のなし」（`shl` の取り消し）で戻せることを確かめる．**値を文書・テスト・コミットに書き写さない．確かめ終わったらコピーを消す．**
-- [ ] **Step 2: 文書を直す．**
+- [x] **Step 1: 本番のコピーで見比べる**（設計書 §6 の 3〜5）．`%USERPROFILE%\shift-lock` を scratchpad にコピーし（`log/` は不要），`SHIFTLOCK_DIR` を向けてアプリを起動する．同じコピーに対して Python 版の `status` を実行し（`python3 pc/shiftlock.py status --config <コピー>/shifts.json`），フェーズ・次の乗務の時刻・記録・予定が同じことを確かめる．コピーの上でボタン 4 つと取り消しを押し，Python 版の `status` が結果を読めること，アプリで記録したものを Python 版の「今のなし」（`shl` の取り消し）で戻せることを確かめる．**値を文書・テスト・コミットに書き写さない．確かめ終わったらコピーを消す．**
+- [x] **Step 2: 文書を直す．**
   - `docs/data-format.md` §1: `events.log` のメモの出所に `app`（ネイティブ版の画面）を足す．`state.json` の `undo` をネイティブ版も書くことを 1 行足す．
   - `docs/native-app-plan.md` §8: 順番を入れ替えたこと（画面ごとに移す 5 つの区切り）を表の下に 2〜3 行で書き，設計書へリンクする．もとの表は残す．
   - `CLAUDE.md`: 「テスト」に C# のテストのコマンドと「Python 版の判断・対象の文面を変えたら `python3 pc/tools/export_native.py` で書き出し直す」を足す．「ファイルの決まり」に `native/` の文面は書き出した JSON で読む（C# に直書きしない）ことを 1 行足す．
   - `README.md`: フォルダの表に `native/`（Windows のネイティブ版．状態と記録の画面まで）を足す．
   - `native/README.md`: 今できること，起動のしかた，`SHIFTLOCK_DIR`，画面の写し．
-- [ ] **Step 3:** pytest と `dotnet test` が全部通る．
+- [x] **Step 3:** pytest と `dotnet test` が全部通る．
 - [ ] **Step 4:** コミット `docs(native): 区切り 1 の文書を直す (#38)`．push して dev 向けの PR を作る（ロジックの変更を含むので Copilot のレビューを 1 回依頼する）．
 - [ ] **Step 5:** マージ後，issue #38 のチェックリストを更新し，PR 番号とコミットを書いてクローズする．区切り 2 の issue を作る．公開リポジトリへ出すのはユーザーに確認してから（`tools/publish-public.sh`）．

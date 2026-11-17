@@ -17,7 +17,19 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 - データは Python 版と同じ `%USERPROFILE%\shift-lock`，形式は [docs/data-format.md](../docs/data-format.md)．`shiftlock.App` は環境変数 `SHIFTLOCK_DIR` があればそのフォルダを使う（本番のコピーで確かめるとき用）．
 - `shiftlock.App` は `dotnet new winui`（`--packaging Unpackaged -tpmv 10.0.17763.0 -tfm net10.0`）で作って直したもの．パッケージの版はテンプレートが固定したまま: `Microsoft.WindowsAppSDK` 2.6.5，`Microsoft.Windows.SDK.BuildTools` 10.0.28000.2957，`Microsoft.Windows.SDK.BuildTools.MSIX` 1.7.261102100．ターゲットは `net10.0-windows10.0.26100.0`（最低 10.0.17763.0）．
 
+## 今できること
+
+`shiftlock.exe`（`shiftlock.App`）: いまの状態を見て，ボタンで記録するウィンドウ．見張り・通知・設定の変更・レポート・Claude Code の hook は Python 版（`pc/`）のまま動かす（同じフォルダを同じ形式で読み書きするので並べて使える）．
+
 ![状態と記録の画面（合成データ）](./SampleImage/status-window.png)
+
+- 表示: 現在時刻，フェーズと次の節目までの残り時間，次の乗務の時刻（就寝準備・就寝目安・最低ライン・出発・出庫）と記録，今日から 14 日の予定．
+- ボタン: 寝る・起きた・行ってきます・帰ってきた．判断と返事は Python 版と同じ（`docs/test-vectors/*.json` で確かめている）．`events.log` の出所は `app`．
+- 取り消す: このアプリが最後に書いた記録を 60 分以内なら戻せる．Python 版の「今のなし」でも戻せる．
+- 毎分と，`shifts.json`・`state.json`・`days.json`・`calendar.json`・`STOP.txt` が変わったときに読み直す．
+- 言葉づかいは `shifts.json` の `lang`（`ja`／`ja_kansai`）．無い・知らない値のときは標準語（Python 版の既定は関西弁）．
+- `shifts.json` が無い・読めないときは知らせるだけ（設定の作成・変更はまだ Python 版の設定メニューで行う）．
+- 強制モードの宣言・解除・設定は画面に置かない．
 
 ## 前提
 

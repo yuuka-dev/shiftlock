@@ -15,10 +15,14 @@
 - `*.py` は UTF-8・LF、標準ライブラリのみ（Python 3.8+）
 - `pc/shiftlock.py` はエントリだけ。本体は `pc/shiftlock/`（役割ごとのモジュール、依存は基盤 → 判断 → 記録 → 入口の一方向）。ユーザー向け・Claude 向けの文面は `pc/shiftlock/i18n/ja.py` の定数に置き、コードには書かない（入力の語彙・ファイルに書く値・設定の既定値・日付の表記は置かない）。決まりは [docs/superpowers/specs/2026-11-04-pc-refactor-modules-design.md](docs/superpowers/specs/2026-11-04-pc-refactor-modules-design.md)
 - PC 版とスマホ版のやりとりは [docs/data-format.md](docs/data-format.md) の形式だけ。形式を変えるならまずそこを直す
+- `native/`（C#）の文面は C# に直書きしない。`pc/shiftlock/i18n/` から書き出した JSON（`native/shared/messages.*.json`）で読む。`*.cs`・`*.xaml` は UTF-8・LF。判断は `shiftlock.Core` に置き、画面（`shiftlock.App`）には書かない。画面に強制モードの宣言・解除・設定を置かない
 
 ## テスト
 - WSL で `source .venv/bin/activate && cd pc && python3 -m pytest -q tests`（全部通してからコミット）。`.venv` はリポジトリ直下に WSL 側で作った仮想環境（`python3 -m venv .venv && .venv/bin/pip install pytest`）。システムの python3 には入れない
 - 時刻は全部ローカル時刻（JST）、テストでは `now` を引数で渡す
+- C#（`native/`）は Windows 側で `dotnet test native`。Python 版と同じ結果になることを `docs/test-vectors/*.json` で確かめている
+- Python 版の判断や、ネイティブ版が使う文面（`pc/tools/export_native.py` の対象のキー）を変えたら `python3 pc/tools/export_native.py` で文面とテストベクタを書き出し直し、一緒にコミットする（ずれは pytest が落ちて知らせる）
+- ネイティブ版の画面を動かして確かめるときは、環境変数 `SHIFTLOCK_DIR` を合成データか本番のコピーのフォルダに向ける。本番の実行フォルダに向けて動かさない
 
 ## 文体
 - ユーザー向け・Claude 向けの文面は `pc/shiftlock/i18n/` の言語ファイルに置く（コードに直書きしない）。既定は関西弁 `ja_kansai.py`、土台は標準語 `ja.py`。文を足すときは `ja.py`（標準語）と `ja_kansai.py`（関西弁。既存のメッセージに合わせる）の両方に同じ名前で足す。`inm.py`（淫夢語録）は Gemini が足すので触らなくてよい（無いキーは標準語で出る）。`inm.py` はリポジトリで配らない任意の言語（`.gitignore` で除外。コミットしない）。無い環境でも動く・テストが通ること
