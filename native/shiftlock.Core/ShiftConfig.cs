@@ -112,6 +112,13 @@ public sealed partial class ShiftConfig
 
     public IReadOnlyList<NoSleepRule> NoSleep { get; private set; } = [];
 
+    /// <summary>節の中の整数（Python の int(値)）．読めなければ ConfigException（Python 版はここで落ちる）．</summary>
+    public int SectionInt(string section, string key) =>
+        Py.Int(Section(section)[key]) ?? throw BadValue($"{section}.{key}", Section(section)[key]);
+
+    /// <summary>文面に入れる値の表記（Python の str(値)）．</summary>
+    internal static string PyText(JsonNode? v) => PyStr(v);
+
     /// <summary>
     /// 自動「起きた」に要る睡眠時間（auto_wake_hours．無い・0 なら sleep_min_hours）．数として読めなければ ConfigException．
     /// </summary>

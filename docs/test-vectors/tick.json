@@ -5887,5 +5887,1910 @@
     }
    }
   }
+ ],
+ "phone": [
+  {
+   "name": "neru → 寝た時刻",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 08:10,neru\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T08:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T08:15\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "neru の後の okita → 起きた（時刻は iPhone の記録）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 08:10,neru\n2026-12-07 14:20,okita\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう（iPhone）。08:10〜14:20（6時間10分）。出発目安 16:00。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10",
+        "status": "okita",
+        "at": "2026-12-07T14:20"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10",
+      "2026-12-07T14:20\t2026-12-07\tokita\tphone 08:10-14:20"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "2 回の見張りに分かれても同じ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 08:10,neru\n2026-12-07 14:20,okita\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T08:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T14:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう（iPhone）。08:10〜14:20（6時間10分）。出発目安 16:00。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10",
+        "status": "okita",
+        "at": "2026-12-07T14:20"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T08:15\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10",
+      "2026-12-07T14:20\t2026-12-07\tokita\tphone 08:10-14:20"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "二度寝をまとめて取り込んでも最後の okita が効く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 08:10,neru\n2026-12-07 10:00,okita\n2026-12-07 10:30,neru\n2026-12-07 14:20,okita\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう（iPhone）。10:30〜14:20（3時間50分）。出発目安 16:00。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T10:30",
+        "status": "okita",
+        "at": "2026-12-07T14:20"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10",
+      "2026-12-07T10:00\t2026-12-07\tokita\tphone 08:10-10:00",
+      "2026-12-07T14:30\t2026-12-07\tsleep_at\tphone 2026-12-07T10:30",
+      "2026-12-07T14:20\t2026-12-07\tokita\tphone 10:30-14:20"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "二度寝を途中で 1 回取り込んでいても最後の okita が効く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 08:10,neru\n2026-12-07 10:00,okita\n2026-12-07 10:30,neru\n2026-12-07 14:20,okita\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう（iPhone）。08:10〜10:00（1時間50分）。出発目安 16:00。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう（iPhone）。10:30〜14:20（3時間50分）。出発目安 16:00。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T10:30",
+        "status": "okita",
+        "at": "2026-12-07T14:20"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:05\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10",
+      "2026-12-07T10:00\t2026-12-07\tokita\tphone 08:10-10:00",
+      "2026-12-07T14:30\t2026-12-07\tsleep_at\tphone 2026-12-07T10:30",
+      "2026-12-07T14:20\t2026-12-07\tokita\tphone 10:30-14:20"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "neru の無い okita は何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 14:20,okita\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "kitaku → 帰宅の時刻。2 回目は書かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 07:05,kitaku\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T07:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T07:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと30分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "kitaku": "2026-12-07T07:05"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T07:30\t2026-12-07\tkitaku\tphone 2026-12-07T07:05"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "日本語の印（ねる・ただいま・起きた）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 07:05,ただいま\n2026-12-07 08:10,ねる\n2026-12-07 14:20,起きた\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう（iPhone）。08:10〜14:20（6時間10分）。出発目安 16:00。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "kitaku": "2026-12-07T07:05",
+        "sleep_at": "2026-12-07T08:10",
+        "status": "okita",
+        "at": "2026-12-07T14:20"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-07\tkitaku\tphone 2026-12-07T07:05",
+      "2026-12-07T14:30\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10",
+      "2026-12-07T14:20\t2026-12-07\tokita\tphone 08:10-14:20"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "T 区切り・秒つきの日時と前後の空白",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07T08:10:30 , neru \n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T08:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10"
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T08:15\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "乗務日の前日の昼より前の印は見ない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-06 11:00,neru\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T08:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "日付つきの yasumi → その日の事後報告。2 回目の見張りでは適用しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-03 09:50,yasumi:2026-12-02\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-03"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-03T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-03T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "（iPhone）12/02(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "undo": {
+       "day": "2026-12-02",
+       "prev": {},
+       "at": "2026-12-03T10:00",
+       "what": [
+        "yasumi"
+       ],
+       "days_work_added": false
+      },
+      "shifts": {
+       "2026-12-02": {
+        "status": "yasumi",
+        "at": "2026-12-03T10:00"
+       }
+      },
+      "phone_applied": [
+       "2026-12-03T09:50|yasumi|2026-12-02"
+      ]
+     },
+     "events.log": [
+      "2026-12-03T10:00\t2026-12-02\tyasumi\tlate phone"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "日付なしの 休んだ → 記録した時点で直近に終わった乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-08 09:00,休んだ\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-08"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-08T09:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "（iPhone）12/07(月) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "undo": {
+       "day": "2026-12-07",
+       "prev": {},
+       "at": "2026-12-08T09:05",
+       "what": [
+        "yasumi"
+       ],
+       "days_work_added": false
+      },
+      "shifts": {
+       "2026-12-07": {
+        "status": "yasumi",
+        "at": "2026-12-08T09:05"
+       }
+      },
+      "phone_applied": [
+       "2026-12-08T09:00|yasumi|"
+      ]
+     },
+     "events.log": [
+      "2026-12-08T09:05\t2026-12-07\tyasumi\tlate phone"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "日付なしの deta → 直近に終わった乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-08 09:00,deta\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-08"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-08T09:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "（iPhone）12/07(月) は出たことにしたよ。違ったら『今のなし』。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "undo": {
+       "day": "2026-12-07",
+       "prev": {},
+       "at": "2026-12-08T09:05",
+       "what": [
+        "worked"
+       ],
+       "days_work_added": false
+      },
+      "shifts": {
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T09:05"
+       }
+      },
+      "phone_applied": [
+       "2026-12-08T09:00|worked|"
+      ]
+     },
+     "events.log": [
+      "2026-12-08T09:05\t2026-12-07\tworked\tlate phone"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "休みの日（土曜）に deta → 出勤の例外日に足す",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-06 10:00,deta:2026-12-05\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-06"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-06T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "（iPhone）12/05(土) は出たことにしたよ。違ったら『今のなし』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "undo": {
+       "day": "2026-12-05",
+       "prev": {},
+       "at": "2026-12-06T10:05",
+       "what": [
+        "worked"
+       ],
+       "days_work_added": true
+      },
+      "shifts": {
+       "2026-12-05": {
+        "status": "worked",
+        "at": "2026-12-06T10:05"
+       }
+      },
+      "phone_applied": [
+       "2026-12-06T10:00|worked|2026-12-05"
+      ]
+     },
+     "events.log": [
+      "2026-12-06T10:05\t2026-12-05\tworked\tlate phone"
+     ],
+     "days.json": {
+      "off": {},
+      "work": {
+       "2026-12-05": "事後報告"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "休みの日に yasumi は記録しない（適用済みには残る）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-06 10:00,yasumi:2026-12-05\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-06"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-06T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "phone_applied": [
+       "2026-12-06T10:00|yasumi|2026-12-05"
+      ]
+     },
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "まだ終わっていない乗務の yasumi は記録しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 09:00,yasumi:2026-12-07\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T09:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "phone_applied": [
+       "2026-12-07T09:00|yasumi|2026-12-07"
+      ]
+     },
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "もう同じ記録がある日は何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-03 09:50,yasumi:2026-12-02\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-02": {
+       "status": "yasumi",
+       "at": "2026-12-02T06:00"
+      }
+     }
+    },
+    "maintenance.json": {
+     "last_cleanup": "2026-12-03"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-03T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-02": {
+        "status": "yasumi",
+        "at": "2026-12-02T06:00"
+       }
+      },
+      "phone_applied": [
+       "2026-12-03T09:50|yasumi|2026-12-02"
+      ]
+     },
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "未来の時刻と lookback_days より前の印は無視",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-20 09:00,yasumi:2026-12-02\n2026-12-01 09:00,yasumi:2026-12-01\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-10"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "気分の行と知らない印は無視",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 09:00,1,メモ\n2026-12-07 09:01,sanpo\nこわれた行\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T09:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "mood_file のファイルが無ければ何も起きない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T09:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": null,
+     "events.log": null,
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "当日欠勤の目安に達したら一文が付く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     },
+     "absence": {
+      "warn_at": 1
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 0, \"game\": 0}\n",
+    "mood.csv": "2026-12-03 09:50,yasumi:2026-12-02\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-03"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-03T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "（iPhone）12/02(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。 ！ 直近 3 乗務で当日欠勤 1 回（有給は除く）。目安の 1 回に達しているよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "undo": {
+       "day": "2026-12-02",
+       "prev": {},
+       "at": "2026-12-03T10:00",
+       "what": [
+        "yasumi"
+       ],
+       "days_work_added": false
+      },
+      "shifts": {
+       "2026-12-02": {
+        "status": "yasumi",
+        "at": "2026-12-03T10:00"
+       }
+      },
+      "phone_applied": [
+       "2026-12-03T09:50|yasumi|2026-12-02"
+      ]
+     },
+     "events.log": [
+      "2026-12-03T10:00\t2026-12-02\tyasumi\tlate phone"
+     ],
+     "days.json": null
+    }
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "mood_file": "{DIR}/mood.csv",
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "mood.csv": "2026-12-07 08:10,neru\n2026-12-07 14:20,okita\n2026-12-07 14:25,休んだ:2026-12-04\n",
+    "maintenance.json": {
+     "last_cleanup": "2026-12-07"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T14:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "days.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "auto_okita",
+        "title": "shiftlock",
+        "text": "おはよう（iPhone）。08:10〜14:20（6時間10分）。出発目安 16:00。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "undo": {
+       "day": "2026-12-04",
+       "prev": {},
+       "at": "2026-12-07T14:30",
+       "what": [
+        "yasumi"
+       ],
+       "days_work_added": false
+      },
+      "shifts": {
+       "2026-12-04": {
+        "status": "yasumi",
+        "at": "2026-12-07T14:30"
+       },
+       "2026-12-07": {
+        "sleep_at": "2026-12-07T08:10",
+        "status": "okita",
+        "at": "2026-12-07T14:20"
+       }
+      },
+      "phone_applied": [
+       "2026-12-07T14:25|yasumi|2026-12-04"
+      ]
+     },
+     "events.log": [
+      "2026-12-07T14:30\t2026-12-04\tyasumi\tlate phone",
+      "2026-12-07T14:30\t2026-12-07\tsleep_at\tphone 2026-12-07T08:10",
+      "2026-12-07T14:20\t2026-12-07\tokita\tphone 08:10-14:20"
+     ],
+     "days.json": null
+    }
+   }
+  }
  ]
 }

@@ -261,6 +261,37 @@ def test_tick_autowake_vectors():
     assert kinds <= {"auto_okita", "lastcall", "soft", "hard", "go", "go_last"}
 
 
+def test_tick_phone_vectors():
+    """節 phone: iPhone の印が state.json・events.log・days.json に名前どおりに入る"""
+    by_name = {c["name"]: c["expect"] for c in ex.build_vectors()["tick.json"]["phone"]}
+
+    def texts(name):
+        return [a["text"] for r in by_name[name]["results"] for a in r["actions"] if a["kind"] == "auto_okita"]
+
+    e = by_name["neru の後の okita → 起きた（時刻は iPhone の記録）"]
+    assert e["files"]["state.json"]["shifts"]["2026-12-07"] == {"sleep_at": "2026-12-07T08:10", "status": "okita",
+                                                               "at": "2026-12-07T14:20"}
+    assert e["files"]["events.log"][-1] == "2026-12-07T14:20\t2026-12-07\tokita\tphone 08:10-14:20"
+    assert len(texts("neru の後の okita → 起きた（時刻は iPhone の記録）")) == 1
+    for name in ("二度寝をまとめて取り込んでも最後の okita が効く", "二度寝を途中で 1 回取り込んでいても最後の okita が効く"):
+        assert by_name[name]["files"]["state.json"]["shifts"]["2026-12-07"]["at"] == "2026-12-07T14:20", name
+    assert len(by_name["kitaku → 帰宅の時刻。2 回目は書かない"]["files"]["events.log"]) == 1
+    e = by_name["日付つきの yasumi → その日の事後報告。2 回目の見張りでは適用しない"]
+    assert e["files"]["events.log"] == ["2026-12-03T10:00\t2026-12-02\tyasumi\tlate phone"]
+    assert e["files"]["state.json"]["phone_applied"] == ["2026-12-03T09:50|yasumi|2026-12-02"]
+    assert [sum(a["kind"] == "auto_okita" for a in r["actions"]) for r in e["results"]] == [1, 0]
+    assert texts("日付つきの yasumi → その日の事後報告。2 回目の見張りでは適用しない")[0].startswith(JA.PHONE_LATE_PREFIX)
+    e = by_name["休みの日（土曜）に deta → 出勤の例外日に足す"]
+    assert e["files"]["days.json"]["work"] == {"2026-12-05": "事後報告"}
+    assert e["files"]["state.json"]["undo"]["days_work_added"] is True
+    for name in ("休みの日に yasumi は記録しない（適用済みには残る）", "まだ終わっていない乗務の yasumi は記録しない"):
+        assert by_name[name]["files"]["events.log"] is None and len(by_name[name]["files"]["state.json"]["phone_applied"]) == 1
+    for name in ("未来の時刻と lookback_days より前の印は無視", "気分の行と知らない印は無視",
+                 "mood_file のファイルが無ければ何も起きない", "neru の無い okita は何もしない"):
+        assert by_name[name]["files"] == {"state.json": None, "events.log": None, "days.json": None}, name
+    assert "当日欠勤" in texts("当日欠勤の目安に達したら一文が付く")[0]
+
+
 TICK_KEYS = (
     "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
     "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",

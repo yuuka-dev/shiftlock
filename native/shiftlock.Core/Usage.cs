@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace Shiftlock.Core;
@@ -29,7 +27,7 @@ public static class Usage
     public static TimeSpan? GameIdleLimit(ShiftConfig cfg)
     {
         var usage = cfg.Section("usage");
-        var n = usage.TryGetPropertyValue("game_idle_minutes", out var v) ? PyFloat(v) ?? GameIdleMinutes : GameIdleMinutes;
+        var n = usage.TryGetPropertyValue("game_idle_minutes", out var v) ? Py.Float(v) ?? GameIdleMinutes : GameIdleMinutes;
         if (double.IsNaN(n) || double.IsInfinity(n))
         {
             n = GameIdleMinutes;
@@ -135,15 +133,4 @@ public static class Usage
         && TimeUtil.ParseIso(JsonX.Str(pair[1])) is { } e
             ? (s, e)
             : null;
-
-    /// <summary>Python の float(v)（JSON の数・真偽値・数字の文字列）．読めなければ null．</summary>
-    internal static double? PyFloat(JsonNode? v) => v?.GetValueKind() switch
-    {
-        JsonValueKind.Number => v.GetValue<double>(),
-        JsonValueKind.True => 1,
-        JsonValueKind.False => 0,
-        JsonValueKind.String when double.TryParse(v.GetValue<string>().Trim(), NumberStyles.Float,
-            CultureInfo.InvariantCulture, out var parsed) => parsed,
-        _ => null,
-    };
 }

@@ -720,6 +720,71 @@ def _tick_autowake_rows() -> list:
     ]
 
 
+PHONE_WATCH = STATE_WATCH + ("days.json",)
+
+
+def _tick_phone_rows() -> list:
+    """iPhone の記録（mood.csv）の取り込みと事後報告。乗務日は 2026-12-07（月）ほか。"""
+    def cfg(**over):
+        return {"shifts.json": _base(mood_file=DIR_MARK + "/mood.csv", **{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    mon = "2026-12-07"
+
+    def mood(*lines):
+        return {"mood.csv": "".join(ln + "\n" for ln in lines)}
+
+    def run(*whens):
+        return _tick_steps(*[(w, 30, 0) for w in whens], watch=PHONE_WATCH)
+
+    first_log = {"log/pc-2026-12.jsonl": '{"t": "2026-12-01T00:00:00", "idle": 0, "game": 0}\n'}
+    return [_skip_cleanup(row) for row in [
+        ("neru → 寝た時刻", {**b, **mood(f"{mon} 08:10,neru")}, run(f"{mon}T08:15")),
+        ("neru の後の okita → 起きた（時刻は iPhone の記録）", {**b, **mood(f"{mon} 08:10,neru", f"{mon} 14:20,okita")},
+         run(f"{mon}T14:30")),
+        ("2 回の見張りに分かれても同じ", {**b, **mood(f"{mon} 08:10,neru", f"{mon} 14:20,okita")},
+         run(f"{mon}T08:15", f"{mon}T14:30", f"{mon}T14:35")),
+        ("二度寝をまとめて取り込んでも最後の okita が効く",
+         {**b, **mood(f"{mon} 08:10,neru", f"{mon} 10:00,okita", f"{mon} 10:30,neru", f"{mon} 14:20,okita")}, run(f"{mon}T14:30")),
+        ("二度寝を途中で 1 回取り込んでいても最後の okita が効く",
+         {**b, **mood(f"{mon} 08:10,neru", f"{mon} 10:00,okita", f"{mon} 10:30,neru", f"{mon} 14:20,okita")},
+         run(f"{mon}T10:05", f"{mon}T14:30")),
+        ("neru の無い okita は何もしない", {**b, **mood(f"{mon} 14:20,okita")}, run(f"{mon}T14:30")),
+        ("kitaku → 帰宅の時刻。2 回目は書かない", {**b, **mood(f"{mon} 07:05,kitaku")}, run(f"{mon}T07:30", f"{mon}T07:35")),
+        ("日本語の印（ねる・ただいま・起きた）", {**b, **mood(f"{mon} 07:05,ただいま", f"{mon} 08:10,ねる", f"{mon} 14:20,起きた")},
+         run(f"{mon}T14:30")),
+        ("T 区切り・秒つきの日時と前後の空白", {**b, **mood(f"{mon}T08:10:30 , neru ")}, run(f"{mon}T08:15")),
+        ("乗務日の前日の昼より前の印は見ない", {**b, **mood("2026-12-06 11:00,neru")}, run(f"{mon}T08:15")),
+        ("日付つきの yasumi → その日の事後報告。2 回目の見張りでは適用しない",
+         {**b, **mood("2026-12-03 09:50,yasumi:2026-12-02")}, run("2026-12-03T10:00", "2026-12-03T10:05")),
+        ("日付なしの 休んだ → 記録した時点で直近に終わった乗務", {**b, **mood("2026-12-08 09:00,休んだ")}, run("2026-12-08T09:05")),
+        ("日付なしの deta → 直近に終わった乗務", {**b, **mood("2026-12-08 09:00,deta")}, run("2026-12-08T09:05")),
+        ("休みの日（土曜）に deta → 出勤の例外日に足す", {**b, **mood("2026-12-06 10:00,deta:2026-12-05")}, run("2026-12-06T10:05")),
+        ("休みの日に yasumi は記録しない（適用済みには残る）", {**b, **mood("2026-12-06 10:00,yasumi:2026-12-05")},
+         run("2026-12-06T10:05")),
+        ("まだ終わっていない乗務の yasumi は記録しない", {**b, **mood(f"{mon} 09:00,yasumi:{mon}")}, run(f"{mon}T09:05")),
+        ("もう同じ記録がある日は何もしない",
+         {**b, **mood("2026-12-03 09:50,yasumi:2026-12-02"), "state.json": _state("2026-12-02", status="yasumi", at="2026-12-02T06:00")},
+         run("2026-12-03T10:00")),
+        ("未来の時刻と lookback_days より前の印は無視",
+         {**b, **mood("2026-12-20 09:00,yasumi:2026-12-02", "2026-12-01 09:00,yasumi:2026-12-01")}, run("2026-12-10T10:00")),
+        ("気分の行と知らない印は無視", {**b, **mood(f"{mon} 09:00,1,メモ", f"{mon} 09:01,sanpo", "こわれた行")}, run(f"{mon}T09:05")),
+        ("mood_file のファイルが無ければ何も起きない", b, run(f"{mon}T09:05")),
+        ("当日欠勤の目安に達したら一文が付く",
+         {**cfg(absence={"warn_at": 1}), **first_log, **mood("2026-12-03 09:50,yasumi:2026-12-02")}, run("2026-12-03T10:00")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **mood(f"{mon} 08:10,neru", f"{mon} 14:20,okita", "2026-12-07 14:25,休んだ:2026-12-04")},
+         run(f"{mon}T14:30")),
+    ]]
+
+
+def _skip_cleanup(row):
+    """その日の整理は済んだことにする（maintenance.json を置く）。1 日 1 回の整理は days.json を書き直すので、
+    days.json を見る節（phone）に整理の書き込みが混ざらないようにする。整理そのものは節 maintenance で見る。"""
+    name, files, inp = row
+    day = inp["steps"][0]["now"][:10]
+    return name, {**files, "maintenance.json": {"last_cleanup": day}}, inp
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -745,6 +810,7 @@ def build_vectors() -> dict:
             "notify": _cases(_tick_notify_rows(), _expect_tick),
             "sound": _cases(_tick_sound_rows(), _expect_tick),
             "autowake": _cases(_tick_autowake_rows(), _expect_tick),
+            "phone": _cases(_tick_phone_rows(), _expect_tick),
         },
     }
 

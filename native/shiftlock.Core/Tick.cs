@@ -87,7 +87,19 @@ public static class Tick
         var actions = new List<TickAction>();
         if (active)
         {
-            var autoMsg = AutoWake.MaybeAutoOkita(cfg, store, m, now);
+            string autoMsg;
+            try
+            {
+                autoMsg = Phone.ImportMarks(cfg, store, m, now);
+            }
+            catch (Exception)
+            {
+                autoMsg = "";   // iPhone の記録の取り込みに失敗しても本線（通知）を止めない（Python 版と同じ）
+            }
+            if (autoMsg.Length == 0)
+            {
+                autoMsg = AutoWake.MaybeAutoOkita(cfg, store, m, now);
+            }
             if (autoMsg.Length > 0)
             {
                 actions.Add(new TickAction(Method(notify, "phase", "toast"), "auto_okita", Title, autoMsg, speak));
@@ -146,29 +158,9 @@ public static class Tick
     /// </summary>
     private static (double Volume, int MaxSeconds)? SoundNumbers(JsonObject notify)
     {
-        var volume = notify.TryGetPropertyValue("sound_volume", out var v) ? Usage.PyFloat(v) : DefaultVolume;
-        var seconds = notify.TryGetPropertyValue("sound_max_seconds", out var s) ? PyInt(s) : DefaultMaxSeconds;
+        var volume = notify.TryGetPropertyValue("sound_volume", out var v) ? Py.Float(v) : DefaultVolume;
+        var seconds = notify.TryGetPropertyValue("sound_max_seconds", out var s) ? Py.Int(s) : DefaultMaxSeconds;
         return volume is { } vol && seconds is { } sec ? (vol, sec) : null;
-    }
-
-    /// <summary>Python の int(v): 数は 0 に向けて切り捨て，文字列は整数の表記だけ．読めなければ null．</summary>
-    private static int? PyInt(JsonNode? v)
-    {
-        switch (v?.GetValueKind())
-        {
-            case System.Text.Json.JsonValueKind.True:
-                return 1;
-            case System.Text.Json.JsonValueKind.False:
-                return 0;
-            case System.Text.Json.JsonValueKind.Number:
-                var d = Math.Truncate(v.GetValue<double>());
-                return double.IsFinite(d) && Math.Abs(d) <= int.MaxValue ? (int)d : null;
-            case System.Text.Json.JsonValueKind.String:
-                return int.TryParse(v.GetValue<string>().Trim(), System.Globalization.NumberStyles.AllowLeadingSign,
-                    System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : null;
-            default:
-                return null;
-        }
     }
 
     /// <summary>
