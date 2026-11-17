@@ -2,6 +2,8 @@
 文面の JSON がコミット済みの生成物と同じか、言語どうしでキーとプレースホルダが揃っているかを見張る。"""
 from __future__ import annotations
 
+import json
+import re
 import string
 import sys
 from pathlib import Path
@@ -114,3 +116,34 @@ def test_all_app_keys_are_exported():
     ja = ex.build_messages("ja")
     names = {n for n in dir(JA) if n.isupper() and n.startswith("APP_")}
     assert names and names <= set(ja)
+
+
+def test_vectors_use_only_synthetic_dates():
+    """テストベクタの日付は合成（2026-12-01 以降）だけ。実データの日付を入れない"""
+    text = json.dumps(ex.build_vectors(), ensure_ascii=False)
+    dates = set(re.findall(r"20\d\d-\d\d-\d\d", text))
+    assert dates and all(d >= "2026-12-01" for d in dates), sorted(d for d in dates if d < "2026-12-01")
+
+
+def test_vectors_shape():
+    """どのケースも name / files / input / expect を持ち、節の中で名前が重ならない"""
+    for fname, body in ex.build_vectors().items():
+        for section, cases in body.items():
+            assert cases, f"{fname} {section}"
+            names = [c["name"] for c in cases]
+            assert len(names) == len(set(names)), f"{fname} {section}"
+            assert all(set(c) == {"name", "files", "input", "expect"} for c in cases), f"{fname} {section}"
+
+
+def test_vectors_base_plan():
+    """土台の設定の 2026-12-01 の時刻（計画書に書いてある値）"""
+    case = ex.build_vectors()["plan.json"]["make_plan"][0]
+    assert case["expect"] == {"day": "2026-12-01", "start_target": "2026-12-01T17:00", "start_latest": "2026-12-01T17:30",
+                              "depart_target": "2026-12-01T16:00", "depart_latest": "2026-12-01T16:30",
+                              "soft_close": "2026-12-01T08:00", "hard_close": "2026-12-01T10:30", "lastcall": "2026-12-01T07:20"}
+
+
+def test_vectors_do_not_change_lang():
+    before = M.LANG
+    ex.build_vectors()
+    assert M.LANG == before

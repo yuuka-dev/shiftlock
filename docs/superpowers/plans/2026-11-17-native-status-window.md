@@ -296,7 +296,7 @@ public static class Vectors {
 
 - ベクタの形（全ファイル共通）: `{"<節>": [{"name": "...", "files": {"shifts.json": {...}, "days.json": {...}, ...}, "input": {...}, "expect": {...}}]}`
 
-- [ ] **Step 1:** csproj でベクタを出力へ写す．
+- [x] **Step 1:** csproj でベクタを出力へ写す．
 
 ```xml
 <ItemGroup>
@@ -304,17 +304,17 @@ public static class Vectors {
 </ItemGroup>
 ```
 
-- [ ] **Step 2: Python 側でベクタを書き出す．** `export_native.py` に `build_vectors() -> dict[str, dict]`（ファイル名 → 中身）を足し，`outputs()` に含める．各ケースは一時フォルダに `files` を書いて Python 版の関数を呼び，結果を `expect` に入れる．`plan.json` の節:
+- [x] **Step 2: Python 側でベクタを書き出す．** `export_native.py` に `build_vectors() -> dict[str, dict]`（ファイル名 → 中身）を足し，`outputs()` に含める．各ケースは一時フォルダに `files` を書いて Python 版の関数を呼び，結果を `expect` に入れる．`plan.json` の節:
   - `workday`（`input: {"day"}` → `expect: {"work": bool}`．`config.load_config` → `plan.is_workday`）: 平日／土曜／`days.json` の off（理由つき）／`days.json` の work（土曜）／`calendar.json` 旧形式の off／新形式 `sources` 2 本で同じ日が off と work（上のソースが勝つ）／手動 work がカレンダー off に勝つ／旧形式 `shifts` に文字列の日付／`shifts` に `{"date": ...}`
   - `config_error`（`expect: {"error": "<ja の文>"}` か `{"ok": true}`）: `work_weekdays` に `"holiday"`／`usage` が文字列／`calendar.sources` が辞書／`start_target` が `"25:99"`／`notify.sound` がリスト（→ ok）／`"prep_minutes": "90"` と `"start_target": "8:00"`（→ ok）．`no_sleep` の項目に `from`／`to` が無い設定はベクタに入れない（Python 版は読み込みでは通し，逆算で落ちる．C# は読み込みで設定のエラーにする．Step 4 の単独のテストで扱う）
-- [ ] **Step 3:** `test_export_native.py` に足す．
+- [x] **Step 3:** `test_export_native.py` に足す．
 
 ```python
 def test_vectors_use_only_synthetic_dates():
     # build_vectors() の全文に "2026-12-" より前の日付（正規表現 20\d\d-\d\d-\d\d）が無い
 ```
 
-- [ ] **Step 4: 失敗するテストを書く**（`ConfigTests.cs`）．
+- [x] **Step 4: 失敗するテストを書く**（`ConfigTests.cs`）．
 
 ```csharp
 [Theory] [MemberData(nameof(WorkdayCases))] public void IsWorkday_MatchesPython(VectorCase c)
@@ -326,10 +326,10 @@ def test_vectors_use_only_synthetic_dates():
 [Fact] public void SleepMinHoursText_KeepsJsonNotation()   // 5 → "5"，5.0 → "5.0"，4.5 → "4.5"，既定 → "4"
 ```
 
-- [ ] **Step 5:** `dotnet test` → 失敗．
-- [ ] **Step 6:** 実装する．既定値は `config.DEFAULTS` のうち上の型に出てくるキーだけ持つ（`work_weekdays` は月〜土，`start_target` 20:00，`start_latest` 22:30，`prep_minutes` 90，`sleep_target_hours` 5，`sleep_min_hours` 4，`lastcall_minutes` 40）．検証は `config.load_config` と同じ順・同じ文（`CONFIG_*`）．数値は JSON の数でも数字の文字列でも受ける（Python の `float()`）．
-- [ ] **Step 7:** `dotnet test` と pytest が全部通る．
-- [ ] **Step 8:** コミット `feat(native): 設定の読み込みと乗務日の判定を移す (#38)`
+- [x] **Step 5:** `dotnet test` → 失敗．
+- [x] **Step 6:** 実装する．既定値は `config.DEFAULTS` のうち上の型に出てくるキーだけ持つ（`work_weekdays` は月〜土，`start_target` 20:00，`start_latest` 22:30，`prep_minutes` 90，`sleep_target_hours` 5，`sleep_min_hours` 4，`lastcall_minutes` 40）．検証は `config.load_config` と同じ順・同じ文（`CONFIG_*`）．数値は JSON の数でも数字の文字列でも受ける（Python の `float()`）．
+- [x] **Step 7:** `dotnet test` と pytest が全部通る．
+- [x] **Step 8:** コミット `feat(native): 設定の読み込みと乗務日の判定を移す (#38)`
 
 ---
 
@@ -354,15 +354,15 @@ public static partial class Planner {
 }
 ```
 
-- [ ] **Step 1: ベクタを書き出す．**
+- [x] **Step 1: ベクタを書き出す．**
   - `plan.json` の `make_plan`（`input: {"day"}` → `expect`: 7 つの時刻を `yyyy-MM-ddTHH:mm` で）: 土台の設定で 2026-12-01／`start_latest` が `start_target` より早い（→ 同じ時刻に揃う）／`days.json` の `times` で `start_target` と `sleep_target_hours` を上書き／旧形式 `shifts` の辞書で上書き／`no_sleep` が睡眠の途中に 1 つ（曜日指定）／`no_sleep` が日をまたぐ（`from` 23:00 `to` 02:00）／`no_sleep` が 2 つ（日付指定と曜日指定）／`no_sleep` が起きる時刻をまたぐ／`"prep_minutes": "90"` と `"start_target": "8:00"`
   - `phase.json` の `current`（`files` に `state.json`，`input: {"now"}` → `expect: {"phase", "day"}`）: 土台の設定の 2026-12-01 で 07:19（free）／07:20（lastcall）／07:59／08:00（soft）／10:29／10:30（hard）／17:29（hard）／17:30（free）／`okita` で 12:00（free）・15:44（free）・15:45（go）・16:14（go）・16:15（go_last）／`yasumi` で 09:00（free）／`worked` で 16:20（free）／土曜 12:00（free）
   - `phase.json` の `target_plan`（`input: {"now"}` → `expect: {"day"}`，無ければ `null`）: 月曜 2026-12-07 17:29（→ 12-07）／12-07 17:30（→ 12-08）／12-08 17:29（→ 12-08）／金曜 12-11 17:30（→ null．次は月曜で 24 時間より先）／土曜 12-12 18:00（→ null）
-- [ ] **Step 2: 失敗するテストを書く**（`PlannerTests.cs`）: `MakePlan_MatchesPython`・`Current_MatchesPython`・`TargetPlan_MatchesPython`（どれも `[Theory]` でベクタの全ケース）．
-- [ ] **Step 3:** `dotnet test` → 失敗．
-- [ ] **Step 4:** `plan.py` の `no_sleep_intervals`・`latest_bedtime`・`make_plan`・`plans`・`current`・`target_plan` を移す．`latest_bedtime` の区間の並べ方と引き算は Python 版の順のまま移す（終わりが遅い区間から見る）．
-- [ ] **Step 5:** `dotnet test` と pytest が全部通る．
-- [ ] **Step 6:** コミット `feat(native): 時刻の逆算とフェーズの判定を移す (#38)`
+- [x] **Step 2: 失敗するテストを書く**（`PlannerTests.cs`）: `MakePlan_MatchesPython`・`Current_MatchesPython`・`TargetPlan_MatchesPython`（どれも `[Theory]` でベクタの全ケース）．
+- [x] **Step 3:** `dotnet test` → 失敗．
+- [x] **Step 4:** `plan.py` の `no_sleep_intervals`・`latest_bedtime`・`make_plan`・`plans`・`current`・`target_plan` を移す．`latest_bedtime` の区間の並べ方と引き算は Python 版の順のまま移す（終わりが遅い区間から見る）．
+- [x] **Step 5:** `dotnet test` と pytest が全部通る．
+- [x] **Step 6:** コミット `feat(native): 時刻の逆算とフェーズの判定を移す (#38)`
 
 ---
 

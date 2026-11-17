@@ -1,0 +1,1364 @@
+{
+ "workday": [
+  {
+   "name": "平日は乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "work": true
+   }
+  },
+  {
+   "name": "土曜は休み",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "day": "2026-12-05"
+   },
+   "expect": {
+    "work": false
+   }
+  },
+  {
+   "name": "手動の休み（理由つき）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-02": "用事"
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-02"
+   },
+   "expect": {
+    "work": false
+   }
+  },
+  {
+   "name": "手動の出勤（土曜）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "work": {
+      "2026-12-05": ""
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-05"
+   },
+   "expect": {
+    "work": true
+   }
+  },
+  {
+   "name": "カレンダー旧形式の休み",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "calendar.json": {
+     "off": {
+      "2026-12-03": "公休"
+     },
+     "work": {}
+    }
+   },
+   "input": {
+    "day": "2026-12-03"
+   },
+   "expect": {
+    "work": false
+   }
+  },
+  {
+   "name": "カレンダー新形式: 同じ日は上のソース（休み）が勝つ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "off": {
+        "2026-12-04": "休み"
+       },
+       "work": {
+        "2026-12-05": ""
+       }
+      },
+      "B": {
+       "work": {
+        "2026-12-04": "出勤"
+       },
+       "off": {
+        "2026-12-05": "休み"
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-04"
+   },
+   "expect": {
+    "work": false
+   }
+  },
+  {
+   "name": "カレンダー新形式: 同じ日は上のソース（出勤）が勝つ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "off": {
+        "2026-12-04": "休み"
+       },
+       "work": {
+        "2026-12-05": ""
+       }
+      },
+      "B": {
+       "work": {
+        "2026-12-04": "出勤"
+       },
+       "off": {
+        "2026-12-05": "休み"
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-05"
+   },
+   "expect": {
+    "work": true
+   }
+  },
+  {
+   "name": "手動の出勤がカレンダーの休みに勝つ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "work": {
+      "2026-12-03": ""
+     }
+    },
+    "calendar.json": {
+     "off": {
+      "2026-12-03": "公休"
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-03"
+   },
+   "expect": {
+    "work": true
+   }
+  },
+  {
+   "name": "手動の休みがカレンダーの出勤に勝つ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-05": ""
+     }
+    },
+    "calendar.json": {
+     "work": {
+      "2026-12-05": "出勤"
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-05"
+   },
+   "expect": {
+    "work": false
+   }
+  },
+  {
+   "name": "旧形式 shifts の日付（文字列）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "shifts": [
+      "2026-12-05"
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-05"
+   },
+   "expect": {
+    "work": true
+   }
+  },
+  {
+   "name": "旧形式 shifts の日付（辞書）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "shifts": [
+      {
+       "date": "2026-12-06"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-06"
+   },
+   "expect": {
+    "work": true
+   }
+  },
+  {
+   "name": "手動の休みが旧形式 shifts に勝つ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "shifts": [
+      "2026-12-05"
+     ]
+    },
+    "days.json": {
+     "off": {
+      "2026-12-05": ""
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-05"
+   },
+   "expect": {
+    "work": false
+   }
+  },
+  {
+   "name": "work_weekdays が空",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "work": false
+   }
+  },
+  {
+   "name": "days.json が壊れていれば無いものとして扱う",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": "{"
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "work": true
+   }
+  }
+ ],
+ "config_error": [
+  {
+   "name": "土台の設定は通る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {},
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "知らない曜日",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "holiday"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "work_weekdays に知らない曜日: ['holiday']"
+   }
+  },
+  {
+   "name": "知らない曜日が 2 つ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "holiday",
+      "mon",
+      "funday"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "work_weekdays に知らない曜日: ['holiday', 'funday']"
+   }
+  },
+  {
+   "name": "知らない曜日（関西弁）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "holiday"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "work_weekdays に知らん曜日: ['holiday']"
+   }
+  },
+  {
+   "name": "usage が文字列",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "usage": "120"
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "usage は {...} の形で書いてね（settings.cmd で直せる）"
+   }
+  },
+  {
+   "name": "enforce が null",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "enforce": null
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "enforce は {...} の形で書いてね（settings.cmd で直せる）"
+   }
+  },
+  {
+   "name": "calendar.sources が辞書",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "calendar": {
+      "sources": {}
+     }
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "calendar.sources はリスト [ ... ] で書いてね"
+   }
+  },
+  {
+   "name": "start_target が 25:99",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "25:99",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": null
+   }
+  },
+  {
+   "name": "start_latest の後ろに空白",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30 ",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": null
+   }
+  },
+  {
+   "name": "notify.sound がリストでも通る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": []
+     }
+    }
+   },
+   "input": {},
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "数字の文字列と 0 埋めなしの時刻は通る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "8:00",
+     "start_latest": "9:5",
+     "prep_minutes": "90",
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {},
+   "expect": {
+    "ok": true
+   }
+  },
+  {
+   "name": "最上位が配列",
+   "files": {
+    "shifts.json": [
+     "mon"
+    ]
+   },
+   "input": {},
+   "expect": {
+    "error": null
+   }
+  }
+ ],
+ "make_plan": [
+  {
+   "name": "土台の設定",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T08:00",
+    "hard_close": "2026-12-01T10:30",
+    "lastcall": "2026-12-01T07:20"
+   }
+  },
+  {
+   "name": "start_latest が start_target より早ければ揃える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "16:00",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:00",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:00",
+    "soft_close": "2026-12-01T08:00",
+    "hard_close": "2026-12-01T10:00",
+    "lastcall": "2026-12-01T07:20"
+   }
+  },
+  {
+   "name": "days.json の times で上書き",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "times": {
+      "2026-12-01": {
+       "start_target": "18:00",
+       "start_latest": "19:00",
+       "sleep_target_hours": 7.5
+      }
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T18:00",
+    "start_latest": "2026-12-01T19:00",
+    "depart_target": "2026-12-01T17:00",
+    "depart_latest": "2026-12-01T18:00",
+    "soft_close": "2026-12-01T09:30",
+    "hard_close": "2026-12-01T12:00",
+    "lastcall": "2026-12-01T08:50"
+   }
+  },
+  {
+   "name": "times の無い日は上書きしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "times": {
+      "2026-12-01": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-02"
+   },
+   "expect": {
+    "day": "2026-12-02",
+    "start_target": "2026-12-02T17:00",
+    "start_latest": "2026-12-02T17:30",
+    "depart_target": "2026-12-02T16:00",
+    "depart_latest": "2026-12-02T16:30",
+    "soft_close": "2026-12-02T08:00",
+    "hard_close": "2026-12-02T10:30",
+    "lastcall": "2026-12-02T07:20"
+   }
+  },
+  {
+   "name": "旧形式 shifts の辞書で上書き",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "shifts": [
+      {
+       "date": "2026-12-01",
+       "start_target": "15:00",
+       "sleep_min_hours": "5"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T15:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T14:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T06:00",
+    "hard_close": "2026-12-01T11:30",
+    "lastcall": "2026-12-01T05:20"
+   }
+  },
+  {
+   "name": "times が旧形式 shifts に勝つ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "shifts": [
+      {
+       "date": "2026-12-01",
+       "start_target": "15:00",
+       "start_latest": "15:30"
+      }
+     ]
+    },
+    "days.json": {
+     "times": {
+      "2026-12-01": {
+       "start_target": "16:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T16:00",
+    "start_latest": "2026-12-01T16:00",
+    "depart_target": "2026-12-01T15:00",
+    "depart_latest": "2026-12-01T15:00",
+    "soft_close": "2026-12-01T07:00",
+    "hard_close": "2026-12-01T09:00",
+    "lastcall": "2026-12-01T06:20"
+   }
+  },
+  {
+   "name": "no_sleep が睡眠の途中に 1 つ（曜日）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "no_sleep": [
+      {
+       "weekday": "tue",
+       "from": "10:00",
+       "to": "11:00"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T07:00",
+    "hard_close": "2026-12-01T09:30",
+    "lastcall": "2026-12-01T06:20"
+   }
+  },
+  {
+   "name": "no_sleep は曜日が違えば効かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "no_sleep": [
+      {
+       "weekday": "tue",
+       "from": "10:00",
+       "to": "11:00"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-02"
+   },
+   "expect": {
+    "day": "2026-12-02",
+    "start_target": "2026-12-02T17:00",
+    "start_latest": "2026-12-02T17:30",
+    "depart_target": "2026-12-02T16:00",
+    "depart_latest": "2026-12-02T16:30",
+    "soft_close": "2026-12-02T08:00",
+    "hard_close": "2026-12-02T10:30",
+    "lastcall": "2026-12-02T07:20"
+   }
+  },
+  {
+   "name": "no_sleep が日をまたぐ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "08:00",
+     "start_latest": "08:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "no_sleep": [
+      {
+       "weekday": "mon",
+       "from": "23:00",
+       "to": "02:00"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-08"
+   },
+   "expect": {
+    "day": "2026-12-08",
+    "start_target": "2026-12-08T08:00",
+    "start_latest": "2026-12-08T08:30",
+    "depart_target": "2026-12-08T07:00",
+    "depart_latest": "2026-12-08T07:30",
+    "soft_close": "2026-12-07T20:00",
+    "hard_close": "2026-12-07T22:30",
+    "lastcall": "2026-12-07T19:20"
+   }
+  },
+  {
+   "name": "no_sleep が 2 つ（日付と曜日の長い書き方）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "no_sleep": [
+      {
+       "date": "2026-12-01",
+       "from": "12:00",
+       "to": "13:00"
+      },
+      {
+       "weekday": "Tuesday",
+       "from": "09:00",
+       "to": "09:30"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T06:30",
+    "hard_close": "2026-12-01T09:30",
+    "lastcall": "2026-12-01T05:50"
+   }
+  },
+  {
+   "name": "no_sleep が起きる時刻をまたぐ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "no_sleep": [
+      {
+       "weekday": "tue",
+       "from": "15:30",
+       "to": "17:00"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T07:30",
+    "hard_close": "2026-12-01T09:30",
+    "lastcall": "2026-12-01T06:50"
+   }
+  },
+  {
+   "name": "no_sleep が起きる時刻ちょうどに終わる",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "no_sleep": [
+      {
+       "weekday": "tue",
+       "from": "15:00",
+       "to": "16:00"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T07:00",
+    "hard_close": "2026-12-01T09:30",
+    "lastcall": "2026-12-01T06:20"
+   }
+  },
+  {
+   "name": "no_sleep が重なる",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "no_sleep": [
+      {
+       "weekday": "tue",
+       "from": "09:00",
+       "to": "11:00"
+      },
+      {
+       "date": "2026-12-01",
+       "from": "10:00",
+       "to": "12:00"
+      }
+     ]
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T05:00",
+    "hard_close": "2026-12-01T07:30",
+    "lastcall": "2026-12-01T04:20"
+   }
+  },
+  {
+   "name": "数字の文字列と 0 埋めなしの時刻",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "8:00",
+     "start_latest": "9:05",
+     "prep_minutes": "90",
+     "sleep_target_hours": "4.5",
+     "sleep_min_hours": 3.0,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "day": "2026-12-08"
+   },
+   "expect": {
+    "day": "2026-12-08",
+    "start_target": "2026-12-08T08:00",
+    "start_latest": "2026-12-08T09:05",
+    "depart_target": "2026-12-08T06:30",
+    "depart_latest": "2026-12-08T07:35",
+    "soft_close": "2026-12-08T02:00",
+    "hard_close": "2026-12-08T04:35",
+    "lastcall": "2026-12-08T01:20"
+   }
+  },
+  {
+   "name": "lastcall_minutes が無ければ 40 分",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6
+    }
+   },
+   "input": {
+    "day": "2026-12-01"
+   },
+   "expect": {
+    "day": "2026-12-01",
+    "start_target": "2026-12-01T17:00",
+    "start_latest": "2026-12-01T17:30",
+    "depart_target": "2026-12-01T16:00",
+    "depart_latest": "2026-12-01T16:30",
+    "soft_close": "2026-12-01T08:00",
+    "hard_close": "2026-12-01T10:30",
+    "lastcall": "2026-12-01T07:20"
+   }
+  }
+ ]
+}

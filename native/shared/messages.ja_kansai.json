@@ -5,6 +5,8 @@
  "APP_BTN_OKITA": "起きた",
  "APP_BTN_SHUPPATSU": "行ってきます",
  "APP_BTN_UNDO": "取り消す",
+ "APP_CONFIG_BAD_JSON": "JSON の書き方がおかしいで（{err}）",
+ "APP_CONFIG_BAD_VALUE": "{key} の書き方がおかしいで: {value}",
  "APP_COUNTDOWN": {
   "lastcall": "就寝目安まで あと {remain}",
   "soft": "最低ラインまで あと {remain}",

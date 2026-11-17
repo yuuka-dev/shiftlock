@@ -100,7 +100,7 @@ public static class JsonFiles
     }
 
     /// <summary>木を全部たどって，遅延で作られる中身を先に作らせる（壊れたところをここで見つける）．</summary>
-    private static void Touch(JsonNode? node)
+    internal static void Touch(JsonNode? node)
     {
         switch (node)
         {
