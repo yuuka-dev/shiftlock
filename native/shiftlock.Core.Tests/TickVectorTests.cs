@@ -29,6 +29,10 @@ public sealed class TickVectorTests
     [Theory]
     [MemberData(nameof(Cases), "phone")]
     public void Phone(VectorCase c) => TickRunner.RunCase(c);
+
+    [Theory]
+    [MemberData(nameof(Cases), "confirm")]
+    public void Confirm(VectorCase c) => TickRunner.RunCase(c);
 }
 
 /// <summary>tick.json の 1 ケースを通す共通の手順．</summary>

@@ -7792,5 +7792,1865 @@
     }
    }
   }
+ ],
+ "confirm": [
+  {
+   "name": "昨日の乗務が未記録なら聞く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "同じ日の 2 回目は聞かない。翌日は次の 1 件",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-10T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-11T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。（ほか 1 件は shl kakunin で）",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/10(木) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。（ほか 1 件は shl kakunin で）",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       },
+       "2026-12-10": {
+        "confirm_asked": "2026-12-11T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-11"
+     }
+    }
+   }
+  },
+  {
+   "name": "2 件あれば新しいほうと「ほか 1 件」",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。（ほか 1 件は shl kakunin で）",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "起きた記録があれば聞かない（okita_means_worked の既定）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-09": {
+       "status": "okita",
+       "at": "2026-12-09T14:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "status": "okita",
+        "at": "2026-12-09T14:00"
+       }
+      },
+      "confirm_since": "2026-12-01"
+     }
+    }
+   }
+  },
+  {
+   "name": "okita_means_worked が false なら起きた記録があっても聞く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "okita_means_worked": false
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-09": {
+       "status": "okita",
+       "at": "2026-12-09T14:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "status": "okita",
+        "at": "2026-12-09T14:00",
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "休みにした乗務は聞かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T06:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "status": "yasumi",
+        "at": "2026-12-09T06:00"
+       }
+      },
+      "confirm_since": "2026-12-01"
+     }
+    }
+   }
+  },
+  {
+   "name": "乗務の時間帯に PC を 60 分触っていたら一言付く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:00:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:05:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:10:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:15:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:20:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:25:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:30:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:35:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:40:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:45:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:50:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:55:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。PC の記録だと家にいたようだよ（Parsec なら気にしなくていい）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "55 分なら付かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:00:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:05:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:10:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:15:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:20:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:25:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:30:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:35:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:40:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:45:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:50:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "放置（idle 300 秒以上）は数えず、ゲーム中は数える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n{\"t\": \"2026-12-09T16:00:00\", \"idle\": 300, \"game\": 0}\n{\"t\": \"2026-12-09T16:05:00\", \"idle\": 300, \"game\": 0}\n{\"t\": \"2026-12-09T16:10:00\", \"idle\": 300, \"game\": 0}\n{\"t\": \"2026-12-09T16:15:00\", \"idle\": 300, \"game\": 0}\n{\"t\": \"2026-12-09T16:20:00\", \"idle\": 300, \"game\": 0}\n{\"t\": \"2026-12-09T16:25:00\", \"idle\": 300, \"game\": 0}\n{\"t\": \"2026-12-09T16:30:00\", \"idle\": 9000, \"game\": 1}\n{\"t\": \"2026-12-09T16:35:00\", \"idle\": 9000, \"game\": 1}\n{\"t\": \"2026-12-09T16:40:00\", \"idle\": 9000, \"game\": 1}\n{\"t\": \"2026-12-09T16:45:00\", \"idle\": 9000, \"game\": 1}\n{\"t\": \"2026-12-09T16:50:00\", \"idle\": 9000, \"game\": 1}\n{\"t\": \"2026-12-09T16:55:00\", \"idle\": 9000, \"game\": 1}\n{\"t\": \"2026-12-09T17:00:00\", \"idle\": 299, \"game\": 0}\n{\"t\": \"2026-12-09T17:05:00\", \"idle\": 299, \"game\": 0}\n{\"t\": \"2026-12-09T17:10:00\", \"idle\": 299, \"game\": 0}\n{\"t\": \"2026-12-09T17:15:00\", \"idle\": 299, \"game\": 0}\n{\"t\": \"2026-12-09T17:20:00\", \"idle\": 299, \"game\": 0}\n{\"t\": \"2026-12-09T17:25:00\", \"idle\": 299, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。PC の記録だと家にいたようだよ（Parsec なら気にしなくていい）。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "翌朝 07:00（shift_end_earliest）より前は聞かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T06:55",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-10T07:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T07:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "shift_end_earliest を遅くすると、まだ終わっていない扱い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "shift_end_earliest": "11:00"
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/08(火) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "記録開始日より前の乗務は聞かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-09T12:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {},
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "confirm_since が無ければ前日を書き、それより前は聞かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n"
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "confirm_since": "2026-12-09",
+      "shifts": {
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "ログが無い初回は聞かない（今日が記録開始日）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "confirm_since": "2026-12-09"
+     }
+    }
+   }
+  },
+  {
+   "name": "lookback_days 2 ならその中だけ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "lookback_days": 2
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {},
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってね。（ほか 1 件は shl kakunin で）",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  },
+  {
+   "name": "mode が off なら聞かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       }
+      },
+      "confirm_since": "2026-12-01"
+     }
+    }
+   }
+  },
+  {
+   "name": "離席中は聞かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-08": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       }
+      },
+      "confirm_since": "2026-12-01"
+     }
+    }
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T00:00:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     },
+     "confirm_since": "2026-12-01"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-10T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 過ぎてるで（目標睡眠 8h）。10:30 からロックかかるで。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "confirm",
+        "title": "shiftlock",
+        "text": "12/09(水) の乗務、出た？休んだ？ Claude Code か shl で『出た』『休んだ』を打ってな。（ほか 1 件は shl kakunin で）",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-03": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-04": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-07": {
+        "status": "worked",
+        "at": "2026-12-08T16:00"
+       },
+       "2026-12-09": {
+        "confirm_asked": "2026-12-10T10:00"
+       }
+      },
+      "confirm_since": "2026-12-01",
+      "confirm_last_ask": "2026-12-10"
+     }
+    }
+   }
+  }
  ]
 }

@@ -110,6 +110,14 @@ public static class Tick
                 var method = phase is "hard" or "go_last" ? Method(notify, "hard", "popup") : Method(notify, "phase", "toast");
                 actions.Add(new TickAction(method, phase, Title, PhaseText.User(phase, p, now, cfg, m), speak));
             }
+            var (unconfirmed, others) = Confirm.PickUnconfirmed(cfg, store, now);
+            if (unconfirmed is not null)
+            {
+                // 終わった乗務の「出た？休んだ？」は 1 日 1 件，新しい乗務から
+                actions.Add(new TickAction(Method(notify, "phase", "toast"), "confirm", Title,
+                    Confirm.UserText(cfg, store, m, unconfirmed, now, others), speak));
+                Confirm.MarkAsked(store, unconfirmed.Day, now);
+            }
             if (Usage.DueNag(u, now, cfg) is { } cont)
             {
                 var what = m[input.Game ? "TICK_NAG_GAME" : "TICK_NAG_PC"];

@@ -349,7 +349,7 @@ public sealed class Store(string dir)
         return toks.Length > 0 && TimeUtil.ParseIso(toks[^1]) is not null ? toks[^1] : null;
     }
 
-    private static JsonObject ShiftsForWrite(JsonObject state)
+    internal static JsonObject ShiftsForWrite(JsonObject state)
     {
         if (!state.TryGetPropertyValue("shifts", out var node))
         {
@@ -361,7 +361,7 @@ public sealed class Store(string dir)
         return node as JsonObject ?? throw new StateBusyException("state.json の shifts が辞書ではない");
     }
 
-    private static JsonObject ShiftForWrite(JsonObject shifts, string day)
+    internal static JsonObject ShiftForWrite(JsonObject shifts, string day)
     {
         if (!shifts.TryGetPropertyValue(day, out var node))
         {

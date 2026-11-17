@@ -777,6 +777,66 @@ def _tick_phone_rows() -> list:
     ]]
 
 
+def _tick_confirm_rows() -> list:
+    """終わった乗務の「出た？休んだ？」（1 日 1 件、新しい乗務から）。ここからは confirm.mode の既定（ask）。
+    記録開始日は log/pc-2026-12.jsonl の最初の行で作る。いまは 2026-12-10（木）で、昨日の乗務は 12/09。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**over)}
+
+    def log(*stamps, idle=30, game=0):
+        return "".join(json.dumps({"t": s, "idle": idle, "game": game}) + "\n" for s in stamps)
+
+    def state(since="2026-12-01", **shifts):
+        st = {"shifts": {d.replace("_", "-"): v for d, v in shifts.items()}}
+        if since:
+            st["confirm_since"] = since
+        return {"state.json": st}
+
+    def run(*whens, idle=30):
+        return _tick_steps(*[(w, idle, 0) for w in whens], watch=("state.json",))
+
+    worked = {"status": "worked", "at": "2026-12-08T16:00"}
+    older = {f"d2026_12_0{n}": worked for n in (3, 4, 7, 8)}        # 12/09 より前は記録済み
+    start = {"log/pc-2026-12.jsonl": log("2026-12-01T00:00:00")}
+    b = cfg()
+    now = "2026-12-10T10:00"
+
+    def keyed(**shifts):
+        return state(**{k[1:]: v for k, v in shifts.items()})
+
+    evening = [f"2026-12-09T{16 + i // 12:02d}:{i % 12 * 5:02d}:00" for i in range(12)]   # 16:00〜16:55 の 12 行 = 60 分
+    return [
+        ("昨日の乗務が未記録なら聞く", {**b, **start, **keyed(**older)}, run(now)),
+        ("同じ日の 2 回目は聞かない。翌日は次の 1 件", {**b, **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})},
+         run(now, "2026-12-10T10:05", "2026-12-11T10:00")),
+        ("2 件あれば新しいほうと「ほか 1 件」", {**b, **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})}, run(now)),
+        ("起きた記録があれば聞かない（okita_means_worked の既定）",
+         {**b, **start, **keyed(**older, d2026_12_09={"status": "okita", "at": "2026-12-09T14:00"})}, run(now)),
+        ("okita_means_worked が false なら起きた記録があっても聞く",
+         {**cfg(confirm={"okita_means_worked": False}), **start,
+          **keyed(**older, d2026_12_09={"status": "okita", "at": "2026-12-09T14:00"})}, run(now)),
+        ("休みにした乗務は聞かない", {**b, **start, **keyed(**older, d2026_12_09={"status": "yasumi", "at": "2026-12-09T06:00"})}, run(now)),
+        ("乗務の時間帯に PC を 60 分触っていたら一言付く",
+         {**b, "log/pc-2026-12.jsonl": log("2026-12-01T00:00:00") + log(*evening), **keyed(**older)}, run(now)),
+        ("55 分なら付かない",
+         {**b, "log/pc-2026-12.jsonl": log("2026-12-01T00:00:00") + log(*evening[:11]), **keyed(**older)}, run(now)),
+        ("放置（idle 300 秒以上）は数えず、ゲーム中は数える",
+         {**b, "log/pc-2026-12.jsonl": log("2026-12-01T00:00:00") + log(*evening[:6], idle=300) + log(*evening[6:], idle=9000, game=1)
+          + log(*[s.replace("T16", "T17") for s in evening[:6]], idle=299), **keyed(**older)}, run(now)),
+        ("翌朝 07:00（shift_end_earliest）より前は聞かない", {**b, **start, **keyed(**older)},
+         run("2026-12-10T06:55", "2026-12-10T07:00")),
+        ("shift_end_earliest を遅くすると、まだ終わっていない扱い",
+         {**cfg(shift_end_earliest="11:00"), **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})}, run(now)),
+        ("記録開始日より前の乗務は聞かない", {**b, "log/pc-2026-12.jsonl": log("2026-12-09T12:00:00"), **state()}, run(now)),
+        ("confirm_since が無ければ前日を書き、それより前は聞かない", {**b, **start}, run(now)),
+        ("ログが無い初回は聞かない（今日が記録開始日）", b, run(now)),
+        ("lookback_days 2 ならその中だけ", {**cfg(confirm={"lookback_days": 2}), **start, **state()}, run(now)),
+        ("mode が off なら聞かない", {**cfg(**NO_CONFIRM), **start, **keyed(**older)}, run(now)),
+        ("離席中は聞かない", {**b, **start, **keyed(**older)}, run(now, idle=1500)),
+        ("関西弁", {**cfg(lang="ja_kansai"), **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})}, run(now)),
+    ]
+
+
 def _skip_cleanup(row):
     """その日の整理は済んだことにする（maintenance.json を置く）。1 日 1 回の整理は days.json を書き直すので、
     days.json を見る節（phone）に整理の書き込みが混ざらないようにする。整理そのものは節 maintenance で見る。"""
@@ -811,6 +871,7 @@ def build_vectors() -> dict:
             "sound": _cases(_tick_sound_rows(), _expect_tick),
             "autowake": _cases(_tick_autowake_rows(), _expect_tick),
             "phone": _cases(_tick_phone_rows(), _expect_tick),
+            "confirm": _cases(_tick_confirm_rows(), _expect_tick),
         },
     }
 

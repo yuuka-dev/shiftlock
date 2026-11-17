@@ -292,6 +292,23 @@ def test_tick_phone_vectors():
     assert "当日欠勤" in texts("当日欠勤の目安に達したら一文が付く")[0]
 
 
+def test_tick_confirm_vectors():
+    """節 confirm: 聞くのは 1 日 1 件。聞いた乗務に confirm_asked が付く"""
+    by_name = {c["name"]: c["expect"] for c in ex.build_vectors()["tick.json"]["confirm"]}
+
+    def asked(name):
+        return [sum(a["kind"] == "confirm" for a in r["actions"]) for r in by_name[name]["results"]]
+
+    assert asked("同じ日の 2 回目は聞かない。翌日は次の 1 件") == [1, 0, 1]
+    assert asked("翌朝 07:00（shift_end_earliest）より前は聞かない") == [0, 1]
+    assert asked("mode が off なら聞かない") == asked("離席中は聞かない") == asked("休みにした乗務は聞かない") == [0]
+    hint = [a["text"] for a in by_name["乗務の時間帯に PC を 60 分触っていたら一言付く"]["results"][0]["actions"] if a["kind"] == "confirm"]
+    assert JA.CONFIRM_HOME_HINT in hint[0]
+    plain = [a["text"] for a in by_name["55 分なら付かない"]["results"][0]["actions"] if a["kind"] == "confirm"]
+    assert JA.CONFIRM_HOME_HINT not in plain[0]
+    assert by_name["confirm_since が無ければ前日を書き、それより前は聞かない"]["files"]["state.json"]["confirm_since"] == "2026-12-09"
+
+
 TICK_KEYS = (
     "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
     "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",
