@@ -82,11 +82,88 @@ public static class Tick
         }
         store.WriteJson(UsageFile, u);   // 自動起床の判定がこの直後に読む
 
+        var notify = cfg.Section("notify");
+        var speak = JsonX.Truthy(notify["speak"]);
         var actions = new List<TickAction>();
-        var warnings = new List<string>();
-
+        if (active)
+        {
+            var (phase, p) = Planner.Current(cfg, store.ShiftStatus(), now);
+            if (p is not null && NotifyLog.Once(store, $"{p.Day}:{phase}", now, NotifyLog.Every(phase)))
+            {
+                var method = phase is "hard" or "go_last" ? Method(notify, "hard", "popup") : Method(notify, "phase", "toast");
+                actions.Add(new TickAction(method, phase, Title, PhaseText.User(phase, p, now, cfg, m), speak));
+            }
+            if (Usage.DueNag(u, now, cfg) is { } cont)
+            {
+                var what = m[input.Game ? "TICK_NAG_GAME" : "TICK_NAG_PC"];
+                actions.Add(new TickAction(Method(notify, "nag", "toast"), "nag", Title,
+                    m.Format("TICK_NAG", ("what", what), ("dur", TimeUtil.FmtDur(cont, m))), speak));
+            }
+        }
         store.WriteJson(UsageFile, u);
-        return new TickResult(actions, warnings, 0.8, 20);
+
+        var warnings = new List<string>();
+        try
+        {
+            warnings.AddRange(NotifyLog.AttachSounds(cfg, store, m, actions, now));
+        }
+        catch (Exception e)
+        {
+            // 通知音の設定ミスや履歴の書き込み失敗で本線（通知）を止めない
+            warnings = [m.Format("TICK_SOUND_CONFIG_ERROR", ("err", e.Message))];
+            for (var i = 0; i < actions.Count; i++)
+            {
+                actions[i] = actions[i] with { Sound = "" };
+            }
+        }
+        var (volume, maxSeconds) = (DefaultVolume, DefaultMaxSeconds);
+        if (SoundNumbers(notify) is { } numbers)
+        {
+            (volume, maxSeconds) = numbers;
+        }
+        else
+        {
+            warnings.Add(m["TICK_SOUND_NUMBER_ERROR"]);
+        }
+        return new TickResult(actions, warnings, volume, maxSeconds);
+    }
+
+    private const double DefaultVolume = 0.8;
+    private const int DefaultMaxSeconds = 20;
+
+    /// <summary>通知の出し方（notify.phase / hard / nag）．無ければ fallback．文字列でなければその表記（鳴らす側が知らない出し方として扱う）．</summary>
+    private static string Method(JsonObject notify, string key, string fallback) =>
+        notify.TryGetPropertyValue(key, out var v) ? JsonX.Str(v) ?? JsonX.Text(v) : fallback;
+
+    /// <summary>
+    /// 通知音の音量と最長秒数（Python の float(sound_volume), int(sound_max_seconds)）．どちらかが数として読めなければ null
+    /// （呼ぶ側は両方とも既定にして警告する）．
+    /// </summary>
+    private static (double Volume, int MaxSeconds)? SoundNumbers(JsonObject notify)
+    {
+        var volume = notify.TryGetPropertyValue("sound_volume", out var v) ? Usage.PyFloat(v) : DefaultVolume;
+        var seconds = notify.TryGetPropertyValue("sound_max_seconds", out var s) ? PyInt(s) : DefaultMaxSeconds;
+        return volume is { } vol && seconds is { } sec ? (vol, sec) : null;
+    }
+
+    /// <summary>Python の int(v): 数は 0 に向けて切り捨て，文字列は整数の表記だけ．読めなければ null．</summary>
+    private static int? PyInt(JsonNode? v)
+    {
+        switch (v?.GetValueKind())
+        {
+            case System.Text.Json.JsonValueKind.True:
+                return 1;
+            case System.Text.Json.JsonValueKind.False:
+                return 0;
+            case System.Text.Json.JsonValueKind.Number:
+                var d = Math.Truncate(v.GetValue<double>());
+                return double.IsFinite(d) && Math.Abs(d) <= int.MaxValue ? (int)d : null;
+            case System.Text.Json.JsonValueKind.String:
+                return int.TryParse(v.GetValue<string>().Trim(), System.Globalization.NumberStyles.AllowLeadingSign,
+                    System.Globalization.CultureInfo.InvariantCulture, out var n) ? n : null;
+            default:
+                return null;
+        }
     }
 
     /// <summary>

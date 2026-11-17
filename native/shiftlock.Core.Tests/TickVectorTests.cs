@@ -13,6 +13,14 @@ public sealed class TickVectorTests
     [Theory]
     [MemberData(nameof(Cases), "usage")]
     public void Usage(VectorCase c) => TickRunner.RunCase(c);
+
+    [Theory]
+    [MemberData(nameof(Cases), "notify")]
+    public void Notify(VectorCase c) => TickRunner.RunCase(c);
+
+    [Theory]
+    [MemberData(nameof(Cases), "sound")]
+    public void Sound(VectorCase c) => TickRunner.RunCase(c);
 }
 
 /// <summary>tick.json の 1 ケースを通す共通の手順．</summary>
@@ -105,7 +113,11 @@ public static class TickRunner
         {
             return null;
         }
-        var text = File.ReadAllText(path);
+        // ファイルの中に出た一時フォルダのパス（通知音の警告のキーなど）も {DIR} に戻す
+        var text = File.ReadAllText(path)
+            .Replace(folder.Dir.Replace('\\', '/'), Vectors.DirMark)
+            .Replace(folder.Dir.Replace(@"\", @"\\"), Vectors.DirMark)
+            .Replace(folder.Dir, Vectors.DirMark);
         if (name.EndsWith(".json", StringComparison.Ordinal))
         {
             return JsonNode.Parse(text);

@@ -584,6 +584,87 @@ def _tick_usage_rows() -> list:
     ]
 
 
+NOTIFY_WATCH = ("notified.json", "usage-pc.json")
+
+
+def _tick_notify_rows() -> list:
+    """フェーズ通知の間引き（1 回だけ・30 分おき・10 分おき）と声かけ。乗務日は 2026-12-01（火）。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    d = "2026-12-01"
+
+    def at(hm, day=d):
+        return f"{day}T{hm}"
+
+    def run(*hms, idle=30, game=0, day=d):
+        return _tick_steps(*[(at(hm, day), idle, game) for hm in hms], watch=NOTIFY_WATCH)
+
+    def used(start, last, day=d):
+        """start から触り続けている usage-pc.json（声かけまでの時間を縮める）。"""
+        return {"usage-pc.json": {"gaps": [], "start": f"{day}T{start}:00", "last": f"{day}T{last}:00"}}
+
+    okita = {"state.json": _state(d, status="okita", at=at("14:00"))}
+    sat = "2026-12-05"
+    return [
+        ("lastcall は 1 回だけ", b, run("07:20", "07:25", "07:30")),
+        ("soft は 30 分おき", b, run("07:55", "08:00", "08:05", "08:30", "08:35")),
+        ("hard は 10 分おき", b, run("10:30", "10:35", "10:40", "10:45", "10:50")),
+        ("go と go_last は 1 回ずつ", {**b, **okita}, run("15:40", "15:45", "15:50", "16:15", "16:20")),
+        ("離席中は出さない。戻ったら出す", b,
+         _tick_steps((at("08:00"), 1500, 0), (at("08:05"), 30, 0), watch=NOTIFY_WATCH)),
+        ("休みにした乗務には出さない", {**b, "state.json": _state(d, status="yasumi", at=at("06:00"))}, run("08:00", "10:30")),
+        ("notify.hard を toast に", cfg(notify={"hard": "toast"}), run("10:30")),
+        ("notify.phase を popup に・読み上げあり", cfg(notify={"phase": "popup", "speak": True}), run("07:20", "10:30")),
+        ("文に入る時間の表記（7.5 と 5.0）", cfg(sleep_target_hours=7.5, sleep_min_hours=5.0), run("08:30", "11:30")),
+        ("声かけは連続 120 分で 1 回、その 30 分後にもう 1 回", {**b, **used("10:00", "11:50", sat)},
+         run("11:55", "12:00", "12:05", "12:30", "12:35", day=sat)),
+        ("離席から戻ると声かけは数え直し", {**b, **used("10:00", "11:50", sat)},
+         _tick_steps((at("11:55", sat), 30, 0), (at("12:20", sat), 1500, 0), (at("12:25", sat), 20, 0), watch=NOTIFY_WATCH)),
+        ("ゲーム中の声かけ", {**b, **used("10:00", "11:55", sat)}, run("12:00", game=1, day=sat)),
+        ("声かけの間隔を変える（10 分から 5 分おき）", cfg(usage={"nag_after_minutes": 10, "nag_every_minutes": 5}),
+         run("10:00", "10:05", "10:10", "10:15", day=sat)),
+        ("notify.nag を popup に", {**cfg(notify={"nag": "popup"}), **used("10:00", "11:55", sat)}, run("12:00", day=sat)),
+        ("同じ回にフェーズ通知と声かけ", {**b, **used("06:00", "07:55")}, run("08:00")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **used("05:20", "07:15")}, run("07:20", "08:00", "10:30")),
+        ("関西弁: 出発", {**cfg(lang="ja_kansai"), **okita}, run("15:45", "16:15")),
+    ]
+
+
+def _tick_sound_rows() -> list:
+    """通知音の解決（種類 → default → なし）と音量・最長秒数。"""
+    d = "2026-12-01"
+
+    def cfg(**notify):
+        return {"shifts.json": _base(notify=notify, **NO_CONFIRM)}
+
+    def run(*hms):
+        return _tick_steps(*[(f"{d}T{hm}", 30, 0) for hm in hms], watch=("notified.json",))
+
+    two = {"usage-pc.json": {"gaps": [], "start": f"{d}T06:00:00", "last": f"{d}T07:55:00"}}   # 08:00 に soft と声かけが重なる
+    return [
+        ("種類ごとの音", {**cfg(sound={"hard": DIR_MARK + "/hard.wav"}), "hard.wav": True}, run("07:20", "10:30")),
+        ("default だけ", {**cfg(sound={"default": DIR_MARK + "/d.wav"}), "d.wav": True}, run("07:20")),
+        ("種類の音が default より先", {**cfg(sound={"default": DIR_MARK + "/d.wav", "lastcall": DIR_MARK + "/l.wav"}),
+                                "d.wav": True, "l.wav": True}, run("07:20")),
+        ("設定なしは空", cfg(), run("07:20")),
+        ("無いファイルの警告は 1 日 1 回", cfg(sound={"hard": DIR_MARK + "/none.wav"}), run("10:30", "10:40")),
+        ("同じ回に 2 件あれば優先の高い 1 件だけ",
+         {**cfg(sound={"soft": DIR_MARK + "/s.wav", "nag": DIR_MARK + "/n.wav"}), **two, "s.wav": True, "n.wav": True},
+         run("08:00")),
+        ("優先の高いほうのファイルが無ければ次の 1 件",
+         {**cfg(sound={"soft": DIR_MARK + "/none.wav", "nag": DIR_MARK + "/n.wav"}), **two, "n.wav": True}, run("08:00")),
+        ("ドライブでも / でも始まらないパスは確かめずに渡す", cfg(sound={"hard": "  chime.wav "}), run("10:30")),
+        ("音量と最長秒数", cfg(sound_volume=0.5, sound_max_seconds=7), run("07:20")),
+        ("数字の文字列と小数の秒数", cfg(sound_volume="0.3", sound_max_seconds=7.9), run("07:20")),
+        ("sound_volume が数字でなければ 0.8 と警告", cfg(sound_volume="大"), run("07:20")),
+        ("sound_max_seconds が数字でなければ両方とも既定と警告", cfg(sound_volume=0.5, sound_max_seconds="7.5"), run("07:20")),
+        ("sound_volume が null でも既定と警告", cfg(sound_volume=None), run("07:20")),
+        ("sound がリストなら空として扱う", cfg(sound=["a.wav"]), run("07:20")),
+    ]
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -606,6 +687,8 @@ def build_vectors() -> dict:
         },
         "tick.json": {
             "usage": _cases(_tick_usage_rows(), _expect_tick),
+            "notify": _cases(_tick_notify_rows(), _expect_tick),
+            "sound": _cases(_tick_sound_rows(), _expect_tick),
         },
     }
 

@@ -104,6 +104,9 @@ public sealed partial class ShiftConfig
     /// <summary>文面に入れる sleep_min_hours の表記（Python の str()．5 → "5"，5.0 → "5.0"）．</summary>
     public string SleepMinHoursText { get; private set; } = "4";
 
+    /// <summary>文面に入れる sleep_target_hours の表記（Python の str()）．</summary>
+    public string SleepTargetHoursText { get; private set; } = "5";
+
     /// <summary>文面に入れる auto_wake_hours の表記．無い・0 なら SleepMinHoursText．</summary>
     public string AutoWakeHoursText { get; private set; } = "4";
 
@@ -213,6 +216,7 @@ public sealed partial class ShiftConfig
         cfg.SleepTargetHours = cfg.Number(raw, "sleep_target_hours", cfg.SleepTargetHours);
         cfg.SleepMinHours = cfg.Number(raw, "sleep_min_hours", cfg.SleepMinHours);
         cfg.SleepMinHoursText = raw.TryGetPropertyValue("sleep_min_hours", out var minH) ? PyStr(minH) : "4";
+        cfg.SleepTargetHoursText = raw.TryGetPropertyValue("sleep_target_hours", out var targetH) ? PyStr(targetH) : "5";
         cfg.AutoWakeHoursText = raw.TryGetPropertyValue("auto_wake_hours", out var aw) && IsTruthy(aw)
             ? PyStr(aw)
             : cfg.SleepMinHoursText;

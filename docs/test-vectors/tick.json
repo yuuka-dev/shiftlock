@@ -1431,5 +1431,2814 @@
     }
    }
   }
+ ],
+ "notify": [
+  {
+   "name": "lastcall は 1 回だけ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T07:25",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T07:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T07:20:00",
+      "last": "2026-12-01T07:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "soft は 30 分おき",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:55",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T08:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T08:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T08:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと5分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:55:00",
+      "2026-12-01:soft": "2026-12-01T08:30:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T07:55:00",
+      "last": "2026-12-01T08:35:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "hard は 10 分おき",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:hard": "2026-12-01T10:50:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T10:30:00",
+      "last": "2026-12-01T10:50:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "go と go_last は 1 回ずつ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "okita",
+       "at": "2026-12-01T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T15:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T15:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T15:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T16:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T16:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "go",
+        "title": "shiftlock",
+        "text": "出発目安 16:00。そろそろ着替えよう。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "go_last",
+        "title": "shiftlock",
+        "text": "最終出発 16:30（出庫 17:30）。もう出ないと間に合わないよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:go": "2026-12-01T15:45:00",
+      "2026-12-01:go_last": "2026-12-01T16:15:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T15:40:00",
+      "last": "2026-12-01T16:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "離席中は出さない。戻ったら出す",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T08:00",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T08:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:soft": "2026-12-01T08:05:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "gap_start": null,
+      "start": "2026-12-01T08:04:30",
+      "last": "2026-12-01T08:05:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "休みにした乗務には出さない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "yasumi",
+       "at": "2026-12-01T06:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": null,
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T10:30:00",
+      "last": "2026-12-01T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "notify.hard を toast に",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "notify": {
+      "hard": "toast"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:hard": "2026-12-01T10:30:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T10:30:00",
+      "last": "2026-12-01T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "notify.phase を popup に・読み上げあり",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "notify": {
+      "phase": "popup",
+      "speak": true
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00",
+      "2026-12-01:hard": "2026-12-01T10:30:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T10:30:00",
+      "last": "2026-12-01T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "文に入る時間の表記（7.5 と 5.0）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 7.5,
+     "sleep_min_hours": 5.0,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T08:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T11:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:30 を過ぎているよ（目標睡眠 7.5h）。11:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（5.0h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:soft": "2026-12-01T08:30:00",
+      "2026-12-01:hard": "2026-12-01T11:30:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T11:30:00",
+      "last": "2026-12-01T11:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "声かけは連続 120 分で 1 回、その 30 分後にもう 1 回",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-05T10:00:00",
+     "last": "2026-12-05T11:50:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T11:55",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T12:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T12:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T12:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T12:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続2時間0分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続2時間30分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": null,
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T12:35:00",
+      "last_nag": "2026-12-05T12:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "離席から戻ると声かけは数え直し",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-05T10:00:00",
+     "last": "2026-12-05T11:50:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T11:55",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T12:20",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T12:25",
+      "idle": 20,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": null,
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T12:24:40",
+      "last": "2026-12-05T12:25:00",
+      "gap_start": null
+     }
+    }
+   }
+  },
+  {
+   "name": "ゲーム中の声かけ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-05T10:00:00",
+     "last": "2026-12-05T11:55:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T12:00",
+      "idle": 30,
+      "game": 1,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "ゲーム連続2時間0分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": null,
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T12:00:00",
+      "last_nag": "2026-12-05T12:00:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "声かけの間隔を変える（10 分から 5 分おき）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "usage": {
+      "nag_after_minutes": 10,
+      "nag_every_minutes": 5
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:10",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続10分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続15分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": null,
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T10:15:00",
+      "last_nag": "2026-12-05T10:15:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "notify.nag を popup に",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "notify": {
+      "nag": "popup"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-05T10:00:00",
+     "last": "2026-12-05T11:55:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T12:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続2時間0分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": null,
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T12:00:00",
+      "last_nag": "2026-12-05T12:00:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "同じ回にフェーズ通知と声かけ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-01T06:00:00",
+     "last": "2026-12-01T07:55:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続2時間0分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:soft": "2026-12-01T08:00:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T06:00:00",
+      "last": "2026-12-01T08:00:00",
+      "last_nag": "2026-12-01T08:00:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-01T05:20:00",
+     "last": "2026-12-01T07:15:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げんとき。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続2時間0分やで。そろそろやめよ♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 過ぎてるで（目標睡眠 8h）。10:30 からロックかかるで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったで。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝てたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00",
+      "2026-12-01:soft": "2026-12-01T08:00:00",
+      "2026-12-01:hard": "2026-12-01T10:30:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T10:30:00",
+      "last": "2026-12-01T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "関西弁: 出発",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-01": {
+       "status": "okita",
+       "at": "2026-12-01T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T15:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T16:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json",
+     "usage-pc.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "go",
+        "title": "shiftlock",
+        "text": "出発目安 16:00。そろそろ着替えよか。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "go_last",
+        "title": "shiftlock",
+        "text": "最終出発 16:30（出庫 17:30）。もう出な間に合わへんで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:go": "2026-12-01T15:45:00",
+      "2026-12-01:go_last": "2026-12-01T16:15:00"
+     },
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-01T15:45:00",
+      "last": "2026-12-01T16:15:00"
+     }
+    }
+   }
+  }
+ ],
+ "sound": [
+  {
+   "name": "種類ごとの音",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": {
+       "hard": "{DIR}/hard.wav"
+      }
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "hard.wav": true
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": "{DIR}/hard.wav"
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00",
+      "2026-12-01:hard": "2026-12-01T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "default だけ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": {
+       "default": "{DIR}/d.wav"
+      }
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "d.wav": true
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": "{DIR}/d.wav"
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "種類の音が default より先",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": {
+       "default": "{DIR}/d.wav",
+       "lastcall": "{DIR}/l.wav"
+      }
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "d.wav": true,
+    "l.wav": true
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": "{DIR}/l.wav"
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "設定なしは空",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {},
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "無いファイルの警告は 1 日 1 回",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": {
+       "hard": "{DIR}/none.wav"
+      }
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-01T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [
+       "通知音のファイルが見つからない: {DIR}/none.wav"
+      ],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:hard": "2026-12-01T10:40:00",
+      "2026-12-01:warn:sound:{DIR}/none.wav": "2026-12-01T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "同じ回に 2 件あれば優先の高い 1 件だけ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": {
+       "soft": "{DIR}/s.wav",
+       "nag": "{DIR}/n.wav"
+      }
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-01T06:00:00",
+     "last": "2026-12-01T07:55:00"
+    },
+    "s.wav": true,
+    "n.wav": true
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": "{DIR}/s.wav"
+       },
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続2時間0分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:soft": "2026-12-01T08:00:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "優先の高いほうのファイルが無ければ次の 1 件",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": {
+       "soft": "{DIR}/none.wav",
+       "nag": "{DIR}/n.wav"
+      }
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [],
+     "start": "2026-12-01T06:00:00",
+     "last": "2026-12-01T07:55:00"
+    },
+    "n.wav": true
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "toast",
+        "kind": "nag",
+        "title": "shiftlock",
+        "text": "PC連続2時間0分だよ。そろそろやめよう♡",
+        "speak": false,
+        "sound": "{DIR}/n.wav"
+       }
+      ],
+      "warnings": [
+       "通知音のファイルが見つからない: {DIR}/none.wav"
+      ],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:soft": "2026-12-01T08:00:00",
+      "2026-12-01:warn:sound:{DIR}/none.wav": "2026-12-01T08:00:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "ドライブでも / でも始まらないパスは確かめずに渡す",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": {
+       "hard": "  chime.wav "
+      }
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": "chime.wav"
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:hard": "2026-12-01T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "音量と最長秒数",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound_volume": 0.5,
+      "sound_max_seconds": 7
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.5,
+       "max_seconds": 7
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "数字の文字列と小数の秒数",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound_volume": "0.3",
+      "sound_max_seconds": 7.9
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.3,
+       "max_seconds": 7
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "sound_volume が数字でなければ 0.8 と警告",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound_volume": "大"
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [
+       "notify.sound_volume / sound_max_seconds が数字ではない"
+      ],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "sound_max_seconds が数字でなければ両方とも既定と警告",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound_volume": 0.5,
+      "sound_max_seconds": "7.5"
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [
+       "notify.sound_volume / sound_max_seconds が数字ではない"
+      ],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "sound_volume が null でも既定と警告",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound_volume": null
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [
+       "notify.sound_volume / sound_max_seconds が数字ではない"
+      ],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "sound がリストなら空として扱う",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "notify": {
+      "sound": [
+       "a.wav"
+      ]
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-01T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "notified.json": {
+      "2026-12-01:lastcall": "2026-12-01T07:20:00"
+     }
+    }
+   }
+  }
  ]
 }

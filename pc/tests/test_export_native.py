@@ -211,6 +211,36 @@ def test_tick_usage_vectors_have_no_actions():
         assert c["expect"]["files"]["usage-pc.json"] is not None, c["name"]
 
 
+def _tick_kinds(section: str) -> list:
+    return [[a["kind"] for r in c["expect"]["results"] for a in r["actions"]] for c in ex.build_vectors()["tick.json"][section]]
+
+
+def test_tick_notify_vectors_cover_phases_and_nag():
+    """節 notify はフェーズ通知 5 種と声かけだけ（自動起きた・確認・強制が混ざらない）。間引きの回数も見る"""
+    kinds = _tick_kinds("notify")
+    assert {k for ks in kinds for k in ks} == {"lastcall", "soft", "hard", "go", "go_last", "nag"}
+    by_name = {c["name"]: ks for c, ks in zip(ex.build_vectors()["tick.json"]["notify"], kinds)}
+    assert by_name["lastcall は 1 回だけ"] == ["lastcall"]
+    assert by_name["soft は 30 分おき"] == ["lastcall", "soft", "soft"]
+    assert by_name["hard は 10 分おき"] == ["hard", "hard", "hard"]
+    assert by_name["go と go_last は 1 回ずつ"] == ["go", "go_last"]
+    assert by_name["声かけは連続 120 分で 1 回、その 30 分後にもう 1 回"] == ["nag", "nag"]
+    assert by_name["離席から戻ると声かけは数え直し"] == []
+    assert by_name["同じ回にフェーズ通知と声かけ"] == ["soft", "nag"]
+
+
+def test_tick_sound_vectors():
+    """節 sound: 鳴らすのは 1 件、無いファイルの警告は 1 日 1 回、数字でない音量は既定と警告"""
+    cases = {c["name"]: c["expect"]["results"] for c in ex.build_vectors()["tick.json"]["sound"]}
+    assert [a["sound"] for a in cases["種類ごとの音"][1]["actions"]] == ["{DIR}/hard.wav"]
+    assert [a["sound"] for a in cases["同じ回に 2 件あれば優先の高い 1 件だけ"][0]["actions"]] == ["{DIR}/s.wav", ""]
+    assert [a["sound"] for a in cases["優先の高いほうのファイルが無ければ次の 1 件"][0]["actions"]] == ["", "{DIR}/n.wav"]
+    assert [len(r["warnings"]) for r in cases["無いファイルの警告は 1 日 1 回"]] == [1, 0]
+    assert cases["sound_volume が数字でなければ 0.8 と警告"][0]["sound"] == {"volume": 0.8, "max_seconds": 20}
+    assert cases["sound_volume が数字でなければ 0.8 と警告"][0]["warnings"] == [JA.TICK_SOUND_NUMBER_ERROR]
+    assert cases["音量と最長秒数"][0]["sound"] == {"volume": 0.5, "max_seconds": 7}
+
+
 TICK_KEYS = (
     "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
     "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",
