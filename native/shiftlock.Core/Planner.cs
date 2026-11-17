@@ -201,4 +201,8 @@ public static class Planner
         }
         return t - need;
     }
+
+    /// <summary>直近 lookbackDays 日で，出庫最終がもう過ぎた最後の乗務（plan.last_past_plan）．無ければ null．</summary>
+    public static Plan? LastPastPlan(ShiftConfig cfg, DateTime now, int lookbackDays) =>
+        Plans(cfg, DateOnly.FromDateTime(now), back: lookbackDays, fwd: 0).LastOrDefault(p => p.StartLatest <= now);
 }

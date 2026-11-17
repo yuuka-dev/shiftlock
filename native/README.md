@@ -8,7 +8,7 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 |---|---|---|
 | `shiftlock.Core` | ロジック層（逆算・フェーズ・意図判定・睡眠推定・レポート生成・設定の読み書き）．Windows API を呼ばない | v12-α |
 | `shl` | CLI（`shl.exe`，NativeAOT）．Claude Code hook・コマンド・ダブルクリック用 | v12-α |
-| `shiftlock.Core.Tests` | Core のテスト．`docs/test-vectors/*.json` を読んで Python 版と同じ結果になることを確かめる | v12-α |
+| `shiftlock.Core.Tests` | Core のテスト．`docs/test-vectors/*.json` を読んで Python 版と同じ結果になることを確かめる（`pc/tools/export_native.py` が作るケース別のベクタと，`pc/tools/make_test_vectors.py` が作る逆算・フェーズのシナリオ `plan-scenarios.json`） | v12-α |
 | `shiftlock.Agent` | トレイ常駐（見張り・通知・強制・同期）．まだ無い | v12-β |
 | `shiftlock.App` | ウィンドウ（WinUI 3，非パッケージ）．実行ファイル名は `shiftlock.exe`．同時に動くのは 1 つだけ．いまの状態・記録のボタン 4 つ（寝る・起きた・行ってきます・帰ってきた）・取り消す・14 日の予定 | 区切り 1 |
 

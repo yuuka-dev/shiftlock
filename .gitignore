@@ -31,6 +31,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 
+# ---- .NET（native/） ----
+native/**/bin/
+native/**/obj/
+
 # ---- Android / KMP（app/ を作ったとき用） ----
 app/**/build/
 app/.gradle/

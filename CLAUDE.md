@@ -21,7 +21,7 @@
 - WSL で `source .venv/bin/activate && cd pc && python3 -m pytest -q tests`（全部通してからコミット）。`.venv` はリポジトリ直下に WSL 側で作った仮想環境（`python3 -m venv .venv && .venv/bin/pip install pytest`）。システムの python3 には入れない
 - 時刻は全部ローカル時刻（JST）、テストでは `now` を引数で渡す
 - C#（`native/`）は Windows 側で `dotnet test native`。Python 版と同じ結果になることを `docs/test-vectors/*.json` で確かめている
-- Python 版の判断や、ネイティブ版が使う文面（`pc/tools/export_native.py` の対象のキー）を変えたら `python3 pc/tools/export_native.py` で文面とテストベクタを書き出し直し、一緒にコミットする（ずれは pytest が落ちて知らせる）
+- Python 版の判断や、ネイティブ版が使う文面（`pc/tools/export_native.py` の対象のキー）を変えたら `python3 pc/tools/export_native.py` と `python3 pc/tools/make_test_vectors.py`（逆算・フェーズのシナリオ `plan-scenarios.json`）で文面とテストベクタを書き出し直し、一緒にコミットする（ずれは pytest が落ちて知らせる）
 - ネイティブ版の画面を動かして確かめるときは、環境変数 `SHIFTLOCK_DIR` を合成データか本番のコピーのフォルダに向ける。本番の実行フォルダに向けて動かさない
 
 ## 文体
