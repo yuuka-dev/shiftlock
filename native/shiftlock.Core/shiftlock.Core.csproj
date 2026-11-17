@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Shiftlock.Core</RootNamespace>
+    <!-- shl.exe（NativeAOT）から使うので、AOT で動かない書き方を警告にする -->
+    <IsAotCompatible>true</IsAotCompatible>
+  </PropertyGroup>
+
+</Project>
