@@ -1,11 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- Core のテスト．docs/test-vectors/*.json を読んで Python 版と同じ結果になることを確かめる場所（docs/native-app-plan.md 4.3）． -->
   <PropertyGroup>
     <RootNamespace>Shiftlock.Core.Tests</RootNamespace>
+    <AssemblyName>Shiftlock.Core.Tests</AssemblyName>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
@@ -13,6 +16,11 @@
 
   <ItemGroup>
     <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- テストベクタ（Python 版から書き出したもの）を出力の vectors/ へ写す -->
+  <ItemGroup>
+    <Content Include="..\..\docs\test-vectors\*.json" Link="vectors\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

@@ -553,3 +553,36 @@ CLI_LEARNED_SHORT = "短すぎるよ（2文字以上）"
 CLI_INSTALL_DONE = "hook 本体: {dest}\nsettings : {settings}（最初の状態は .bak-shiftlock に退避）"
 CLI_INSTALL_WIN = "Windows  : {win}（Git Bash から wsl.exe 経由で同じ本体を呼ぶ）"
 CLI_INSTALL_RESTART = "Claude Code を再起動して /hooks で UserPromptSubmit と Stop に入っているか確認してね"
+
+# ---- ネイティブ版（native/）の画面 ----
+# Python 側では使わない。pc/tools/export_native.py が native/shared/messages.<lang>.json に書き出し、C# が読む
+APP_PHASE = {"free": "いまは自由時間", "lastcall": "就寝準備の時間", "soft": "就寝目安を過ぎているよ",
+             "hard": "最低ラインを過ぎているよ", "go": "そろそろ出発", "go_last": "出発の最終が近いよ"}
+APP_COUNTDOWN = {"lastcall": "就寝目安まで あと {remain}", "soft": "最低ラインまで あと {remain}",
+                 "hard": "出発の最終まで あと {remain}", "go": "出発目安まで あと {remain}",
+                 "go_late": "出発の最終まで あと {remain}", "go_last": "出庫の最終まで あと {remain}"}
+APP_NEXT_SHIFT = "次の乗務  {day}"
+APP_NO_SHIFT = "14 日以内に乗務はないよ"
+APP_TIMES_SLEEP = "就寝準備 {lastcall} → 就寝目安 {soft} → 最低ライン {hard}"
+APP_TIMES_DEPART = "出発 {target}（遅くとも {latest}）"
+APP_TIMES_START = "出庫 {target}（遅くとも {latest}）"
+APP_RECORD = "記録: {text}"
+APP_RECORD_NONE = "まだなし"
+APP_RECORD_STATUS = {"okita": "起きた", "worked": "出発済み", "yasumi": "休み"}
+APP_RECORD_SLEEP_AT = "{when} 就寝"
+APP_RECORD_KITAKU = "{when} 帰宅"
+APP_RECORD_SEP = " / "
+APP_BTN_NERU = "寝る"
+APP_BTN_OKITA = "起きた"
+APP_BTN_SHUPPATSU = "行ってきます"
+APP_BTN_KITAKU = "帰ってきた"
+APP_BTN_UNDO = "取り消す"
+APP_SCHEDULE = "予定"
+APP_DAY_WORK = "乗務"
+APP_DAY_OFF = "休み"
+APP_NO_CONFIG = "まだ設定がないよ（{path} が見つからない）。"
+APP_BAD_CONFIG = "設定が読めないよ: {err}"
+APP_CONFIG_BAD_JSON = "JSON の書き方がおかしいよ（{err}）"
+APP_CONFIG_BAD_VALUE = "{key} の書き方がおかしいよ: {value}"
+APP_STATE_BUSY = "いま記録のファイルを読み書きできなかったよ。もう一度押してね。"
+APP_LOG_BUSY = "（履歴の events.log には書けなかったよ。記録そのものは残っているから、押し直さなくていいよ。）"

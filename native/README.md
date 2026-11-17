@@ -1,32 +1,58 @@
-# native/（Windows ネイティブ版・v12-α 作業中）
+# native/ — ネイティブ版（C# / .NET 10）
 
-C# / .NET 10。計画は [../docs/native-app-plan.md](../docs/native-app-plan.md)（§4.2 構成、§8 段階計画）。
-Python 版（[../pc/](../pc/)）が今の本番で、こっちはまだどこからも使われていない。
+PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作り直す場所．計画と構成は [docs/native-app-plan.md](../docs/native-app-plan.md)，仕様は [docs/pc-spec.md](../docs/pc-spec.md) を正とする．
 
-## いま入っているもの
+## 構成
 
-| プロジェクト | 中身 |
-|---|---|
-| `shiftlock.Core` | 依存なしのクラスライブラリ（Windows API を呼ばない。NativeAOT 対応の書き方に限る）。`Planner`（乗務日・時刻の逆算・フェーズ判定 = Python 版 `plan.py`）、`PlanConfig`（その計算に使う設定の読み込み）、`TimeUtil` |
-| `shiftlock.Core.Tests` | xunit。[../docs/test-vectors/](../docs/test-vectors/) を読んで Python 版と同じ結果になるか確かめる |
+| プロジェクト | 役割 | 段階 |
+|---|---|---|
+| `shiftlock.Core` | ロジック層（逆算・フェーズ・意図判定・睡眠推定・レポート生成・設定の読み書き）．Windows API を呼ばない | v12-α |
+| `shl` | CLI（`shl.exe`，NativeAOT）．Claude Code hook・コマンド・ダブルクリック用 | v12-α |
+| `shiftlock.Core.Tests` | Core のテスト．`docs/test-vectors/*.json` を読んで Python 版と同じ結果になることを確かめる（`pc/tools/export_native.py` が作るケース別のベクタと，`pc/tools/make_test_vectors.py` が作る逆算・フェーズのシナリオ `plan-scenarios.json`） | v12-α |
+| `shiftlock.Agent` | トレイ常駐（見張り・通知・強制・同期）．まだ無い | v12-β |
+| `shiftlock.App` | ウィンドウ（WinUI 3，非パッケージ）．実行ファイル名は `shiftlock.exe`．同時に動くのは 1 つだけ．いまの状態・記録のボタン 4 つ（寝る・起きた・行ってきます・帰ってきた）・取り消す・14 日の予定 | 区切り 1 |
 
-まだ無いもの: 設定・状態ファイルの読み書き（`config.merged_days`・`store`）、意図判定、睡眠推定、レポート、`shl.exe`、Agent、App。
+- フォルダ名・ソリューション名は計画書どおり小文字（`shiftlock.Core`），名前空間とアセンブリ名は C# の慣習で `Shiftlock.Core`．`shl` の名前空間は `Shiftlock.Cli`，実行ファイル名は `shl.exe`．`shiftlock.App` の名前空間は `Shiftlock.App`，実行ファイル名は `shiftlock.exe`．
+- 共通設定（`net10.0`・Nullable・警告をエラー扱い）は `Directory.Build.props`．
+- データは Python 版と同じ `%USERPROFILE%\shift-lock`，形式は [docs/data-format.md](../docs/data-format.md)．`shiftlock.App` は環境変数 `SHIFTLOCK_DIR` があればそのフォルダを使う（本番のコピーで確かめるとき用）．
+- `shiftlock.App` は `dotnet new winui`（`--packaging Unpackaged -tpmv 10.0.17763.0 -tfm net10.0`）で作って直したもの．パッケージの版はテンプレートが固定したまま: `Microsoft.WindowsAppSDK` 2.6.5，`Microsoft.Windows.SDK.BuildTools` 10.0.28000.2957，`Microsoft.Windows.SDK.BuildTools.MSIX` 1.7.261102100．ターゲットは `net10.0-windows10.0.26100.0`（最低 10.0.17763.0）．
 
-## テスト
+## 今できること
 
-```bash
-cd native && dotnet test
+`shiftlock.exe`（`shiftlock.App`）: いまの状態を見て，ボタンで記録するウィンドウ．見張り・通知・設定の変更・レポート・Claude Code の hook は Python 版（`pc/`）のまま動かす（同じフォルダを同じ形式で読み書きするので並べて使える）．
+
+![状態と記録の画面（合成データ）](./SampleImage/status-window.png)
+
+- 表示: 現在時刻，フェーズと次の節目までの残り時間，次の乗務の時刻（就寝準備・就寝目安・最低ライン・出発・出庫）と記録，今日から 14 日の予定．
+- ボタン: 寝る・起きた・行ってきます・帰ってきた．判断と返事は Python 版と同じ（`docs/test-vectors/*.json` で確かめている）．`events.log` の出所は `app`．
+- 取り消す: このアプリが最後に書いた記録を 60 分以内なら戻せる．Python 版の「今のなし」でも戻せる．
+- 毎分と，`shifts.json`・`state.json`・`days.json`・`calendar.json`・`STOP.txt` が変わったときに読み直す．
+- 言葉づかいは `shifts.json` の `lang`（`ja`／`ja_kansai`）．無い・知らない値のときは標準語（Python 版の既定は関西弁）．
+- `shifts.json` が無い・読めないときは知らせるだけ（設定の作成・変更はまだ Python 版の設定メニューで行う）．
+- 強制モードの宣言・解除・設定は画面に置かない．
+
+## 前提
+
+- .NET 10 SDK
+- `shiftlock.App` を作り直すときだけ: `dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates`（ビルドには不要）
+- Visual Studio 2026 の「C++ によるデスクトップ開発」ワークロード（`shl` の NativeAOT 発行でリンカ `link.exe` が要る．ビルドとテストだけなら不要）
+
+## コマンド
+
+```powershell
+cd native
+dotnet build
+dotnet test
+dotnet publish shl -c Release    # → shl\bin\Release\net10.0\win-x64\publish\shl.exe
+
+# ウィンドウを起動する（本番のフォルダに向けて試さない．コピーか空のフォルダを SHIFTLOCK_DIR に入れる）
+$env:SHIFTLOCK_DIR = "<確認用のフォルダ>"
+dotnet build shiftlock.App -r win-x64
+.\shiftlock.App\bin\Debug\net10.0-windows10.0.26100.0\win-x64\shiftlock.exe
 ```
 
-.NET 10 SDK が要る（Ubuntu 24.04 / WSL なら `sudo apt-get install -y dotnet-sdk-10.0`）。Linux でも Windows でも同じに通る。
+### 発行時の注意
 
-## Python 版との一致の確かめ方
-
-- `docs/test-vectors/*.json` は `pc/tools/make_test_vectors.py` が Python 版から作る（手で直さない）。形はそのスクリプトの先頭に書いてある。
-- Python 版のロジックを変えたら `cd pc && ../.venv/bin/python tools/make_test_vectors.py` で作り直す。古いままだと `pc/tests/test_vectors.py` が落ちる。
-- 作り直したベクタで `dotnet test` が落ちたら、C# 側を Python 版に合わせて直す（Python 版が「正」）。
-
-## 移植で Python 版と違うところ
-
-- 設定の値が `null`（例: `"start_target": null`）のとき、Python 版は落ちるが、こっちは「書いていない」と同じ扱い（既定値）。
-- `no_sleep` の `from` / `to` が無いと `FormatException`（Python 版は `KeyError`）。
+- コマンドラインから `dotnet publish` するときは，PATH に `C:\Program Files (x86)\Microsoft Visual Studio\Installer` を足しておく．VS の `VsDevCmd.bat` が `vswhere.exe` をパス無しで呼び，見つからないときのエラー文が NativeAOT のリンカ探索の出力に混ざってリンクが失敗する．Visual Studio から発行する場合は不要．
+- `shl.csproj` の `KnownILCompilerPack` は，SDK 10.0.401 が暗黙参照する ILCompiler 10.0.12 の脆弱性警告（NU1903）を避けるための上書き．SDK を更新したら外してよい．
+- hook（UserPromptSubmit）から呼ばれる `shl.exe` は失敗時に exit 2 を返してはいけない（プロンプトが消える）．

@@ -20,7 +20,7 @@ def test_vectors_are_fresh():
 
 
 def test_plan_vectors_cover_every_phase():
-    doc = json.loads(V.render()["plan.json"])
+    doc = json.loads(V.render()["plan-scenarios.json"])
     seen = {cur[0] for sc in doc["scenarios"] for m in sc["moments"] for cur in m["current"].values()}
     assert seen == {"free", "lastcall", "soft", "hard", "go", "go_last"}
     assert any(m["target"] is None for sc in doc["scenarios"] for m in sc["moments"])

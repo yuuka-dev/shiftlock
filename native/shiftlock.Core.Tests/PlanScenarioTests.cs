@@ -4,18 +4,30 @@ using System.Text.Json.Nodes;
 namespace Shiftlock.Core.Tests;
 
 /// <summary>
-/// docs/test-vectors/plan.json（Python 版が作った「正」）と同じ結果になるか。
-/// ベクタの形は pc/tools/make_test_vectors.py の先頭に書いてある。
+/// docs/test-vectors/plan-scenarios.json（Python 版が作った「正」．境目の時刻を細かく刻んだシナリオ）と同じ結果になること．
+/// ベクタの形は pc/tools/make_test_vectors.py の先頭に書いてある．
+/// 設定は config を shifts.json，days（例外日をまとめたもの）を days.json として置いて ShiftConfig.Load で読む．
 /// </summary>
-public class PlanVectorTests
+public sealed class PlanScenarioTests
 {
-    private static readonly JsonNode Doc = Vectors.Load("plan.json");
+    private static readonly JsonNode Doc =
+        JsonNode.Parse(File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "vectors", "plan-scenarios.json")))!;
 
     public static IEnumerable<object[]> ScenarioNames() =>
         Doc["scenarios"]!.AsArray().Select(s => new object[] { s!["name"]!.GetValue<string>() });
 
     private static JsonNode Scenario(string name) =>
         Doc["scenarios"]!.AsArray().Single(s => s!["name"]!.GetValue<string>() == name)!;
+
+    private static (TempFolder Folder, ShiftConfig Cfg) Load(JsonNode scenario)
+    {
+        var folder = Vectors.Materialize(new JsonObject
+        {
+            ["shifts.json"] = scenario["config"]!.DeepClone(),
+            ["days.json"] = scenario["days"]!.DeepClone(),
+        });
+        return (folder, ShiftConfig.Load(folder.ShiftsJson));
+    }
 
     private static string Iso(DateTime dt) => dt.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
 
@@ -31,7 +43,8 @@ public class PlanVectorTests
     public void WorkdaysAndPlansMatchPython(string name)
     {
         var sc = Scenario(name);
-        var cfg = PlanConfig.FromJson(sc["config"], sc["days"]);
+        var (folder, cfg) = Load(sc);
+        using var _ = folder;
         var rows = sc["plans"]!.AsArray();
         Assert.NotEmpty(rows);
         foreach (var row in rows)
@@ -40,7 +53,9 @@ public class PlanVectorTests
             var d = DateOnly.ParseExact(date, "yyyy-MM-dd", CultureInfo.InvariantCulture);
             Assert.True(row["workday"]!.GetValue<bool>() == Planner.IsWorkday(cfg, d), $"{name} {date} workday");
             if (row["plan"] is not JsonObject want)
+            {
                 continue;
+            }
             var p = Planner.MakePlan(cfg, d);
             var got = new Dictionary<string, string>
             {
@@ -55,7 +70,9 @@ public class PlanVectorTests
             };
             Assert.Equal(got.Count, want.Count);
             foreach (var (k, v) in want)
+            {
                 Assert.True(v!.GetValue<string>() == got[k], $"{name} {date} {k}: want {v} got {got[k]}");
+            }
         }
     }
 
@@ -64,7 +81,8 @@ public class PlanVectorTests
     public void PhasesAndTargetsMatchPython(string name)
     {
         var sc = Scenario(name);
-        var cfg = PlanConfig.FromJson(sc["config"], sc["days"]);
+        var (folder, cfg) = Load(sc);
+        using var _ = folder;
         var lookback = Doc["lookback_days"]!.GetValue<int>();
         var moments = sc["moments"]!.AsArray();
         Assert.NotEmpty(moments);
@@ -75,11 +93,13 @@ public class PlanVectorTests
             foreach (var (st, want) in m["current"]!.AsObject())
             {
                 // ベクタの決まり: その状態を前後 3 日の全部に入れて判定する（"" は記録なし）
-                var status = new Dictionary<string, string>();
+                var status = new JsonObject();
                 if (st != "")
                 {
                     for (var i = -3; i <= 3; i++)
-                        status[TimeUtil.Iso(DateOnly.FromDateTime(now).AddDays(i))] = st;
+                    {
+                        status[Planner.DayKey(DateOnly.FromDateTime(now).AddDays(i))] = new JsonObject { ["status"] = st };
+                    }
                 }
                 var (phase, plan) = Planner.Current(cfg, status, now);
                 var w = want!.AsArray();
@@ -91,20 +111,5 @@ public class PlanVectorTests
             var last = Planner.LastPastPlan(cfg, now, lookback)?.Day;
             Assert.True(m["last_past"]?.GetValue<string>() == last, $"{name} {nowText} last_past: got {last}");
         }
-    }
-}
-
-internal static class Vectors
-{
-    /// <summary>リポジトリの docs/test-vectors/ を、テストの出力フォルダから上にたどって探す。</summary>
-    public static JsonNode Load(string name)
-    {
-        for (var dir = new DirectoryInfo(AppContext.BaseDirectory); dir is not null; dir = dir.Parent)
-        {
-            var path = Path.Combine(dir.FullName, "docs", "test-vectors", name);
-            if (File.Exists(path))
-                return JsonNode.Parse(File.ReadAllText(path))!;
-        }
-        throw new FileNotFoundException($"docs/test-vectors/{name} が見つからない");
     }
 }

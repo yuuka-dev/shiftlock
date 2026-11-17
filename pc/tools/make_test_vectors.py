@@ -8,7 +8,7 @@
     cd pc && ../.venv/bin/python tools/make_test_vectors.py --check  # 今のファイルと同じか確かめるだけ（違えば exit 1）
 pc/tests/test_vectors.py が --check と同じことをするので、ロジックを変えたら作り直してコミットする。
 
-plan.json の形:
+plan-scenarios.json の形:
     scenarios[] = {
       name, about,
       config   shifts.json に書く内容（書いていないキーは既定値。既定値も移植の対象）
@@ -165,7 +165,7 @@ def _dump(doc: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-FILES = {"plan.json": build_plan}
+FILES = {"plan-scenarios.json": build_plan}
 
 
 def render() -> dict[str, str]:
