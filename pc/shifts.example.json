@@ -1,0 +1,87 @@
+{
+  "lang": "ja_kansai",
+  "work_weekdays": [
+    "mon",
+    "tue",
+    "wed",
+    "thu",
+    "fri",
+    "sat"
+  ],
+  "start_target": "20:00",
+  "start_latest": "22:30",
+  "prep_minutes": 90,
+  "sleep_target_hours": 5,
+  "sleep_min_hours": 4,
+  "lastcall_minutes": 40,
+  "block_claude_on_hard": true,
+  "no_sleep": [
+    {
+      "weekday": "tue",
+      "from": "10:00",
+      "to": "11:00",
+      "label": "訪問看護"
+    },
+    {
+      "weekday": "thu",
+      "from": "10:00",
+      "to": "11:00",
+      "label": "ヘルパー"
+    }
+  ],
+  "usage": {
+    "nag_after_minutes": 120,
+    "nag_every_minutes": 30,
+    "idle_reset_minutes": 20,
+    "game_idle_minutes": 180
+  },
+  "notify": {
+    "phase": "toast",
+    "hard": "popup",
+    "nag": "toast",
+    "speak": false,
+    "sound": {
+      "default": "",
+      "hard": ""
+    },
+    "sound_volume": 0.8,
+    "sound_max_seconds": 20
+  },
+  "game_processes": [
+    "EliteDangerous64",
+    "KSP_x64",
+    "Anno1800"
+  ],
+  "mood_file": "C:\\Users\\<名前>\\iCloudDrive\\iCloud~is~workflow~my~workflows\\mood.csv",
+  "shift_end_earliest": "07:00",
+  "calendar": {
+    "sources": [],
+    "off_keywords": [
+      "休み",
+      "公休",
+      "有給"
+    ],
+    "work_keywords": [
+      "出勤"
+    ],
+    "sync_minutes": 60
+  },
+  "retention": {
+    "days_keep": 60,
+    "log_keep_days": 180,
+    "events_keep_days": 365
+  },
+  "absence": {
+    "window_shifts": 24,
+    "warn_at": 5
+  },
+  "enforce": {
+    "action": "lock",
+    "duration_hours": 2,
+    "grace_minutes": 15,
+    "relock_minutes": 5,
+    "max_runs": 6,
+    "boot_grace_minutes": 15,
+    "skip_if_remote": true
+  }
+}

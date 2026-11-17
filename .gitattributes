@@ -1,0 +1,13 @@
+# 既定は LF
+* text=auto eol=lf
+
+# Windows で動かすスクリプトは CRLF（cmd は LF だと誤動作する。ps1 は 5.1 用に BOM 付き UTF-8 で保存してある）
+*.cmd text eol=crlf
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# バイナリ
+*.png binary
+*.jpg binary
+*.pdf binary
+*.jar binary

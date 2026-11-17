@@ -1,0 +1,49 @@
+# ---- 個人データ・秘密（絶対にコミットせえへん） ----
+# 実行フォルダ（%USERPROFILE%\shift-lock）はリポジトリの外やけど、うっかり pc/ で動かしたとき用
+pc/shifts.json
+pc/days.json
+pc/state.json
+pc/calendar.json
+pc/learned.json
+pc/maintenance.json
+pc/notified.json
+pc/usage-*.json
+pc/events.log
+pc/guard.log
+pc/game-scan.txt
+pc/report.html
+pc/reports/
+pc/log/
+*.bak-shiftlock
+mood.csv
+
+# ---- 公開しないもの ----
+# 淫夢語録の文面（他者由来の語録なので配らない。手元にだけ置く）
+pc/shiftlock/i18n/inm.py
+# Claude Code の出力（.claude/ は下の「Claude Code」の節で除外済み）
+Claude outputs/
+
+# ---- Python ----
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# ---- Android / KMP（app/ を作ったとき用） ----
+app/**/build/
+app/.gradle/
+app/.kotlin/
+app/local.properties
+app/**/*.keystore
+app/**/*.jks
+app/**/google-services.json
+.idea/
+*.iml
+
+# ---- OS ----
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ---- Claude Code ----
+.claude/
