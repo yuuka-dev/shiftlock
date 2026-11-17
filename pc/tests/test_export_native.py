@@ -147,3 +147,32 @@ def test_vectors_do_not_change_lang():
     before = M.LANG
     ex.build_vectors()
     assert M.LANG == before
+
+
+def test_record_vectors_use_app_as_source():
+    """記録のベクタは出所 app で書く（Python 版の claude / phone が混ざらない）。断ったステップは events.log を増やさない"""
+    cases = ex.build_vectors()["records.json"]["steps"]
+    assert len(cases) >= 21
+    for c in cases:
+        assert not any("claude" in line or "phone" in line for line in c["expect"]["events"]), c["name"]
+        assert len(c["expect"]["results"]) == len(c["input"]["steps"]), c["name"]
+        assert sum(r["recorded"] for r in c["expect"]["results"]) == len(c["expect"]["events"]), c["name"]
+        assert not any(r["message"].startswith(M.PREFIX) for r in c["expect"]["results"]), c["name"]
+
+
+def test_do_kitaku_and_neru_default_source_is_claude(tmp_path):
+    """via を足しても、既定（hook・CLI）の出所は claude のまま"""
+    import shiftlock as sl
+    from datetime import datetime
+    (tmp_path / "shifts.json").write_text(json.dumps(ex.BASE), encoding="utf-8")
+    before = M.LANG
+    try:
+        cfg, store = sl.load_config(tmp_path / "shifts.json"), sl.Store(tmp_path / "shifts.json")
+        now = datetime(2026, 12, 1, 8, 10)
+        p = sl.target_plan(cfg, now)
+        sl.do_neru(cfg, store, now, p)
+        sl.do_kitaku(cfg, store, now, p)
+        lines = (tmp_path / "events.log").read_text(encoding="utf-8").splitlines()
+        assert [ln.split("\t")[3] for ln in lines] == ["claude 2026-12-01T08:10", "claude 2026-12-01T08:10"]
+    finally:
+        M.set_lang(before)

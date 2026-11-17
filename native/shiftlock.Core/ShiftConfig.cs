@@ -413,15 +413,7 @@ public sealed partial class ShiftConfig
 
     // ---- Python の表記 ----
 
-    private static bool IsTruthy(JsonNode? v) => v?.GetValueKind() switch
-    {
-        null or JsonValueKind.False => false,
-        JsonValueKind.Number => v.GetValue<double>() != 0,
-        JsonValueKind.String => v.GetValue<string>().Length > 0,
-        JsonValueKind.Array => ((JsonArray)v).Count > 0,
-        JsonValueKind.Object => ((JsonObject)v).Count > 0,
-        _ => true,
-    };
+    private static bool IsTruthy(JsonNode? v) => JsonX.Truthy(v);
 
     /// <summary>Python の str(値)．文字列はそのまま，それ以外は repr と同じ．</summary>
     private static string PyStr(JsonNode? v) => JsonX.Str(v) ?? PyRepr(v);
@@ -502,6 +494,17 @@ internal static class JsonX
     /// <summary>文字列ならその値，それ以外（無い・null・数など）は null．</summary>
     public static string? Str(JsonNode? n) =>
         n is JsonValue v && v.GetValueKind() == JsonValueKind.String ? v.GetValue<string>() : null;
+
+    /// <summary>Python の真偽（if 値:）．無い・null・false・0・空の文字列・空の配列・空の辞書は偽．</summary>
+    public static bool Truthy(JsonNode? v) => v?.GetValueKind() switch
+    {
+        null or JsonValueKind.Null or JsonValueKind.False => false,
+        JsonValueKind.Number => v.GetValue<double>() != 0,
+        JsonValueKind.String => v.GetValue<string>().Length > 0,
+        JsonValueKind.Array => ((JsonArray)v).Count > 0,
+        JsonValueKind.Object => ((JsonObject)v).Count > 0,
+        _ => true,
+    };
 
     /// <summary>JSON の表記（1 行．日本語はエスケープしない）．エラーの文に値を見せるとき用．</summary>
     public static string Text(JsonNode? n)

@@ -20,6 +20,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 import json
 import string
 import sys
@@ -271,6 +272,128 @@ def _expect_target(cfg, store, inp) -> dict:
     return {"day": p.day if p else None}
 
 
+# ---- 記録（ネイティブ版の画面のボタン）----
+
+APP_VIA = "app"   # events.log のメモに書く出所
+
+
+def _event_lines(store) -> list:
+    path = store.p("events.log")
+    return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+
+def _read_state(store) -> dict:
+    path = store.p("state.json")
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+
+
+def app_record(kind: str, cfg: dict, store, now: datetime) -> dict:
+    """ネイティブ版のボタン 1 つぶんを、Python 版の部品で組む。kind: neru / okita / shuppatsu / kitaku。
+    Python 版の do_* を出所 "app" で呼ぶ。events.log に行が足されたら記録したとみなし、
+    shuppatsu 以外は取り消し用の undo を apply_intents と同じ形で state.json に残す
+    （prev は呼ぶ前の shifts[乗務日]。乗務が無ければ乗務日は "-"。shuppatsu は do_shuppatsu 自身が残す）。
+    断ったとき（早すぎる出発・強制中の起きた）は undo に触らない。
+    返り値 {"message": PREFIX を外した文, "recorded": bool}"""
+    p = sl.target_plan(cfg, now)
+    day = p.day if p else "-"
+    prev = copy.deepcopy(_read_state(store).get("shifts", {}).get(day, {}))
+    before = len(_event_lines(store))
+    if kind == "neru":
+        msg = sl.do_neru(cfg, store, now, p, via=APP_VIA)
+    elif kind == "okita":
+        msg = sl.do_okita(cfg, store, now, p)
+    elif kind == "kitaku":
+        msg = sl.do_kitaku(cfg, store, now, p, via=APP_VIA)
+    elif kind == "shuppatsu":
+        msg = sl.do_shuppatsu(cfg, store, now, p)
+    else:
+        raise ValueError(kind)
+    recorded = len(_event_lines(store)) > before
+    if recorded and kind != "shuppatsu":
+        st = _read_state(store)
+        st["undo"] = {"day": day, "prev": prev, "at": _iso(now), "what": [kind]}
+        store.p("state.json").write_text(json.dumps(st, ensure_ascii=False), encoding="utf-8")
+    return {"message": msg.replace(i18n.PREFIX, ""), "recorded": recorded}
+
+
+def _expect_steps(cfg, store, inp) -> dict:
+    results = []
+    for step in inp["steps"]:
+        now = datetime.fromisoformat(step["now"])
+        if step["op"] == "undo":
+            before = len(_event_lines(store))
+            msg = sl.undo_fuzzy(store, now)
+            results.append({"message": msg.replace(i18n.PREFIX, ""), "recorded": len(_event_lines(store)) > before})
+        else:
+            results.append(app_record(step["op"], cfg, store, now))
+    return {"results": results, "state": _read_state(store) if store.p("state.json").exists() else None,
+            "events": _event_lines(store)}
+
+
+def _steps_rows() -> list:
+    b = {"shifts.json": _base()}
+    d = "2026-12-01"
+
+    def at(hm, day=d):
+        return f"{day}T{hm}"
+
+    def steps(*pairs):
+        return {"steps": [{"op": op, "now": now} for op, now in pairs]}
+
+    no_gap = {"usage-pc.json": {"gaps": []}}
+    enforce = {"consented_at": at("06:00"), "action": "lock"}
+    old_undo = {"day": d, "prev": {}, "at": at("10:50"), "what": ["kitaku"]}
+    gate = {**b, **no_gap, "state.json": {"shifts": {d: {"kitaku": at("07:00"), "enforce": enforce}}, "undo": old_undo}}
+    return [
+        ("寝る", b, steps(("neru", at("08:10")))),
+        ("寝る → 起きた（寝た時間が出る）", b, steps(("neru", at("08:10")), ("okita", at("14:30")))),
+        ("寝る → 起きた（最低ラインに届かない）", b, steps(("neru", at("10:00")), ("okita", at("14:00")))),
+        ("寝る 2 回（後の時刻で上書き）", b, steps(("neru", at("08:10")), ("neru", at("08:40")))),
+        ("起きた: PC の記録なし", b, steps(("okita", at("14:00")))),
+        ("起きた: まとまった離席あり",
+         {**b, "usage-pc.json": {"gaps": [[at("09:00:00"), at("13:00:00")]]}}, steps(("okita", at("14:00")))),
+        ("起きた: 離席の記録が空（確かめる文が付く）", {**b, **no_gap}, steps(("okita", at("14:00")))),
+        ("起きた: 離席が短い・古い", {**b, "usage-pc.json": {"gaps": [[at("11:00:00"), at("13:00:00")],
+                                                                     [at("02:00:00"), at("09:30:00")]]}},
+         steps(("okita", at("14:00")))),
+        ("休みの乗務で 寝る → 起きた（休みのまま）",
+         {**b, "state.json": _state(d, status="yasumi", at=at("06:00"), paid=True)},
+         steps(("neru", at("08:10")), ("okita", at("14:30")))),
+        ("出発済みの乗務で 起きた（寝た記録なし）",
+         {**b, "state.json": _state(d, status="worked", at=at("16:10"))}, steps(("okita", at("16:40")))),
+        ("強制中の 起きた は記録しない（前の undo が残る）", gate, steps(("okita", at("11:00")))),
+        ("強制中でも STOP.txt があれば記録する", {**gate, "STOP.txt": True}, steps(("okita", at("11:00")))),
+        ("強制中でも解除済みなら記録する",
+         {**gate, "state.json": {"shifts": {d: {"enforce": {**enforce, "released_at": at("10:40")}}}}},
+         steps(("okita", at("11:00")))),
+        ("強制中でも最低ラインの前なら記録する", gate, steps(("okita", at("10:29")))),
+        ("強制中でも寝た記録があれば記録する", gate, steps(("neru", at("08:10")), ("okita", at("14:30")))),
+        ("行ってきます: 早すぎる", b, steps(("shuppatsu", at("13:59")))),
+        ("行ってきます: 出発の 2 時間前から", b, steps(("shuppatsu", at("14:00")))),
+        ("起きた → 行ってきます", b, steps(("okita", at("14:00")), ("shuppatsu", at("16:05")))),
+        ("乗務の無い日の 行ってきます は断る", b, steps(("shuppatsu", at("18:00", "2026-12-05")))),
+        ("乗務の無い日の 寝る・起きた・帰ってきた", b,
+         steps(("neru", at("18:00", "2026-12-05")), ("okita", at("18:01", "2026-12-05")), ("kitaku", at("18:02", "2026-12-05")))),
+        ("帰ってきた（次の乗務に付く）", b, steps(("kitaku", at("07:30", "2026-12-02")))),
+        ("寝る → 取り消す", b, steps(("neru", at("08:10")), ("undo", at("08:20")))),
+        ("寝る → 取り消す（ちょうど 60 分は戻せる）", b, steps(("neru", at("08:10")), ("undo", at("09:10")))),
+        ("寝る → 取り消す（61 分は戻せない）", b, steps(("neru", at("08:10")), ("undo", at("09:11")))),
+        ("起きた → 取り消す（前の記録に戻る）",
+         {**b, "state.json": _state(d, sleep_at=at("08:10"))}, steps(("okita", at("14:30")), ("undo", at("14:31")))),
+        ("取り消す → もう一度 取り消す", b, steps(("neru", at("08:10")), ("undo", at("08:20")), ("undo", at("08:21")))),
+        ("取り消せる記録が無い", b, steps(("undo", at("08:20")))),
+        ("強制の宣言がある乗務で 行ってきます → 取り消す（enforce は残る）",
+         {**b, "state.json": {"shifts": {d: {"status": "okita", "at": at("14:00"), "enforce": enforce}}}},
+         steps(("shuppatsu", at("16:00")), ("undo", at("16:05")))),
+        ("乗務の無い日の 寝る → 取り消す（free-day の行は残る）", b,
+         steps(("neru", at("18:00", "2026-12-05")), ("undo", at("18:05", "2026-12-05")))),
+        ("知らないキーは残す",
+         {**b, "state.json": {"pending": {"phrase": "x", "kind": "neru", "at": at("08:00")}, "confirm_since": "2026-12-01",
+                              "shifts": {d: {"x": 1}, "2026-12-02": {"status": "yasumi", "at": at("07:00")}}}},
+         steps(("neru", at("08:10")))),
+    ]
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -284,6 +407,9 @@ def build_vectors() -> dict:
         "phase.json": {
             "current": _cases(_current_rows(), _expect_current),
             "target_plan": _cases(_target_rows(), _expect_target),
+        },
+        "records.json": {
+            "steps": _cases(_steps_rows(), _expect_steps),
         },
     }
 

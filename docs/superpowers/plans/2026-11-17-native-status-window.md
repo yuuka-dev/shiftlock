@@ -407,8 +407,8 @@ public static class Records {
 - `Recorded` は「`events.log` に行を足したか」．断ったとき（早すぎる出発，対象なしの出発，強制中の起きた）は `false` で `state.json` に触らない．
 - `undo` の `what` は `neru`／`okita`／`kitaku`／`worked`．`day` は対象の乗務日，対象が無ければ `-`．
 
-- [ ] **Step 1: Python 版に出所の引数を足す．** `records.do_kitaku` と `do_neru` の末尾に `via: str = "claude"` を足し，`set_mark` の出所に渡す．ほかの呼び出しは変えない（既存の pytest がそのまま通ること）．
-- [ ] **Step 2: ベクタを書き出す．** `export_native.py` に，アプリと同じ手順を Python 版の部品で組む関数を置く．
+- [x] **Step 1: Python 版に出所の引数を足す．** `records.do_kitaku` と `do_neru` の末尾に `via: str = "claude"` を足し，`set_mark` の出所に渡す．ほかの呼び出しは変えない（既存の pytest がそのまま通ること）．
+- [x] **Step 2: ベクタを書き出す．** `export_native.py` に，アプリと同じ手順を Python 版の部品で組む関数を置く．
 
 ```python
 def app_record(kind: str, cfg: dict, store, now) -> dict:
@@ -440,7 +440,7 @@ def app_record(kind: str, cfg: dict, store, now) -> dict:
   19. 強制の宣言がある乗務で 行ってきます 14:00 → 取り消す 14:05（`enforce` はそのまま残る）
   20. 土曜の 寝る → 取り消す（`undo` 行だけ足され，`free-day` の行は残る）
   21. `state.json` に知らないキー（最上位に `pending` と `confirm_since`，乗務日に `x`）がある状態で 寝る → 全部残る
-- [ ] **Step 3: 失敗するテストを書く**（`RecordsTests.cs`）．
+- [x] **Step 3: 失敗するテストを書く**（`RecordsTests.cs`）．
 
 ```csharp
 [Theory] [MemberData(nameof(StepCases))] public void Steps_MatchPython(VectorCase c)
@@ -452,10 +452,10 @@ def app_record(kind: str, cfg: dict, store, now) -> dict:
 [Fact] public void Message_HasNoPrefix()                          // "[shiftlock] " で始まらない
 ```
 
-- [ ] **Step 4:** `dotnet test` → 失敗．
-- [ ] **Step 5:** 実装する．`Store` は `store.py` の `set_shift_status`・`log_event`・`set_mark` と同じ書き方（有給の印 `paid` の扱いを含む）．`Records` は `records.py` の `do_*` と `undo_fuzzy` の分岐をそのまま移す．書く順は「`events.log` に足す前に `state.json` を書く」（Python 版と同じ）で，`state.json` が書けなければ `events.log` にも書かない．やり直しの間隔は 50 ミリ秒．
-- [ ] **Step 6:** `dotnet test` と pytest が全部通る．
-- [ ] **Step 7:** コミット `feat(native): 記録（寝る・起きた・行ってきます・帰ってきた）と取り消しを移す (#38)`
+- [x] **Step 4:** `dotnet test` → 失敗．
+- [x] **Step 5:** 実装する．`Store` は `store.py` の `set_shift_status`・`log_event`・`set_mark` と同じ書き方（有給の印 `paid` の扱いを含む）．`Records` は `records.py` の `do_*` と `undo_fuzzy` の分岐をそのまま移す．書く順は「`events.log` に足す前に `state.json` を書く」（Python 版と同じ）で，`state.json` が書けなければ `events.log` にも書かない．やり直しの間隔は 50 ミリ秒．
+- [x] **Step 6:** `dotnet test` と pytest が全部通る．
+- [x] **Step 7:** コミット `feat(native): 記録（寝る・起きた・行ってきます・帰ってきた）と取り消しを移す (#38)`
 
 ---
 

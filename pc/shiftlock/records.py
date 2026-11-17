@@ -94,21 +94,24 @@ def _log_free(store: Store, when: datetime, kind: str) -> None:
         f.write(f"{when.isoformat(timespec='minutes')}\t-\t{kind}\tfree-day\n")
 
 
-def do_kitaku(cfg: dict, store: Store, now: datetime, p: Plan | None, when: datetime | None = None) -> str:
+def do_kitaku(cfg: dict, store: Store, now: datetime, p: Plan | None, when: datetime | None = None,
+              via: str = "claude") -> str:
+    """via: events.log のメモに書く出所（claude / ネイティブ版の画面は app）。"""
     when = when or now
     if p is None:
         _log_free(store, when, "kitaku")
         return M.RECORDS_KITAKU_FREE
-    set_mark(store, p.day, "kitaku", when, now, "claude")
+    set_mark(store, p.day, "kitaku", when, now, via)
     return M.RECORDS_KITAKU.format(when=fmt(when))
 
 
-def do_neru(cfg: dict, store: Store, now: datetime, p: Plan | None, when: datetime | None = None) -> str:
+def do_neru(cfg: dict, store: Store, now: datetime, p: Plan | None, when: datetime | None = None,
+            via: str = "claude") -> str:
     when = when or now
     if p is None:
         _log_free(store, when, "neru")
         return M.RECORDS_NERU_FREE
-    set_mark(store, p.day, "sleep_at", when, now, "claude")
+    set_mark(store, p.day, "sleep_at", when, now, via)
     aw = cfg.get("auto_wake_hours") or cfg["sleep_min_hours"]
     return M.RECORDS_NERU.format(when=fmt(when), hours=aw, depart=fmt(p.depart_target), latest=fmt(p.depart_latest))
 

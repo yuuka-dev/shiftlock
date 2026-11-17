@@ -43,4 +43,23 @@ public static class TimeUtil
 
     /// <summary>ファイルに書く時刻．分まで（"yyyy-MM-ddTHH:mm"）．</summary>
     public static string Iso(DateTime t) => t.ToString("yyyy'-'MM'-'dd'T'HH':'mm", CultureInfo.InvariantCulture);
+
+    /// <summary>"MM/dd"（Python の %m/%d）．</summary>
+    public static string FmtMd(DateTime t) => t.ToString("MM'/'dd", CultureInfo.InvariantCulture);
+
+    private static readonly string[] IsoFormats =
+    [
+        "yyyy'-'MM'-'dd'T'HH':'mm", "yyyy'-'MM'-'dd'T'HH':'mm':'ss", "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'FFFFFFF",
+        "yyyy'-'MM'-'dd' 'HH':'mm", "yyyy'-'MM'-'dd' 'HH':'mm':'ss", "yyyy'-'MM'-'dd' 'HH':'mm':'ss'.'FFFFFFF",
+        "yyyy'-'MM'-'dd",
+    ];
+
+    /// <summary>
+    /// ファイルに書いてある時刻を読む（Python の datetime.fromisoformat が読む形のうち，タイムゾーンなしのもの）．
+    /// 分まで・秒まで・小数つき・日付だけを受ける．読めなければ null．
+    /// </summary>
+    public static DateTime? ParseIso(string? s) =>
+        s is not null && DateTime.TryParseExact(s, IsoFormats, CultureInfo.InvariantCulture, DateTimeStyles.None, out var t)
+            ? t
+            : null;
 }
