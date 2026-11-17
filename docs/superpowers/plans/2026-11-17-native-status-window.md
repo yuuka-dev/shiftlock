@@ -1,5 +1,7 @@
 # ネイティブ版 区切り 1：状態と記録の画面 実装計画
 
+> 2026-11-17: 開発の場所を公開リポジトリに移した．issue は公開リポジトリの #2（文中の #38 は移す前の番号）．ブランチは main から切った `feature/native-status-window`．コミットには `(#2)` を付ける．
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** 今の状態が見えて「寝る」「起きた」「行ってきます」「帰ってきた」をボタンで記録できる WinUI 3 のウィンドウを，Python 版と同じファイルを読み書きする形で作る（issue #38）．

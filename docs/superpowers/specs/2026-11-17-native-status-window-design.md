@@ -1,5 +1,7 @@
 # ネイティブ版 区切り 1：状態と記録の画面（設計）
 
+> 2026-11-17: 開発の場所を公開リポジトリに移した．issue は公開リポジトリの #2（文中の #38 は移す前の番号）．ブランチは main から切った `feature/native-status-window`．コミットには `(#2)` を付ける．
+
 issue #38．言語と全体の構成は [native-app-plan.md](../../native-app-plan.md) で決定済み（C# / .NET 10，UI は WinUI 3）．仕様の正は [pc-spec.md](../../pc-spec.md)，ファイル形式は [data-format.md](../../data-format.md)．
 
 ## 1. 目的と理由
