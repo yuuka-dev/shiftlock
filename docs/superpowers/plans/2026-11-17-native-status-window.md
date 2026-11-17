@@ -520,7 +520,7 @@ public static class Snapshot {
 - Consumes: `Shiftlock.Core`（プロジェクト参照）
 - Produces: `Shiftlock.App.AppPaths.DataDir`（`SHIFTLOCK_DIR` があればそれ，無ければ `%USERPROFILE%\shift-lock`）．`MainWindow`（中身は Task 9）．
 
-- [ ] **Step 1:** Microsoft 公式のテンプレートで作る（手書きしない．2026-11-17 に `dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates` でこの PC に入れてある．別の PC では先にこれを実行する）．
+- [x] **Step 1:** Microsoft 公式のテンプレートで作る（手書きしない．2026-11-17 に `dotnet new install Microsoft.WindowsAppSDK.WinUI.CSharp.Templates` でこの PC に入れてある．別の PC では先にこれを実行する）．
 
 ```powershell
 dotnet new winui -n shiftlock.App -o native/shiftlock.App --packaging Unpackaged -tpmv 10.0.17763.0 -tfm net10.0
@@ -532,11 +532,11 @@ dotnet new winui -n shiftlock.App -o native/shiftlock.App --packaging Unpackaged
   - `MainPage.xaml`・`MainPage.xaml.cs` は消し，画面は `MainWindow` に直接置く（ページの移動は無いので）．`MainWindow` から `MainPage` への参照も外す．
   - `Properties/PublishProfiles/win-x86.pubxml` は消す（x86 は出さない）．
   - `native/Directory.Build.props` の `TreatWarningsAsErrors` で生成コードが通らないときの扱いは Global Constraints のとおり．
-- [ ] **Step 2:** `Program.cs` に `Main` を書く．`AppInstance.FindOrRegisterForKey("shiftlock")` で 2 つ目の起動なら `RedirectActivationToAsync` して終わる．1 つ目は `Activated` を受けたらウィンドウを前に出す．
-- [ ] **Step 3:** `MainWindow` はタイトル `shiftlock`，幅 520・高さ 560 程度，中身は空の `StackPanel`．
-- [ ] **Step 4:** `dotnet build native/shiftlock.App -r win-x64` が警告なしで通る．`native/shiftlock.App/bin/Debug/net10.0-windows10.0.19041.0/win-x64/shiftlock.exe` を起動して空のウィンドウが出ること，もう一度起動しても 2 つ目が出ず 1 つ目が前に来ることを確かめる．`SHIFTLOCK_DIR` は空の一時フォルダに向ける．
-- [ ] **Step 5:** `dotnet test native/shiftlock.Core.Tests` がそのまま通る．`native/README.md` の表の `shiftlock.App` の行と，ビルド・起動のコマンドを直す．
-- [ ] **Step 6:** コミット `feat(native): WinUI 3 のアプリの殻を追加 (#38)`
+- [x] **Step 2:** `Program.cs` に `Main` を書く．`AppInstance.FindOrRegisterForKey("shiftlock")` で 2 つ目の起動なら `RedirectActivationToAsync` して終わる．1 つ目は `Activated` を受けたらウィンドウを前に出す．
+- [x] **Step 3:** `MainWindow` はタイトル `shiftlock`，幅 520・高さ 560 程度，中身は空の `StackPanel`．
+- [x] **Step 4:** `dotnet build native/shiftlock.App -r win-x64` が警告なしで通る．`native/shiftlock.App/bin/Debug/net10.0-windows10.0.26100.0/win-x64/shiftlock.exe` を起動して空のウィンドウが出ること，もう一度起動しても 2 つ目が出ず 1 つ目が前に来ることを確かめる．`SHIFTLOCK_DIR` は空の一時フォルダに向ける．
+- [x] **Step 5:** `dotnet test native/shiftlock.Core.Tests` がそのまま通る．`native/README.md` の表の `shiftlock.App` の行と，ビルド・起動のコマンドを直す．
+- [x] **Step 6:** コミット `feat(native): WinUI 3 のアプリの殻を追加 (#38)`
 
 ---
 

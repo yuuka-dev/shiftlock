@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Window
+    x:Class="Shiftlock.App.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="shiftlock">
+    <Window.SystemBackdrop>
+        <MicaBackdrop />
+    </Window.SystemBackdrop>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TitleBar x:Name="AppTitleBar" Title="shiftlock">
+            <TitleBar.IconSource>
+                <ImageIconSource ImageSource="Assets/AppIcon.ico" />
+            </TitleBar.IconSource>
+        </TitleBar>
+
+        <!-- 画面の中身（状態・ボタン・予定）はここに置く．ページの移動は無いのでウィンドウに直接置く． -->
+        <StackPanel x:Name="Root" Grid.Row="1" Padding="20" Spacing="8" />
+    </Grid>
+</Window>
