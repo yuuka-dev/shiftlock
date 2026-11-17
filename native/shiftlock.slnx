@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="shiftlock.Core.Tests/shiftlock.Core.Tests.csproj" />
+  <Project Path="shiftlock.Core/shiftlock.Core.csproj" />
+  <Project Path="shl/shl.csproj" />
+</Solution>

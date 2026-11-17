@@ -266,4 +266,8 @@ def test_i18n_constants_are_all_used():
         # COMMON_ は他の定数から参照される（= 定義側で使う）ので除く
         if name.startswith("COMMON_"):
             continue
+        # APP_ はネイティブ版（native/）の画面の文。Python 側では使わず、tools/export_native.py が JSON に書き出す
+        # （書き出しに入っていることは test_export_native.py が見張る）
+        if name.startswith("APP_"):
+            continue
         assert name in used, f"ja.{name} はどこからも使われてへん"

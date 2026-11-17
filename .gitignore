@@ -49,3 +49,9 @@ desktop.ini
 
 # ---- Claude Code ----
 .claude/
+
+# ---- .NET（native/） ----
+native/**/bin/
+native/**/obj/
+native/.vs/
+native/**/*.user

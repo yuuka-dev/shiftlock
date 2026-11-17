@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- ロジック層．逆算・フェーズ・意図判定・睡眠推定・レポート生成・設定の読み書き．
+       Windows API に依存しない（docs/native-app-plan.md 4.2）． -->
+  <PropertyGroup>
+    <RootNamespace>Shiftlock.Core</RootNamespace>
+    <AssemblyName>Shiftlock.Core</AssemblyName>
+  </PropertyGroup>
+
+  <!-- 文面は Python の言語ファイルから書き出した JSON（pc/tools/export_native.py）を埋め込んで読む．
+       messages.ja.json の「ja」が文化名と見なされて別アセンブリ（サテライト）に回るのを避けるため，
+       WithCulture="false" と LogicalName を必ず付ける． -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\shared\messages.ja.json" WithCulture="false" LogicalName="messages.ja.json" />
+    <EmbeddedResource Include="..\shared\messages.ja_kansai.json" WithCulture="false" LogicalName="messages.ja_kansai.json" />
+  </ItemGroup>
+
+</Project>

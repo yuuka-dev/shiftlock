@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- CLI．Claude Code hook・コマンド・ダブルクリック用．
+       hook はプロンプトごとに起動するので NativeAOT で数十 ms 起動にする（docs/native-app-plan.md 4.2）． -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Shiftlock.Cli</RootNamespace>
+    <AssemblyName>shl</AssemblyName>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- SDK 10.0.401 が暗黙参照する ILCompiler 10.0.12 には既知の脆弱性（NU1903）があるので，
+         SDK の既定バージョン表を修正版に上書きする．SDK を更新したら外してよい． -->
+    <KnownILCompilerPack Update="Microsoft.DotNet.ILCompiler" ILCompilerPackVersion="10.0.14" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\shiftlock.Core\shiftlock.Core.csproj" />
+  </ItemGroup>
+
+</Project>
