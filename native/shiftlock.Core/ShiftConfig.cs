@@ -119,6 +119,30 @@ public sealed partial class ShiftConfig
     /// <summary>辞書の節（usage・notify・calendar・retention・report・confirm・enforce・absence）．読み込みで辞書と確かめてある．</summary>
     public JsonObject Section(string key) => Raw[key] as JsonObject ?? new JsonObject();
 
+    /// <summary>
+    /// 節の中の数（分・時間など）．無ければ fallback．JSON の数・真偽値でなければ ConfigException
+    /// （Python 版は timedelta(minutes=値) で落ちる．数字の文字列も通らない）．
+    /// </summary>
+    public double SectionNumber(string section, string key, double fallback)
+    {
+        if (!Section(section).TryGetPropertyValue(key, out var v))
+        {
+            return fallback;
+        }
+        double? d = v?.GetValueKind() switch
+        {
+            JsonValueKind.Number => v.GetValue<double>(),
+            JsonValueKind.True => 1,
+            JsonValueKind.False => 0,
+            _ => null,
+        };
+        if (d is not { } value || !double.IsFinite(value) || Math.Abs(value) > MaxDuration)
+        {
+            throw BadValue($"{section}.{key}", v);
+        }
+        return value;
+    }
+
     /// <summary>休みの例外日（日 → 理由）．手動がカレンダーより優先．</summary>
     public IReadOnlyDictionary<string, string> DaysOff => _daysOff;
 

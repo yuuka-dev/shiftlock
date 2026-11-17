@@ -1,0 +1,1435 @@
+{
+ "usage": [
+  {
+   "name": "触っている 3 回",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:10",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T10:10:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:05:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:10:00\", \"idle\": 30, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "離席して 45 分後に戻る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:25",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:30",
+      "idle": 1800,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [
+       [
+        "2026-12-05T10:00",
+        "2026-12-05T10:44"
+       ]
+      ],
+      "start": "2026-12-05T10:44:30",
+      "last": "2026-12-05T10:45:00",
+      "gap_start": null
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:25:00\", \"idle\": 1500, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:30:00\", \"idle\": 1800, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:45:00\", \"idle\": 30, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "30 分未満の離席は gaps に入らない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:25",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:30",
+      "idle": 20,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:29:40",
+      "last": "2026-12-05T10:30:00",
+      "gap_start": null
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:25:00\", \"idle\": 1500, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:30:00\", \"idle\": 20, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "31 分空いたら（スリープ）起点を切り直す",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:36",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:36:00",
+      "last": "2026-12-05T10:36:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:05:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:36:00\", \"idle\": 30, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "30 分ちょうどなら起点はそのまま",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T10:30:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:30:00\", \"idle\": 30, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "ゲーム中は 150 分の無操作でも触っている。180 分を超えたら離席",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T13:00",
+      "idle": 9000,
+      "game": 1,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T13:05",
+      "idle": 10900,
+      "game": 1,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T13:00:00",
+      "last": "2026-12-05T13:00:00",
+      "gap_start": "2026-12-05T10:03:20"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T13:00:00\", \"idle\": 9000, \"game\": 1}",
+      "{\"t\": \"2026-12-05T13:05:00\", \"idle\": 10900, \"game\": 1}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "game_idle_minutes 0 は無制限",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "usage": {
+      "game_idle_minutes": 0
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T13:00",
+      "idle": 100000,
+      "game": 1,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T13:00:00",
+      "last": "2026-12-05T13:00:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T13:00:00\", \"idle\": 100000, \"game\": 1}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "game_idle_minutes が壊れていれば 180 分",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "usage": {
+      "game_idle_minutes": "長め"
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T13:00",
+      "idle": 10700,
+      "game": 1,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T13:05",
+      "idle": 10900,
+      "game": 1,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T13:00:00",
+      "last": "2026-12-05T13:00:00",
+      "gap_start": "2026-12-05T10:03:20"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T13:00:00\", \"idle\": 10700, \"game\": 1}",
+      "{\"t\": \"2026-12-05T13:05:00\", \"idle\": 10900, \"game\": 1}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "idle_reset_minutes 5",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "usage": {
+      "idle_reset_minutes": 5
+     },
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 299,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:05",
+      "idle": 300,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T10:00:00",
+      "gap_start": "2026-12-05T10:00:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 299, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:05:00\", \"idle\": 300, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "外出中（行ってきます の後）はゲームを見ない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "events.log": "2026-12-04T16:05\t2026-12-04\tworked\tshuppatsu\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-04T16:05"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T02:00",
+      "idle": 3000,
+      "game": 1,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "gap_start": "2026-12-05T01:10:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T02:00:00\", \"idle\": 3000, \"game\": 1}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "帰ってきた後はゲームを見る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "events.log": "2026-12-04T16:05\t2026-12-04\tworked\tshuppatsu\n2026-12-05T01:30\t2026-12-07\tkitaku\tclaude 2026-12-05T01:30\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-04T16:05"
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T02:00",
+      "idle": 3000,
+      "game": 1,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T02:00:00",
+      "last": "2026-12-05T02:00:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T02:00:00\", \"idle\": 3000, \"game\": 1}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "ゲーム中に戻ったら離席の終わりは今",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T13:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T13:25",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T14:10",
+      "idle": 1500,
+      "game": 1,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [
+       [
+        "2026-12-05T13:00",
+        "2026-12-05T14:10"
+       ]
+      ],
+      "start": "2026-12-05T14:10:00",
+      "last": "2026-12-05T14:10:00",
+      "gap_start": null
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T13:00:00\", \"idle\": 30, \"game\": 0}",
+      "{\"t\": \"2026-12-05T13:25:00\", \"idle\": 1500, \"game\": 0}",
+      "{\"t\": \"2026-12-05T14:10:00\", \"idle\": 1500, \"game\": 1}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "gaps は 20 件まで（21 件目で最初の 1 件が落ちる）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "usage-pc.json": {
+     "gaps": [
+      [
+       "2026-12-02T00:00",
+       "2026-12-02T00:40"
+      ],
+      [
+       "2026-12-02T01:00",
+       "2026-12-02T01:40"
+      ],
+      [
+       "2026-12-02T02:00",
+       "2026-12-02T02:40"
+      ],
+      [
+       "2026-12-02T03:00",
+       "2026-12-02T03:40"
+      ],
+      [
+       "2026-12-02T04:00",
+       "2026-12-02T04:40"
+      ],
+      [
+       "2026-12-02T05:00",
+       "2026-12-02T05:40"
+      ],
+      [
+       "2026-12-02T06:00",
+       "2026-12-02T06:40"
+      ],
+      [
+       "2026-12-02T07:00",
+       "2026-12-02T07:40"
+      ],
+      [
+       "2026-12-02T08:00",
+       "2026-12-02T08:40"
+      ],
+      [
+       "2026-12-02T09:00",
+       "2026-12-02T09:40"
+      ],
+      [
+       "2026-12-02T10:00",
+       "2026-12-02T10:40"
+      ],
+      [
+       "2026-12-02T11:00",
+       "2026-12-02T11:40"
+      ],
+      [
+       "2026-12-02T12:00",
+       "2026-12-02T12:40"
+      ],
+      [
+       "2026-12-02T13:00",
+       "2026-12-02T13:40"
+      ],
+      [
+       "2026-12-02T14:00",
+       "2026-12-02T14:40"
+      ],
+      [
+       "2026-12-02T15:00",
+       "2026-12-02T15:40"
+      ],
+      [
+       "2026-12-02T16:00",
+       "2026-12-02T16:40"
+      ],
+      [
+       "2026-12-02T17:00",
+       "2026-12-02T17:40"
+      ],
+      [
+       "2026-12-02T18:00",
+       "2026-12-02T18:40"
+      ],
+      [
+       "2026-12-02T19:00",
+       "2026-12-02T19:40"
+      ]
+     ],
+     "gap_start": "2026-12-05T09:00:00",
+     "start": "2026-12-05T08:00:00",
+     "last": "2026-12-05T08:55:00",
+     "last_nag": "2026-12-05T08:30:00"
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [
+       [
+        "2026-12-02T01:00",
+        "2026-12-02T01:40"
+       ],
+       [
+        "2026-12-02T02:00",
+        "2026-12-02T02:40"
+       ],
+       [
+        "2026-12-02T03:00",
+        "2026-12-02T03:40"
+       ],
+       [
+        "2026-12-02T04:00",
+        "2026-12-02T04:40"
+       ],
+       [
+        "2026-12-02T05:00",
+        "2026-12-02T05:40"
+       ],
+       [
+        "2026-12-02T06:00",
+        "2026-12-02T06:40"
+       ],
+       [
+        "2026-12-02T07:00",
+        "2026-12-02T07:40"
+       ],
+       [
+        "2026-12-02T08:00",
+        "2026-12-02T08:40"
+       ],
+       [
+        "2026-12-02T09:00",
+        "2026-12-02T09:40"
+       ],
+       [
+        "2026-12-02T10:00",
+        "2026-12-02T10:40"
+       ],
+       [
+        "2026-12-02T11:00",
+        "2026-12-02T11:40"
+       ],
+       [
+        "2026-12-02T12:00",
+        "2026-12-02T12:40"
+       ],
+       [
+        "2026-12-02T13:00",
+        "2026-12-02T13:40"
+       ],
+       [
+        "2026-12-02T14:00",
+        "2026-12-02T14:40"
+       ],
+       [
+        "2026-12-02T15:00",
+        "2026-12-02T15:40"
+       ],
+       [
+        "2026-12-02T16:00",
+        "2026-12-02T16:40"
+       ],
+       [
+        "2026-12-02T17:00",
+        "2026-12-02T17:40"
+       ],
+       [
+        "2026-12-02T18:00",
+        "2026-12-02T18:40"
+       ],
+       [
+        "2026-12-02T19:00",
+        "2026-12-02T19:40"
+       ],
+       [
+        "2026-12-05T09:00",
+        "2026-12-05T09:59"
+       ]
+      ],
+      "gap_start": null,
+      "start": "2026-12-05T09:59:30",
+      "last": "2026-12-05T10:00:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 30, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "idle が負なら 0 として扱う",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": -5,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T10:00:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 0, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "idle の小数は切り捨てて書く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-05T10:00",
+      "idle": 12.9,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-05T10:25",
+      "idle": 1500.7,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-05T10:00:00",
+      "last": "2026-12-05T10:00:00",
+      "gap_start": "2026-12-05T09:59:59"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-05T10:00:00\", \"idle\": 12, \"game\": 0}",
+      "{\"t\": \"2026-12-05T10:25:00\", \"idle\": 1500, \"game\": 0}"
+     ]
+    }
+   }
+  },
+  {
+   "name": "月をまたぐとログのファイルが分かれる",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-31T23:58",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2027-01-01T00:03",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "usage-pc.json",
+     "log/pc-2026-12.jsonl",
+     "log/pc-2027-01.jsonl"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "usage-pc.json": {
+      "gaps": [],
+      "start": "2026-12-31T23:58:00",
+      "last": "2027-01-01T00:03:00"
+     },
+     "log/pc-2026-12.jsonl": [
+      "{\"t\": \"2026-12-31T23:58:00\", \"idle\": 30, \"game\": 0}"
+     ],
+     "log/pc-2027-01.jsonl": [
+      "{\"t\": \"2027-01-01T00:03:00\", \"idle\": 30, \"game\": 0}"
+     ]
+    }
+   }
+  }
+ ]
+}

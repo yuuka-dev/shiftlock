@@ -1,0 +1,120 @@
+using System.Text.Json.Nodes;
+
+namespace Shiftlock.Core.Tests;
+
+/// <summary>
+/// 見張り（Tick.Run）が Python 版の run_tick と同じ結果・同じファイルになること．
+/// docs/test-vectors/tick.json の節ごとに，置いたファイルと見張りの列を通して比べる．
+/// </summary>
+public sealed class TickVectorTests
+{
+    public static IEnumerable<object[]> Cases(string section) => Vectors.Cases("tick.json", section);
+
+    [Theory]
+    [MemberData(nameof(Cases), "usage")]
+    public void Usage(VectorCase c) => TickRunner.RunCase(c);
+}
+
+/// <summary>tick.json の 1 ケースを通す共通の手順．</summary>
+public static class TickRunner
+{
+    /// <summary>files を置く → steps を順に Tick.Run → 各回の結果と watch のファイルを expect と比べる．</summary>
+    public static void RunCase(VectorCase c)
+    {
+        using var folder = Vectors.Materialize(c.Files);
+        var fetchTable = c.Input["fetch"] as JsonObject;
+        string Fetch(string url) =>
+            fetchTable is not null && fetchTable[url] is { } body
+                ? body.GetValue<string>()
+                : throw new IOException("fetch failed");
+
+        var results = new JsonArray();
+        foreach (var step in c.Input["steps"]!.AsArray())
+        {
+            // Python の run_tick は毎回設定を読み直す
+            var cfg = ShiftConfig.Load(folder.ShiftsJson);
+            var input = new TickInput(
+                step!["idle"]!.GetValue<double>(),
+                step["game"]!.GetValue<int>() != 0,
+                step["uptime"]?.GetValue<double>(),
+                Remote: false,
+                DryRun: step["dry_run"]?.GetValue<bool>() ?? false);
+            var result = Tick.Run(cfg, new Store(folder.Dir), cfg.Msg, input, Vectors.Time(step["now"]), Fetch);
+            results.Add(ToJson(result, folder));
+        }
+
+        var files = new JsonObject();
+        foreach (var name in c.Input["watch"]!.AsArray())
+        {
+            files[name!.GetValue<string>()] = Snapshot(folder, name.GetValue<string>());
+        }
+        var actual = new JsonObject { ["results"] = results, ["files"] = files };
+
+        AssertSame(c.Expect["results"], actual["results"], "results");
+        foreach (var (name, expected) in c.Expect["files"]!.AsObject())
+        {
+            AssertSame(expected, files[name], name);
+        }
+    }
+
+    public static void AssertSame(JsonNode? expected, JsonNode? actual, string what) =>
+        Assert.True(JsonNode.DeepEquals(expected, actual),
+            $"{what}\nexpected: {expected?.ToJsonString(Relaxed) ?? "null"}\nactual:   {actual?.ToJsonString(Relaxed) ?? "null"}");
+
+    private static readonly System.Text.Json.JsonSerializerOptions Relaxed = new()
+    {
+        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+    };
+
+    /// <summary>run_tick の戻り値と同じ形にする．一時フォルダのパスは {DIR} に戻す．</summary>
+    public static JsonObject ToJson(TickResult r, TempFolder folder)
+    {
+        string Scrub(string s) => s.Replace(folder.Dir.Replace('\\', '/'), Vectors.DirMark).Replace(folder.Dir, Vectors.DirMark);
+
+        var actions = new JsonArray();
+        foreach (var a in r.Actions)
+        {
+            var o = new JsonObject
+            {
+                ["method"] = a.Method,
+                ["kind"] = a.Kind,
+                ["title"] = a.Title,
+                ["text"] = Scrub(a.Text),
+                ["speak"] = a.Speak,
+                ["sound"] = Scrub(a.Sound),
+            };
+            if (a.Action is not null)
+            {
+                o["action"] = a.Action;
+            }
+            actions.Add(o);
+        }
+        return new JsonObject
+        {
+            ["actions"] = actions,
+            ["warnings"] = new JsonArray([.. r.Warnings.Select(w => (JsonNode?)Scrub(w))]),
+            ["sound"] = new JsonObject { ["volume"] = r.SoundVolume, ["max_seconds"] = r.SoundMaxSeconds },
+        };
+    }
+
+    /// <summary>*.json は読み込んだ値，それ以外は行の配列，無ければ null（export_native._snapshot_file と同じ）．</summary>
+    public static JsonNode? Snapshot(TempFolder folder, string name)
+    {
+        var path = folder.P(name);
+        if (!File.Exists(path))
+        {
+            return null;
+        }
+        var text = File.ReadAllText(path);
+        if (name.EndsWith(".json", StringComparison.Ordinal))
+        {
+            return JsonNode.Parse(text);
+        }
+        var lines = text.Split('\n').ToList();
+        if (lines.Count > 0 && lines[^1].Length == 0)
+        {
+            lines.RemoveAt(lines.Count - 1);
+        }
+        return new JsonArray([.. lines.Select(l => (JsonNode?)l)]);
+    }
+}

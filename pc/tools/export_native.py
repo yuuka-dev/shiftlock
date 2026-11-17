@@ -114,8 +114,12 @@ def _iso(t: datetime) -> str:
     return t.isoformat(timespec="minutes")
 
 
+DIR_MARK = "{DIR}"   # shifts.json の中でこの文字列は実行フォルダのパス（区切りは /）に置き換える。結果に出たパスは {DIR} に戻す
+
+
 def _put_files(d: Path, files: dict) -> None:
     for name, body in files.items():
+        (d / name).parent.mkdir(parents=True, exist_ok=True)   # "log/pc-2026-12.jsonl" のように / を含む名前
         if body is True:
             (d / name).write_bytes(b"")
         elif isinstance(body, str):
@@ -131,6 +135,9 @@ def _with_config(files: dict, fn):
         with tempfile.TemporaryDirectory() as t:
             _put_files(Path(t), files)
             path = Path(t) / "shifts.json"
+            raw = path.read_bytes()
+            if DIR_MARK.encode() in raw:
+                path.write_bytes(raw.replace(DIR_MARK.encode(), Path(t).resolve().as_posix().encode("utf-8")))
             return fn(sl.load_config(path), sl.Store(path))
     finally:
         i18n.set_lang(before)
@@ -468,6 +475,115 @@ def _snapshot_rows() -> list:
     return rows
 
 
+# ---- 見張り（tick）----
+# input:  {"steps": [{"now", "idle", "game", "uptime"?, "dry_run"?}], "fetch"?: {URL: ics の中身 / null（失敗させる）},
+#          "watch": [最後に比べるファイル]}
+# expect: {"results": [run_tick の戻り値], "files": {watch の名前: JSON（*.json）/ 行の配列（それ以外）/ null（無い）}}
+# 節は run_tick の段ごと。確認の段より前の節は confirm.mode を off にする（毎回全部の段を通るので、確認が state.json を書く）。
+# 各節は自分の段が書くファイルだけを watch に入れる。
+
+def _snapshot_file(store, name: str):
+    path = store.p(name)
+    if not path.exists():
+        return None
+    if name.endswith(".json"):
+        return json.loads(path.read_text(encoding="utf-8"))
+    return path.read_text(encoding="utf-8").splitlines()
+
+
+def _scrub_dir(obj, store):
+    """結果に出た実行フォルダのパスを {DIR} に戻す（一時フォルダの名前をベクタに残さない）。"""
+    text = json.dumps(obj, ensure_ascii=False)
+    for d in {store.dir.as_posix(), str(store.dir)}:
+        text = text.replace(json.dumps(d, ensure_ascii=False)[1:-1], DIR_MARK)
+    return json.loads(text)
+
+
+def _expect_tick(cfg, store, inp) -> dict:
+    from shiftlock import calendar_sync
+    table = inp.get("fetch")
+
+    def fetch(url: str) -> str:
+        if table is None or table.get(url) is None:
+            raise OSError("fetch failed")   # 取得しない設定のケースで呼ばれたら、同期失敗として結果に出る
+        return table[url]
+
+    real = calendar_sync._http_get
+    calendar_sync._http_get = fetch
+    try:
+        results = [sl.run_tick(store.p("shifts.json"), step["idle"], bool(step["game"]), datetime.fromisoformat(step["now"]),
+                               step.get("uptime"), None, bool(step.get("dry_run", False)))
+                   for step in inp["steps"]]
+    finally:
+        calendar_sync._http_get = real
+    return _scrub_dir({"results": results, "files": {name: _snapshot_file(store, name) for name in inp.get("watch", [])}},
+                      store)
+
+
+def _tick_steps(*rows, watch=(), fetch=None, uptime=7200) -> dict:
+    """rows: (時刻, idle 秒, game 0/1) か (時刻, idle 秒, game, {上書き})。"""
+    steps = []
+    for row in rows:
+        step = {"now": row[0], "idle": row[1], "game": row[2], "uptime": uptime}
+        if len(row) > 3:
+            step.update(row[3])
+        steps.append({k: v for k, v in step.items() if v is not None})
+    inp = {"steps": steps, "watch": list(watch)}
+    if fetch is not None:
+        inp["fetch"] = fetch
+    return inp
+
+
+NO_CONFIRM = {"confirm": {"mode": "off"}}
+USAGE_WATCH = ("usage-pc.json", "log/pc-2026-12.jsonl")
+
+
+def _tick_usage_rows() -> list:
+    """稼働・離席の記録（usage-pc.json と log/pc-*.jsonl）。乗務の無い土日を使い、通知が出ない時刻にする。"""
+    b = {"shifts.json": _base(**NO_CONFIRM)}
+    d = "2026-12-05"   # 土曜
+
+    def at(hm, day=d):
+        return f"{day}T{hm}"
+
+    def run(*rows):
+        return _tick_steps(*rows, watch=USAGE_WATCH)
+
+    away = {"events.log": "2026-12-04T16:05\t2026-12-04\tworked\tshuppatsu\n",
+            "state.json": _state("2026-12-04", status="worked", at="2026-12-04T16:05")}
+    many = [[f"2026-12-02T{h:02d}:00", f"2026-12-02T{h:02d}:40"] for h in range(20)]
+    return [
+        ("触っている 3 回", b, run((at("10:00"), 30, 0), (at("10:05"), 30, 0), (at("10:10"), 30, 0))),
+        ("離席して 45 分後に戻る", b,
+         run((at("10:00"), 30, 0), (at("10:25"), 1500, 0), (at("10:30"), 1800, 0), (at("10:45"), 30, 0))),
+        ("30 分未満の離席は gaps に入らない", b, run((at("10:00"), 30, 0), (at("10:25"), 1500, 0), (at("10:30"), 20, 0))),
+        ("31 分空いたら（スリープ）起点を切り直す", b, run((at("10:00"), 30, 0), (at("10:05"), 30, 0), (at("10:36"), 30, 0))),
+        ("30 分ちょうどなら起点はそのまま", b, run((at("10:00"), 30, 0), (at("10:30"), 30, 0))),
+        ("ゲーム中は 150 分の無操作でも触っている。180 分を超えたら離席", b,
+         run((at("13:00"), 9000, 1), (at("13:05"), 10900, 1))),
+        ("game_idle_minutes 0 は無制限", {"shifts.json": _base(usage={"game_idle_minutes": 0}, **NO_CONFIRM)},
+         run((at("13:00"), 100000, 1))),
+        ("game_idle_minutes が壊れていれば 180 分", {"shifts.json": _base(usage={"game_idle_minutes": "長め"}, **NO_CONFIRM)},
+         run((at("13:00"), 10700, 1), (at("13:05"), 10900, 1))),
+        ("idle_reset_minutes 5", {"shifts.json": _base(usage={"idle_reset_minutes": 5}, **NO_CONFIRM)},
+         run((at("10:00"), 299, 0), (at("10:05"), 300, 0))),
+        ("外出中（行ってきます の後）はゲームを見ない", {**b, **away}, run((at("02:00"), 3000, 1))),
+        ("帰ってきた後はゲームを見る",
+         {**b, **away, "events.log": away["events.log"] + "2026-12-05T01:30\t2026-12-07\tkitaku\tclaude 2026-12-05T01:30\n"},
+         run((at("02:00"), 3000, 1))),
+        ("ゲーム中に戻ったら離席の終わりは今", b, run((at("13:00"), 30, 0), (at("13:25"), 1500, 0), (at("14:10"), 1500, 1))),
+        ("gaps は 20 件まで（21 件目で最初の 1 件が落ちる）",
+         {**b, "usage-pc.json": {"gaps": many, "gap_start": "2026-12-05T09:00:00", "start": "2026-12-05T08:00:00",
+                                 "last": "2026-12-05T08:55:00", "last_nag": "2026-12-05T08:30:00"}},
+         run((at("10:00"), 30, 0))),
+        ("idle が負なら 0 として扱う", b, run((at("10:00"), -5, 0))),
+        ("idle の小数は切り捨てて書く", b, run((at("10:00"), 12.9, 0), (at("10:25"), 1500.7, 0))),
+        ("月をまたぐとログのファイルが分かれる", b,
+         _tick_steps(("2026-12-31T23:58", 30, 0), ("2027-01-01T00:03", 30, 0),
+                     watch=USAGE_WATCH + ("log/pc-2027-01.jsonl",))),
+    ]
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -487,6 +603,9 @@ def build_vectors() -> dict:
         },
         "snapshot.json": {
             "build": _cases(_snapshot_rows(), _expect_snapshot),
+        },
+        "tick.json": {
+            "usage": _cases(_tick_usage_rows(), _expect_tick),
         },
     }
 

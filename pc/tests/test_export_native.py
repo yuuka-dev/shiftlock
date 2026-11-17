@@ -187,6 +187,30 @@ def test_snapshot_vectors_cover_all_phases_and_countdowns():
     assert all(len(c["expect"]["schedule"]) == 14 for c in cases)
 
 
+def test_tick_vectors_shape():
+    """tick.json: 各回の結果は actions / warnings / sound を持ち、回数は steps と同じ。watch したファイルは全部 expect.files にある。
+    一時フォルダのパスが残っていない"""
+    body = ex.build_vectors()["tick.json"]
+    for section, cases in body.items():
+        for c in cases:
+            name = f"{section} {c['name']}"
+            assert len(c["expect"]["results"]) == len(c["input"]["steps"]), name
+            assert all(set(r) == {"actions", "warnings", "sound"} for r in c["expect"]["results"]), name
+            assert set(c["expect"]["files"]) == set(c["input"]["watch"]), name
+            assert all(set(s) <= {"now", "idle", "game", "uptime", "dry_run"} for s in c["input"]["steps"]), name
+    text = json.dumps(body, ensure_ascii=False)
+    assert "/tmp" not in text and "Temp" not in text and "tmp" not in text.lower().replace("{dir}", "")
+
+
+def test_tick_usage_vectors_have_no_actions():
+    """節 usage は稼働・離席の記録だけを見る（通知が混ざらない時刻を選んである）"""
+    cases = ex.build_vectors()["tick.json"]["usage"]
+    assert len(cases) >= 8
+    for c in cases:
+        assert all(r["actions"] == [] and r["warnings"] == [] for r in c["expect"]["results"]), c["name"]
+        assert c["expect"]["files"]["usage-pc.json"] is not None, c["name"]
+
+
 TICK_KEYS = (
     "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
     "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",
