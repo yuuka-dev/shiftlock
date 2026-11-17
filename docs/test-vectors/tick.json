@@ -9652,5 +9652,4431 @@
     }
    }
   }
+ ],
+ "enforce": [
+  {
+   "name": "予告 → あと 5 分 → 実行 → 再予告 → 再実行",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:55",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと5分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:45:00",
+           "action": "lock"
+          },
+          {
+           "at": "2026-12-07T10:55:00",
+           "action": "lock"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:55:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "first_run_at": "2026-12-07T10:45:00",
+         "rewarned_at": "2026-12-07T10:50:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:45\t2026-12-07\tenforce_run\tlock",
+      "2026-12-07T10:55\t2026-12-07\tenforce_run\tlock"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:50:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "実行のあと誰も触っていなければ（入力が実行より前）何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 400,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと5分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:45:00",
+           "action": "lock"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:50:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "first_run_at": "2026-12-07T10:45:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:45\t2026-12-07\tenforce_run\tlock"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:50:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "回数の上限（max_runs 2）で止まる",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 2,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:55",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと5分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:45:00",
+           "action": "lock"
+          },
+          {
+           "at": "2026-12-07T10:55:00",
+           "action": "lock"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 2,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T11:05:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "first_run_at": "2026-12-07T10:45:00",
+         "rewarned_at": "2026-12-07T10:50:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:45\t2026-12-07\tenforce_run\tlock",
+      "2026-12-07T10:55\t2026-12-07\tenforce_run\tlock"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T11:00:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "時間切れ（duration_hours 0.5）で止まる",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 0.5,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:55",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:05",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:10",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:15",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 0.5h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 0.5h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと5分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 0.5h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 0.5h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 0.5h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 0.5h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 0.5,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:45:00",
+           "action": "lock"
+          },
+          {
+           "at": "2026-12-07T10:55:00",
+           "action": "lock"
+          },
+          {
+           "at": "2026-12-07T11:05:00",
+           "action": "lock"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T11:20:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "first_run_at": "2026-12-07T10:45:00",
+         "rewarned_at": "2026-12-07T11:10:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:45\t2026-12-07\tenforce_run\tlock",
+      "2026-12-07T10:55\t2026-12-07\tenforce_run\tlock",
+      "2026-12-07T11:05\t2026-12-07\tenforce_run\tlock"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T11:20:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "12 分以上空いたら予告からやり直し",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:43",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:48",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:58",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:58:00",
+           "action": "lock"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:58:00",
+         "warned_at": "2026-12-07T10:43:00",
+         "first_run_at": "2026-12-07T10:58:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:58\t2026-12-07\tenforce_run\tlock"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:58:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "実行のあと 12 分以上空いたら再予告からやり直し",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:03",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T11:08",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと5分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:45:00",
+           "action": "lock"
+          },
+          {
+           "at": "2026-12-07T11:08:00",
+           "action": "lock"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T11:08:00",
+         "first_run_at": "2026-12-07T10:45:00",
+         "rewarned_at": "2026-12-07T11:03:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:45\t2026-12-07\tenforce_run\tlock",
+      "2026-12-07T11:08\t2026-12-07\tenforce_run\tlock"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T11:03:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "STOP.txt があれば何もしない（通知の添え字に書く）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    },
+    "STOP.txt": "2026-12-07 09:00 kaijo\n"
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ（STOP.txt があるので今は効かない）。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ（STOP.txt があるので今は効かない）。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:45:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "解除済みの宣言は何もしない（添え字も出さない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-07T09:00"
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "released_at": "2026-12-07T09:00"
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:45:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "起動直後（uptime 600 秒）は発動しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 600
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 899
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "起動から 15 分ちょうどで発動する",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 900
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:30:00",
+         "warned_at": "2026-12-07T10:30:00"
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "uptime が 0 なら発動しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 0
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "uptime が無ければ発動しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "dry_run の予告は状態を進めない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200,
+      "dry_run": true
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:35:00",
+         "warned_at": "2026-12-07T10:35:00"
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "dry_run の実行は記録しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "warned_at": "2026-12-07T10:30:00",
+        "seen_at": "2026-12-07T10:40:00"
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200,
+      "dry_run": true
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "warned_at": "2026-12-07T10:30:00",
+         "seen_at": "2026-12-07T10:40:00"
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:45:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "dry_run の「あと 5 分」は何度でも出る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "warned_at": "2026-12-07T10:30:00",
+        "seen_at": "2026-12-07T10:40:00"
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:41",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200,
+      "dry_run": true
+     },
+     {
+      "now": "2026-12-07T10:42",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200,
+      "dry_run": true
+     },
+     {
+      "now": "2026-12-07T10:43",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:44",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと4分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと3分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと2分でロックするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "warned_at": "2026-12-07T10:30:00",
+         "seen_at": "2026-12-07T10:44:00"
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:41:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:43:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "宣言があれば lastcall・soft・hard の通知に添え字",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T07:20",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T08:00",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "lastcall",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 まであと40分。20〜30分級の長い処理はもう投げないで。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "toast",
+        "kind": "soft",
+        "title": "shiftlock",
+        "text": "就寝目安 08:00 を過ぎているよ（目標睡眠 8h）。10:30 からロックがかかるよ。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（ロック 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:30:00",
+         "warned_at": "2026-12-07T10:30:00"
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:lastcall": "2026-12-07T07:20:00",
+      "2026-12-07:soft": "2026-12-07T08:00:00",
+      "2026-12-07:hard": "2026-12-07T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "action が shutdown",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "shutdown",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（シャットダウン 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にシャットダウンするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（シャットダウン 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと5分でシャットダウンするよ（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "shutdown",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "シャットダウンするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "shutdown",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:45:00",
+           "action": "shutdown"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:45:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "first_run_at": "2026-12-07T10:45:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:45\t2026-12-07\tenforce_run\tshutdown"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:40:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "action が sleep・予告 2.5 分",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 2.5,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（スリープ 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 2.5分後にスリープするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "sleep",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "スリープするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "sleep",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:35:00",
+           "action": "sleep"
+          }
+         ],
+         "grace_minutes": 2.5,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:35:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "first_run_at": "2026-12-07T10:35:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:35\t2026-12-07\tenforce_run\tsleep"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:30:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "離席中は何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 1500,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": null
+    }
+   }
+  },
+  {
+   "name": "起きた記録のある乗務は発動しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "status": "okita",
+       "at": "2026-12-07T10:00",
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "status": "okita",
+        "at": "2026-12-07T10:00",
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": null
+    }
+   }
+  },
+  {
+   "name": "宣言が別の乗務日のものなら何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-08": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:45:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "古い宣言（項目が無い）は設定の値を使う",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     },
+     "enforce": {
+      "grace_minutes": 10,
+      "action": "sleep"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "consented_at": "2026-12-07T06:00"
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（None 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 10分後にスリープするよ。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（None 2h）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "enforce",
+        "action": "sleep",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "スリープするよ（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "consented_at": "2026-12-07T06:00",
+         "seen_at": "2026-12-07T10:40:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "runs": [
+          {
+           "at": "2026-12-07T10:40:00",
+           "action": "sleep"
+          }
+         ],
+         "first_run_at": "2026-12-07T10:40:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:40\t2026-12-07\tenforce_run\tsleep"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:40",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:45",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったで。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝てたなら『起きた』。 今日は強制モード（ロック 2h）やで。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "強制モード: 15分後にロックするで。寝るか、やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったで。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝てたなら『起きた』。 今日は強制モード（ロック 2h）やで。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "あと5分でロックするで（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "enforce",
+        "action": "lock",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "ロックするで（強制モード）",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったで。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝てたなら『起きた』。 今日は強制モード（ロック 2h）やで。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       },
+       {
+        "method": "popup",
+        "kind": "enforce",
+        "title": "shiftlock",
+        "text": "5分後にまたロックするで（強制モード）。やめるなら kaijo.cmd。",
+        "speak": true,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "lock",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [
+          {
+           "at": "2026-12-07T10:45:00",
+           "action": "lock"
+          }
+         ],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "seen_at": "2026-12-07T10:50:00",
+         "warned_at": "2026-12-07T10:30:00",
+         "first_run_at": "2026-12-07T10:45:00",
+         "rewarned_at": "2026-12-07T10:50:00"
+        }
+       }
+      }
+     },
+     "events.log": [
+      "2026-12-07T10:45\t2026-12-07\tenforce_run\tlock"
+     ],
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:50:00",
+      "2026-12-07:enforce:warn5:2026-12-07T10:30:00": "2026-12-07T10:40:00"
+     }
+    }
+   }
+  }
+ ],
+ "release": [
+  {
+   "name": "宣言が 1 件",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-07T11:00",
+    "reason": "tray"
+   },
+   "expect": {
+    "message": "[shiftlock] 強制を解除したよ（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
+    "state": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-07T11:00"
+       }
+      }
+     }
+    },
+    "events": [
+     "2026-12-07T11:00\t2026-12-07\tenforce_release\ttray"
+    ],
+    "stop": [
+     "2026-12-07 11:00 tray"
+    ]
+   }
+  },
+  {
+   "name": "宣言が 2 件（別の乗務日）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-07T11:00",
+    "reason": "tray"
+   },
+   "expect": {
+    "message": "[shiftlock] 強制を解除したよ（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
+    "state": {
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-07T11:00"
+       }
+      },
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-07T11:00"
+       }
+      }
+     }
+    },
+    "events": [
+     "2026-12-07T11:00\t2026-12-07\tenforce_release\ttray",
+     "2026-12-07T11:00\t2026-12-08\tenforce_release\ttray"
+    ],
+    "stop": [
+     "2026-12-07 11:00 tray"
+    ]
+   }
+  },
+  {
+   "name": "宣言なし（乗務日は -）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-07T11:00",
+    "reason": "tray"
+   },
+   "expect": {
+    "message": "[shiftlock] 強制を解除したよ（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
+    "state": null,
+    "events": [
+     "2026-12-07T11:00\t-\tenforce_release\ttray"
+    ],
+    "stop": [
+     "2026-12-07 11:00 tray"
+    ]
+   }
+  },
+  {
+   "name": "STOP.txt が既にあって宣言なし",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "STOP.txt": "2026-12-07 09:00 kaijo\n"
+   },
+   "input": {
+    "now": "2026-12-07T11:00",
+    "reason": "tray"
+   },
+   "expect": {
+    "message": "[shiftlock] もう解除中だよ（STOP.txt あり）。再開は shl enforce resume。",
+    "state": null,
+    "events": [
+     "2026-12-07T11:00\t-\tenforce_release\ttray"
+    ],
+    "stop": [
+     "2026-12-07 09:00 kaijo",
+     "2026-12-07 11:00 tray"
+    ]
+   }
+  },
+  {
+   "name": "STOP.txt が既にあっても宣言があれば解除する",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "STOP.txt": "2026-12-07 09:00 kaijo\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-07T11:00",
+    "reason": "tray"
+   },
+   "expect": {
+    "message": "[shiftlock] 強制を解除したよ（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
+    "state": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-07T11:00"
+       }
+      }
+     }
+    },
+    "events": [
+     "2026-12-07T11:00\t2026-12-07\tenforce_release\ttray"
+    ],
+    "stop": [
+     "2026-12-07 09:00 kaijo",
+     "2026-12-07 11:00 tray"
+    ]
+   }
+  },
+  {
+   "name": "解除済みの宣言と同意の無い宣言には触らない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-04": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-04T11:00"
+       }
+      },
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-07T06:00"
+       }
+      },
+      "2026-12-09": {
+       "status": "okita",
+       "at": "2026-12-09T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-07T11:00",
+    "reason": "tray"
+   },
+   "expect": {
+    "message": "[shiftlock] 強制を解除したよ（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
+    "state": {
+     "shifts": {
+      "2026-12-04": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-04T11:00"
+       }
+      },
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-07T06:00"
+       }
+      },
+      "2026-12-09": {
+       "status": "okita",
+       "at": "2026-12-09T14:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-07T11:00\t-\tenforce_release\ttray"
+    ],
+    "stop": [
+     "2026-12-07 11:00 tray"
+    ]
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-07T11:00",
+    "reason": "tray"
+   },
+   "expect": {
+    "message": "[shiftlock] 強制を解除したで（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
+    "state": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-07T10:45:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-07T11:00"
+       }
+      }
+     }
+    },
+    "events": [
+     "2026-12-07T11:00\t2026-12-07\tenforce_release\ttray"
+    ],
+    "stop": [
+     "2026-12-07 11:00 tray"
+    ]
+   }
+  }
  ]
 }

@@ -837,6 +837,96 @@ def _tick_confirm_rows() -> list:
     ]
 
 
+ENFORCE_WATCH = ("state.json", "events.log", "notified.json")
+
+
+def _declared_enforce(**over) -> dict:
+    """同意済みの宣言（enforce_declare が state.json に書く形）。宣言そのものは Python 版でしか作れない。"""
+    return {"action": "lock", "duration_hours": 2, "declared_at": "2026-12-07T06:00", "consented_at": "2026-12-07T06:00",
+            "via": "shl", "runs": [], "grace_minutes": 15, "relock_minutes": 5, "max_runs": 6, "boot_grace_minutes": 15, **over}
+
+
+def _tick_enforce_rows() -> list:
+    """強制モードの発動判定（宣言・同意済みの乗務だけ）。乗務日は 2026-12-07（月）。最低ラインは 10:30。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    d = "2026-12-07"
+
+    def decl(day=d, shift=None, **over):
+        return {"state.json": {"shifts": {day: {**(shift or {}), "enforce": _declared_enforce(**over)}}}}
+
+    def run(*rows):
+        """rows: "HH:MM" か ("HH:MM", idle) か ("HH:MM", idle, {上書き})。"""
+        steps = []
+        for row in rows:
+            row = (row,) if isinstance(row, str) else row
+            steps.append((f"{d}T{row[0]}", row[1] if len(row) > 1 else 30, 0) + ((row[2],) if len(row) > 2 else ()))
+        return _tick_steps(*steps, watch=ENFORCE_WATCH)
+
+    warned = {"warned_at": f"{d}T10:30:00", "seen_at": f"{d}T10:40:00"}
+    return [
+        ("予告 → あと 5 分 → 実行 → 再予告 → 再実行", {**b, **decl()}, run("10:30", "10:35", "10:40", "10:45", "10:50", "10:55")),
+        ("実行のあと誰も触っていなければ（入力が実行より前）何もしない", {**b, **decl()},
+         run("10:30", "10:35", "10:40", "10:45", ("10:50", 400))),
+        ("回数の上限（max_runs 2）で止まる", {**b, **decl(max_runs=2)},
+         run("10:30", "10:35", "10:40", "10:45", "10:50", "10:55", "11:00", "11:05")),
+        ("時間切れ（duration_hours 0.5）で止まる", {**b, **decl(duration_hours=0.5)},
+         run("10:30", "10:35", "10:40", "10:45", "10:50", "10:55", "11:00", "11:05", "11:10", "11:15", "11:20")),
+        ("12 分以上空いたら予告からやり直し", {**b, **decl()}, run("10:30", "10:43", "10:48", "10:58")),
+        ("実行のあと 12 分以上空いたら再予告からやり直し", {**b, **decl()},
+         run("10:30", "10:35", "10:40", "10:45", "10:50", "11:03", "11:08")),
+        ("STOP.txt があれば何もしない（通知の添え字に書く）", {**b, **decl(), "STOP.txt": "2026-12-07 09:00 kaijo\n"},
+         run("10:30", "10:45")),
+        ("解除済みの宣言は何もしない（添え字も出さない）", {**b, **decl(released_at=f"{d}T09:00")}, run("10:30", "10:45")),
+        ("起動直後（uptime 600 秒）は発動しない", {**b, **decl()}, run(("10:30", 30, {"uptime": 600}), ("10:35", 30, {"uptime": 899}))),
+        ("起動から 15 分ちょうどで発動する", {**b, **decl()}, run(("10:30", 30, {"uptime": 900}))),
+        ("uptime が 0 なら発動しない", {**b, **decl()}, run(("10:30", 30, {"uptime": 0}))),
+        ("uptime が無ければ発動しない", {**b, **decl()}, run(("10:30", 30, {"uptime": None}))),
+        ("dry_run の予告は状態を進めない", {**b, **decl()}, run(("10:30", 30, {"dry_run": True}), "10:35")),
+        ("dry_run の実行は記録しない", {**b, **decl(**warned)}, run(("10:45", 30, {"dry_run": True}))),
+        ("dry_run の「あと 5 分」は何度でも出る", {**b, **decl(**warned)},
+         run(("10:41", 30, {"dry_run": True}), ("10:42", 30, {"dry_run": True}), "10:43", "10:44")),
+        ("宣言があれば lastcall・soft・hard の通知に添え字", {**b, **decl()}, run("07:20", "08:00", "10:30")),
+        ("action が shutdown", {**b, **decl(action="shutdown")}, run("10:30", "10:35", "10:40", "10:45")),
+        ("action が sleep・予告 2.5 分", {**b, **decl(action="sleep", grace_minutes=2.5)}, run("10:30", "10:35")),
+        ("離席中は何もしない", {**b, **decl()}, run(("10:30", 1500), ("10:45", 1500))),
+        ("起きた記録のある乗務は発動しない", {**b, **decl(shift={"status": "okita", "at": f"{d}T10:00"})}, run("10:30", "10:45")),
+        ("宣言が別の乗務日のものなら何もしない", {**b, **decl(day="2026-12-08")}, run("10:30", "10:45")),
+        ("古い宣言（項目が無い）は設定の値を使う",
+         {**cfg(enforce={"grace_minutes": 10, "action": "sleep"}),
+          "state.json": {"shifts": {d: {"enforce": {"consented_at": f"{d}T06:00"}}}}}, run("10:30", "10:40")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **decl()}, run("10:30", "10:40", "10:45", "10:50")),
+    ]
+
+
+def _expect_release(cfg, store, inp) -> dict:
+    """緊急解除（tick を通らない）。input {"now", "reason"}、expect {"message", "state", "events", "stop": STOP.txt の行}。"""
+    msg = sl.enforce_release(cfg, store, datetime.fromisoformat(inp["now"]), inp["reason"])
+    return {"message": msg, "state": _read_state(store) if store.p("state.json").exists() else None,
+            "events": _event_lines(store), "stop": store.p(sl.STOP_FILE).read_text(encoding="utf-8").splitlines()}
+
+
+def _release_rows() -> list:
+    b = {"shifts.json": _base()}
+    inp = {"now": "2026-12-07T11:00", "reason": "tray"}
+    one = {"2026-12-07": {"enforce": _declared_enforce(runs=[{"at": "2026-12-07T10:45:00", "action": "lock"}])}}
+    return [
+        ("宣言が 1 件", {**b, "state.json": {"shifts": one}}, inp),
+        ("宣言が 2 件（別の乗務日）",
+         {**b, "state.json": {"shifts": {"2026-12-08": {"enforce": _declared_enforce(action="sleep")}, **one}}}, inp),
+        ("宣言なし（乗務日は -）", b, inp),
+        ("STOP.txt が既にあって宣言なし", {**b, "STOP.txt": "2026-12-07 09:00 kaijo\n"}, inp),
+        ("STOP.txt が既にあっても宣言があれば解除する", {**b, "STOP.txt": "2026-12-07 09:00 kaijo\n", "state.json": {"shifts": one}}, inp),
+        ("解除済みの宣言と同意の無い宣言には触らない",
+         {**b, "state.json": {"shifts": {"2026-12-04": {"enforce": _declared_enforce(released_at="2026-12-04T11:00")},
+                                         "2026-12-08": {"enforce": {"action": "lock", "declared_at": "2026-12-07T06:00"}},
+                                         "2026-12-09": {"status": "okita", "at": "2026-12-09T14:00"}}}}, inp),
+        ("関西弁", {"shifts.json": _base(lang="ja_kansai"), "state.json": {"shifts": one}}, inp),
+    ]
+
+
 def _skip_cleanup(row):
     """その日の整理は済んだことにする（maintenance.json を置く）。1 日 1 回の整理は days.json を書き直すので、
     days.json を見る節（phone）に整理の書き込みが混ざらないようにする。整理そのものは節 maintenance で見る。"""
@@ -872,6 +962,8 @@ def build_vectors() -> dict:
             "autowake": _cases(_tick_autowake_rows(), _expect_tick),
             "phone": _cases(_tick_phone_rows(), _expect_tick),
             "confirm": _cases(_tick_confirm_rows(), _expect_tick),
+            "enforce": _cases(_tick_enforce_rows(), _expect_tick),
+            "release": _cases(_release_rows(), _expect_release),
         },
     }
 

@@ -192,6 +192,8 @@ def test_tick_vectors_shape():
     一時フォルダのパスが残っていない"""
     body = ex.build_vectors()["tick.json"]
     for section, cases in body.items():
+        if section == "release":   # 緊急解除は tick を通らない（形は test_release_vectors で見る）
+            continue
         for c in cases:
             name = f"{section} {c['name']}"
             assert len(c["expect"]["results"]) == len(c["input"]["steps"]), name
@@ -307,6 +309,52 @@ def test_tick_confirm_vectors():
     plain = [a["text"] for a in by_name["55 分なら付かない"]["results"][0]["actions"] if a["kind"] == "confirm"]
     assert JA.CONFIRM_HOME_HINT not in plain[0]
     assert by_name["confirm_since が無ければ前日を書き、それより前は聞かない"]["files"]["state.json"]["confirm_since"] == "2026-12-09"
+
+
+def _enforce_actions(name: str) -> list:
+    """節 enforce のケース name の各回について、強制の予告・実行を (method, action) の並びで。"""
+    case = next(c for c in ex.build_vectors()["tick.json"]["enforce"] if c["name"] == name)
+    return [[(a["method"], a.get("action")) for a in r["actions"] if a["kind"] == "enforce"] for r in case["expect"]["results"]]
+
+
+def test_tick_enforce_vectors():
+    """節 enforce: 予告 → あと 5 分 → 実行 → 再予告 → 再実行の順と、止まる条件が名前どおり"""
+    warn, run = [("popup", None)], [("enforce", "lock")]
+    assert _enforce_actions("予告 → あと 5 分 → 実行 → 再予告 → 再実行") == [warn, [], warn, run, warn, run]
+    assert _enforce_actions("実行のあと誰も触っていなければ（入力が実行より前）何もしない") == [warn, [], warn, run, []]
+    assert _enforce_actions("回数の上限（max_runs 2）で止まる") == [warn, [], warn, run, warn, run, [], []]
+    assert _enforce_actions("時間切れ（duration_hours 0.5）で止まる") == [warn, [], warn, run, warn, run, warn, run, warn, [], []]
+    assert _enforce_actions("12 分以上空いたら予告からやり直し") == [warn, warn, [], run]
+    assert _enforce_actions("実行のあと 12 分以上空いたら再予告からやり直し") == [warn, [], warn, run, warn, warn, run]
+    assert _enforce_actions("dry_run の予告は状態を進めない") == [warn, warn]
+    assert _enforce_actions("dry_run の実行は記録しない") == [run]
+    assert _enforce_actions("action が shutdown")[-1] == [("enforce", "shutdown")]
+    for name in ("STOP.txt があれば何もしない（通知の添え字に書く）", "解除済みの宣言は何もしない（添え字も出さない）",
+                 "起動直後（uptime 600 秒）は発動しない", "uptime が 0 なら発動しない", "uptime が無ければ発動しない",
+                 "離席中は何もしない", "起きた記録のある乗務は発動しない", "宣言が別の乗務日のものなら何もしない"):
+        assert not any(_enforce_actions(name)), name
+    # 宣言の無いケースで強制の予告・実行が出ることは無い（ほかの節には宣言を置いていない）
+    for section, cases in ex.build_vectors()["tick.json"].items():
+        if section in ("enforce", "release"):
+            continue
+        assert not any(a["kind"] == "enforce" for c in cases for r in c["expect"]["results"] for a in r["actions"]), section
+    case = next(c for c in ex.build_vectors()["tick.json"]["enforce"] if c["name"] == "dry_run の実行は記録しない")
+    assert case["expect"]["files"]["events.log"] is None
+    assert case["expect"]["files"]["state.json"]["shifts"]["2026-12-07"]["enforce"]["runs"] == []
+
+
+def test_release_vectors():
+    """節 release: STOP.txt に 1 行、同意済みで未解除の宣言に released_at、events.log に enforce_release（理由 tray）"""
+    cases = {c["name"]: c for c in ex.build_vectors()["tick.json"]["release"]}
+    assert all(set(c["expect"]) == {"message", "state", "events", "stop"} for c in cases.values())
+    assert all(c["expect"]["stop"][-1] == "2026-12-07 11:00 tray" for c in cases.values())
+    e = cases["宣言が 2 件（別の乗務日）"]["expect"]
+    assert [v["enforce"]["released_at"] for v in e["state"]["shifts"].values()] == ["2026-12-07T11:00"] * 2
+    assert e["events"] == ["2026-12-07T11:00	2026-12-07	enforce_release	tray", "2026-12-07T11:00	2026-12-08	enforce_release	tray"]
+    assert cases["宣言なし（乗務日は -）"]["expect"]["events"] == ["2026-12-07T11:00	-	enforce_release	tray"]
+    assert cases["STOP.txt が既にあって宣言なし"]["expect"]["message"] == JA.ENFORCE_RELEASE_ALREADY
+    e = cases["解除済みの宣言と同意の無い宣言には触らない"]["expect"]
+    assert e["state"] == cases["解除済みの宣言と同意の無い宣言には触らない"]["files"]["state.json"]
 
 
 TICK_KEYS = (

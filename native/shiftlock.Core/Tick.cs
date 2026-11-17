@@ -85,6 +85,7 @@ public static class Tick
         var notify = cfg.Section("notify");
         var speak = JsonX.Truthy(notify["speak"]);
         var actions = new List<TickAction>();
+        var enforceError = "";
         if (active)
         {
             string autoMsg;
@@ -102,27 +103,38 @@ public static class Tick
             }
             if (autoMsg.Length > 0)
             {
-                actions.Add(new TickAction(Method(notify, "phase", "toast"), "auto_okita", Title, autoMsg, speak));
+                actions.Add(new TickAction(NotifyLog.Method(notify, "phase", "toast"), "auto_okita", Title, autoMsg, speak));
             }
             var (phase, p) = Planner.Current(cfg, store.ShiftStatus(), now);
             if (p is not null && NotifyLog.Once(store, $"{p.Day}:{phase}", now, NotifyLog.Every(phase)))
             {
-                var method = phase is "hard" or "go_last" ? Method(notify, "hard", "popup") : Method(notify, "phase", "toast");
-                actions.Add(new TickAction(method, phase, Title, PhaseText.User(phase, p, now, cfg, m), speak));
+                var method = phase is "hard" or "go_last" ? NotifyLog.Method(notify, "hard", "popup") : NotifyLog.Method(notify, "phase", "toast");
+                var text = PhaseText.User(phase, p, now, cfg, m) + Enforce.Suffix(store, m, p, phase);
+                actions.Add(new TickAction(method, phase, Title, text, speak));
             }
             var (unconfirmed, others) = Confirm.PickUnconfirmed(cfg, store, now);
             if (unconfirmed is not null)
             {
                 // 終わった乗務の「出た？休んだ？」は 1 日 1 件，新しい乗務から
-                actions.Add(new TickAction(Method(notify, "phase", "toast"), "confirm", Title,
+                actions.Add(new TickAction(NotifyLog.Method(notify, "phase", "toast"), "confirm", Title,
                     Confirm.UserText(cfg, store, m, unconfirmed, now, others), speak));
                 Confirm.MarkAsked(store, unconfirmed.Day, now);
             }
             if (Usage.DueNag(u, now, cfg) is { } cont)
             {
                 var what = m[input.Game ? "TICK_NAG_GAME" : "TICK_NAG_PC"];
-                actions.Add(new TickAction(Method(notify, "nag", "toast"), "nag", Title,
+                actions.Add(new TickAction(NotifyLog.Method(notify, "nag", "toast"), "nag", Title,
                     m.Format("TICK_NAG", ("what", what), ("dur", TimeUtil.FmtDur(cont, m))), speak));
+            }
+            // 強制モード（宣言・同意済みの乗務だけ）．実行は一覧の最後．判断に失敗したら強制せず，通知だけ続ける
+            try
+            {
+                actions.AddRange(Enforce.Due(cfg, store, m, now, phase, p, active: true, input.UptimeSeconds, input.Remote,
+                    input.IdleSeconds, input.DryRun));
+            }
+            catch (Exception e)
+            {
+                enforceError = m.Format("TICK_ENFORCE_ERROR", ("err", e.Message));
             }
         }
         store.WriteJson(UsageFile, u);
@@ -150,15 +162,15 @@ public static class Tick
         {
             warnings.Add(m["TICK_SOUND_NUMBER_ERROR"]);
         }
+        if (enforceError.Length > 0)
+        {
+            warnings.Add(enforceError);
+        }
         return new TickResult(actions, warnings, volume, maxSeconds);
     }
 
     private const double DefaultVolume = 0.8;
     private const int DefaultMaxSeconds = 20;
-
-    /// <summary>通知の出し方（notify.phase / hard / nag）．無ければ fallback．文字列でなければその表記（鳴らす側が知らない出し方として扱う）．</summary>
-    private static string Method(JsonObject notify, string key, string fallback) =>
-        notify.TryGetPropertyValue(key, out var v) ? JsonX.Str(v) ?? JsonX.Text(v) : fallback;
 
     /// <summary>
     /// 通知音の音量と最長秒数（Python の float(sound_volume), int(sound_max_seconds)）．どちらかが数として読めなければ null

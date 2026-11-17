@@ -33,6 +33,27 @@ public sealed class TickVectorTests
     [Theory]
     [MemberData(nameof(Cases), "confirm")]
     public void Confirm(VectorCase c) => TickRunner.RunCase(c);
+
+    [Theory]
+    [MemberData(nameof(Cases), "enforce")]
+    public void Enforce(VectorCase c) => TickRunner.RunCase(c);
+
+    /// <summary>緊急解除（tick を通らない）．返事・state.json・events.log・STOP.txt を比べる．</summary>
+    [Theory]
+    [MemberData(nameof(Cases), "release")]
+    public void Release(VectorCase c)
+    {
+        using var folder = Vectors.Materialize(c.Files);
+        var cfg = ShiftConfig.Load(folder.ShiftsJson);
+
+        var message = Shiftlock.Core.Enforce.Release(new Store(folder.Dir), cfg.Msg, Vectors.Time(c.Input["now"]),
+            c.Input["reason"]!.GetValue<string>());
+
+        Assert.Equal(c.Expect["message"]!.GetValue<string>(), message);
+        TickRunner.AssertSame(c.Expect["state"], TickRunner.Snapshot(folder, "state.json"), "state.json");
+        TickRunner.AssertSame(c.Expect["events"], TickRunner.Snapshot(folder, "events.log") ?? new JsonArray(), "events.log");
+        TickRunner.AssertSame(c.Expect["stop"], TickRunner.Snapshot(folder, "STOP.txt"), "STOP.txt");
+    }
 }
 
 /// <summary>tick.json の 1 ケースを通す共通の手順．</summary>
