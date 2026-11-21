@@ -32,7 +32,7 @@
 ## ドキュメント
 - PC 版の仕様・ロジック（時刻の逆算、フェーズ、hook の入出力と処理順、tick、レポート）は [docs/pc-spec.md](docs/pc-spec.md)。動作を変えたらここも直す
 - v11 で足す機能（事後報告・強制モード・通知音・カレンダー複数・shl ヘルプ）の設計は [docs/pc-v11-design.md](docs/pc-v11-design.md)。上の「絶対」項目は 2026-11-03 に改訂済み
-- ネイティブアプリ化の言語・構成は [docs/native-app-plan.md](docs/native-app-plan.md)
+- ネイティブアプリ化の言語・構成は [docs/native-app-plan.md](docs/native-app-plan.md)。区切り 2（トレイ常駐の Agent）で決めたこと・レビューで送ったもの・まだ確かめていないことは [docs/native-agent-worklog.md](docs/native-agent-worklog.md)
 
 ## 公開
 - 開発はこのリポジトリ（非公開）。公開リポジトリには `tools/publish-public.sh` で中身を 1 コミットとして積む（`inm.py` を外し、個人データの名前と `.publish-deny` の語を確かめる）。スクリプトは push しない。push はユーザーに確認してから
