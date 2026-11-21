@@ -9,7 +9,8 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 | `shiftlock.Core` | ロジック層（逆算・フェーズ・意図判定・睡眠推定・レポート生成・設定の読み書き）．Windows API を呼ばない | v12-α |
 | `shl` | CLI（`shl.exe`，NativeAOT）．Claude Code hook・コマンド・ダブルクリック用 | v12-α |
 | `shiftlock.Core.Tests` | Core のテスト．`docs/test-vectors/*.json` を読んで Python 版と同じ結果になることを確かめる（`pc/tools/export_native.py` が作るケース別のベクタと，`pc/tools/make_test_vectors.py` が作る逆算・フェーズのシナリオ `plan-scenarios.json`） | v12-α |
-| `shiftlock.Agent` | トレイ常駐（見張り・通知・強制・同期）．まだ無い | v12-β |
+| `shiftlock.Agent` | トレイ常駐．実行ファイル名は `shiftlock-agent.exe`．5 分おきの見張り（判断は Core の `Tick.Run`）・通知・宣言済みの強制の実行・カレンダー同期・緊急解除．Windows に触る部分（値を取る・知らせる・止める）はインターフェースの裏．Windows Forms（トレイ）と WinRT（トースト・通知音） | 区切り 2 |
+| `shiftlock.Agent.Tests` | Agent のテスト．Windows 側を差し替えて見張りの流れ・通知の順番・切り替えを確かめる | 区切り 2 |
 | `shiftlock.App` | ウィンドウ（WinUI 3，非パッケージ）．実行ファイル名は `shiftlock.exe`．同時に動くのは 1 つだけ．いまの状態・記録のボタン 4 つ（寝る・起きた・行ってきます・帰ってきた）・取り消す・14 日の予定 | 区切り 1 |
 
 - フォルダ名・ソリューション名は計画書どおり小文字（`shiftlock.Core`），名前空間とアセンブリ名は C# の慣習で `Shiftlock.Core`．`shl` の名前空間は `Shiftlock.Cli`，実行ファイル名は `shl.exe`．`shiftlock.App` の名前空間は `Shiftlock.App`，実行ファイル名は `shiftlock.exe`．
@@ -19,7 +20,7 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 
 ## 今できること
 
-`shiftlock.exe`（`shiftlock.App`）: いまの状態を見て，ボタンで記録するウィンドウ．見張り・通知・設定の変更・レポート・Claude Code の hook は Python 版（`pc/`）のまま動かす（同じフォルダを同じ形式で読み書きするので並べて使える）．
+`shiftlock.exe`（`shiftlock.App`）: いまの状態を見て，ボタンで記録するウィンドウ．設定の変更・レポート・Claude Code の hook は Python 版（`pc/`）のまま動かす（同じフォルダを同じ形式で読み書きするので並べて使える）．見張りと通知は，切り替えるまでは Python 版，切り替えた後は下の `shiftlock-agent.exe`．
 
 ![状態と記録の画面（合成データ）](./SampleImage/status-window.png)
 
@@ -30,6 +31,16 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 - 言葉づかいは `shifts.json` の `lang`（`ja`／`ja_kansai`）．無い・知らない値のときは標準語（Python 版の既定は関西弁）．
 - `shifts.json` が無い・読めないときは知らせるだけ（設定の作成・変更はまだ Python 版の設定メニューで行う）．
 - 強制モードの宣言・解除・設定は画面に置かない．
+
+`shiftlock-agent.exe`（`shiftlock.Agent`）: 通知領域に常駐して，Python 版の `guard.ps1` ＋ `shiftlock.py tick` の代わりに見張る．
+
+- 起動 1 分後と以後 5 分おき（スリープからの復帰では 30 秒後にも）に見張りを 1 回．「前の見張りから 5 分」は `log/pc-YYYY-MM.jsonl` の最後の行で見る．判断と結果は Python 版の `run_tick` と同じ（`docs/test-vectors/tick.json`）．
+- 通知: トースト（`shiftlock` の名前）・ポップアップ（20 秒）・読み上げ・通知音．宣言済みの強制の実行（ロック・スリープ・60 秒後のシャットダウン）は，直前と音の後に `STOP.txt` を見てから．
+- トレイ: アイコンはフェーズで変わる（平常／注意／警告／設定エラー／見張りを止めている）．ホバーは残り時間の行．メニューは「状態を開く」（`shiftlock.exe` を起動）「緊急解除」（確認あり．既定は「いいえ」）「終了」（確認なし）．
+- `shifts.json` が無い・読めないときは終了せず，設定エラーの見た目で待つ（次の回に読み直す）．
+- 同時に動く Agent は 1 つだけ．データのフォルダは `SHIFTLOCK_DIR`（無ければ `%USERPROFILE%\shift-lock`）．
+- 強制モードの宣言・再開・設定はトレイにも引数にも無い（同意は Python 版の `shl enforce on` の対話入力だけ）．
+- 引数: `--install`／`--uninstall`（下の切り替え），`--stop`，`--test-notify`，`--tick-once`（Python 版との突き合わせ用．`pc/tools/tick_once.py` と同じ引数・同じ出力．本番のフォルダは断る）．
 
 ## 常駐（`shiftlock-agent.exe`）への切り替え
 

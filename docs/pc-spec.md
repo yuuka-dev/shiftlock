@@ -416,6 +416,19 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 - ゲームを起動したまま離席しても `game_idle_minutes`（180 分）で `active` でなくなり，`gap_start` は最後の入力時刻になる（issue #24）．
 - これが §6.3 の自動『起きた』と `recent_long_gap()` の材料．**レポートはこれを使わない**（離席は `log/pc-*.jsonl` から別に計算して「覚醒長」の判定だけに使い，睡眠は本人の記録から出す．§6.5・§11）．
 
+### 7.4 ネイティブ版では Agent が行う（`shiftlock-agent.exe`）
+
+ネイティブ版（`native/shiftlock.Agent`）に切り替えると，§7.1 の `guard.ps1` と §7.2 の `run_tick` の役目を常駐の Agent が行う（タスク `shiftlock-guard` は無効にする．切り替えの手順は [native/README.md](../native/README.md)，設計は [superpowers/specs/2026-11-17-native-agent-design.md](superpowers/specs/2026-11-17-native-agent-design.md)）．判断は `run_tick` と同じ順番・同じ条件で，`docs/test-vectors/tick.json` で突き合わせている．違いは次のとおり．
+
+- **5 分の判定**: タスクの間隔ではなく，`log/pc-YYYY-MM.jsonl` の最後の行の時刻で見る（最後の行から 5 分たっていなければ見張らない．Agent を起動し直した直後やスリープからの復帰でも行が重ならない）．タイマーのずれを 10 秒まで許す．最後の行が今より後（時計が戻った）なら見張る．
+- **二重に見張らない**: Agent は見張りのたびにタスク `shiftlock-guard` が有効かを確かめ，有効なら見張らない．
+- **通知の名前**: トーストは PowerShell の名前を借りず，`shiftlock` の名前で出す．
+- **ゲームの判定**: 決まりは §7.1 と同じ．ただし `game_dirs`・`game_exclude_dirs` の相対パスは使わない．exe のパスは権限が上のプロセスでも取れる（`guard.ps1` では取れずゲーム扱いにならなかったものが，ゲーム扱いになりうる）．
+- **緊急解除**: トレイの「緊急解除」が `guard.ps1 -Release` と同じことをする（`events.log` の `enforce_release` のメモは `tray`）．`kaijo.cmd`・`shl kaijo`・`STOP.txt` を手で置く，は今までどおり効く．
+- **カレンダー・整理**（§9・§10）: 読めない `days.json` は書き直さない（Python 版は空で書き直す）．iCal の日付は 8 桁の日付・6 桁の時刻だけ受ける．
+- **ログ**: `guard.log` の代わりに `agent.log`．
+- 宣言（`shl enforce on`）・再開・設定の変更・レポート・hook は Python 版のまま．Agent に宣言の入口は無い．
+
 ---
 
 ## 8. 連続稼働の声かけ（Claude / PC 共通）
