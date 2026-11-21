@@ -98,21 +98,11 @@ public sealed class Watcher(string dir, ISystemProbe probe, Func<DateTime> clock
             return WatchOutcome.GuardTaskEnabled;
         }
 
-        var shiftsJson = Path.Combine(dir, "shifts.json");
-        ShiftConfig cfg;
-        try
+        var (cfg, problem, configError) = LoadConfig(dir);
+        if (cfg is null)
         {
-            cfg = ShiftConfig.Load(shiftsJson);
-        }
-        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
-        {
-            error = Messages.Load(null).Format("APP_NO_CONFIG", ("path", shiftsJson));
-            return WatchOutcome.NoConfig;
-        }
-        catch (ConfigException e)
-        {
-            error = Messages.Load(null).Format("APP_BAD_CONFIG", ("err", e.Message));
-            return WatchOutcome.BadConfig;
+            error = configError;
+            return problem;
         }
 
         var store = new Store(dir);
@@ -142,6 +132,28 @@ public sealed class Watcher(string dir, ISystemProbe probe, Func<DateTime> clock
             deliver(result, cfg.Msg);
         }
         return WatchOutcome.Ran;
+    }
+
+    /// <summary>
+    /// 設定を読む．無い → (null, NoConfig, APP_NO_CONFIG の文)，読めない・検証に落ちた → (null, BadConfig, APP_BAD_CONFIG の文)．
+    /// エラーの文は標準語（設定が読めないので言語が分からない）．ほかのプロセスが掴んでいて読めないときは IOException．
+    /// トレイの表示も同じ読み方をする．
+    /// </summary>
+    public static (ShiftConfig? Config, WatchOutcome Problem, string? Error) LoadConfig(string dir)
+    {
+        var shiftsJson = Path.Combine(dir, "shifts.json");
+        try
+        {
+            return (ShiftConfig.Load(shiftsJson), WatchOutcome.Ran, null);
+        }
+        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return (null, WatchOutcome.NoConfig, Messages.Load(null).Format("APP_NO_CONFIG", ("path", shiftsJson)));
+        }
+        catch (ConfigException e)
+        {
+            return (null, WatchOutcome.BadConfig, Messages.Load(null).Format("APP_BAD_CONFIG", ("err", e.Message)));
+        }
     }
 
     /// <summary>shiftlock-guard の状態．確かめられなければ Unknown（見張りは行い，ログに 1 日 1 回書く）．</summary>

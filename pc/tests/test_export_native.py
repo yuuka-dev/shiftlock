@@ -404,6 +404,22 @@ def test_tick_maintenance_vectors():
     assert by_name["events.log が全部古ければ空になる"]["events.log"] == []
 
 
+AGENT_KEYS = ("AGENT_MENU_OPEN", "AGENT_MENU_RELEASE", "AGENT_MENU_EXIT", "AGENT_RELEASE_TITLE", "AGENT_RELEASE_ASK",
+              "AGENT_RELEASE_PARTIAL", "AGENT_RELEASE_FAILED", "AGENT_TIP_GUARD_TASK", "AGENT_TIP_FAILED", "AGENT_OPEN_FAILED",
+              "AGENT_TEST_TOAST", "AGENT_TEST_POPUP")
+
+
+def test_agent_keys_are_exported_in_both_langs():
+    """常駐（Agent）の文は両方の言語にあり、ja.py の AGENT_ は全部書き出しに入る。
+    強制を促す文・宣言や設定の入口になる文は無い（メニューは 開く・緊急解除・終了 の 3 つだけ）"""
+    for lang in ex.LANGS:
+        msgs = ex.build_messages(lang)
+        assert not [k for k in AGENT_KEYS if k not in msgs], lang
+        assert {k for k in msgs if k.startswith("AGENT_")} == set(AGENT_KEYS), lang
+        assert {k for k in msgs if k.startswith("AGENT_MENU_")} == {"AGENT_MENU_OPEN", "AGENT_MENU_RELEASE", "AGENT_MENU_EXIT"}, lang
+    assert {n for n in dir(JA) if n.isupper() and n.startswith("AGENT_")} == set(AGENT_KEYS)
+
+
 TICK_KEYS = (
     "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
     "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",

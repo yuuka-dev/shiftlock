@@ -586,3 +586,18 @@ APP_CONFIG_BAD_JSON = "JSON の書き方がおかしいよ（{err}）"
 APP_CONFIG_BAD_VALUE = "{key} の書き方がおかしいよ: {value}"
 APP_STATE_BUSY = "いま記録のファイルを読み書きできなかったよ。もう一度押してね。"
 APP_LOG_BUSY = "（履歴の events.log には書けなかったよ。記録そのものは残っているから、押し直さなくていいよ。）"
+
+# ================================================================ agent（ネイティブ版の常駐。native/shiftlock.Agent）
+# Python 側では使わず、tools/export_native.py が JSON に書き出す。トレイのメニュー・確認・知らせ。
+AGENT_MENU_OPEN = "状態を開く"
+AGENT_MENU_RELEASE = "緊急解除"
+AGENT_MENU_EXIT = "終了"
+AGENT_RELEASE_TITLE = "shiftlock 緊急解除"
+AGENT_RELEASE_ASK = "強制モードを解除する？\n（予約済みのシャットダウンを止めて、STOP.txt を置くよ。再開は shl enforce resume）"
+AGENT_RELEASE_PARTIAL = "強制は解除したよ（STOP.txt あり）。ただ、記録の一部が書けなかった。"
+AGENT_RELEASE_FAILED = "解除を記録できなかったよ。{path} を手で作ってね（中身は空でいい）。"
+AGENT_TIP_GUARD_TASK = "見張りを止めているよ（タスク shiftlock-guard が有効）"
+AGENT_TIP_FAILED = "前の見張りに失敗したよ（agent.log を見てね）"
+AGENT_OPEN_FAILED = "shiftlock.exe が見つからないよ（{path}）"
+AGENT_TEST_TOAST = "トーストのテストだよ"
+AGENT_TEST_POPUP = "ポップアップのテストだよ"
