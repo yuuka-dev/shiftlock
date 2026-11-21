@@ -15,6 +15,7 @@ namespace Shiftlock.Agent;
 ///   --install       Python 版の見張りから切り替える（自動起動を登録し，タスク shiftlock-guard を無効にして，Agent を起動）
 ///   --uninstall     戻す（Agent を終わらせ，登録を外し，タスク shiftlock-guard を有効に戻す）
 ///   --stop          動いている Agent を終わらせる（発行物を置き直すとき用）
+///   --tick-once     時刻と値を指定して見張りを 1 回だけ行い，結果の JSON を出す（Python 版との突き合わせ用．TickOnce）
 /// 強制モードの宣言・解除・設定を行う引数は無い（解除はトレイのメニューだけ）．
 /// </summary>
 public static class Program
@@ -38,6 +39,7 @@ public static class Program
                 "--install" => RunSetup(install: true),
                 "--uninstall" => RunSetup(install: false),
                 "--stop" => StopAgent(),
+                "--tick-once" => RunTickOnce(args),
                 _ => 2,
             };
         }
@@ -176,6 +178,13 @@ public static class Program
             StopAgent: AgentControl.Stop,
             Output: Console.WriteLine), m, task.Name);
         return install ? setup.Install(exe) : setup.Uninstall();
+    }
+
+    /// <summary>突き合わせ用の 1 回だけの見張り（--tick-once）．通知は出さず，強制も実行しない．</summary>
+    private static int RunTickOnce(string[] args)
+    {
+        OpenConsole();
+        return TickOnce.Run(args[1..], Console.Out, Console.Error);
     }
 
     /// <summary>動いている Agent を終わらせる（--stop）．終わらせた・動いていなかった → 0，止められない → 1．</summary>

@@ -21,6 +21,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <!-- 突き合わせ用の入口（TickOnce）を Python 版のベクタで確かめる -->
+  <ItemGroup>
+    <Content Include="../../docs/test-vectors/tick.json" Link="vectors/tick.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\shiftlock.Agent\shiftlock.Agent.csproj" />
   </ItemGroup>
