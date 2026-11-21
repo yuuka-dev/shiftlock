@@ -12,7 +12,7 @@ namespace Shiftlock.Agent;
 /// </summary>
 public sealed class Tray : IDisposable
 {
-    /// <summary>ウィンドウの実行ファイル（Agent と同じフォルダに置く）．</summary>
+    /// <summary>ウィンドウの実行ファイル．</summary>
     private const string AppExe = "shiftlock.exe";
 
     private const string Title = "shiftlock";
@@ -115,15 +115,31 @@ public sealed class Tray : IDisposable
         }
     }
 
-    /// <summary>状態を開く: 同じフォルダの shiftlock.exe を起動する（起動済みならウィンドウの側が前に出す）．</summary>
+    /// <summary>
+    /// ウィンドウの実行ファイルの場所: Agent と同じフォルダ，無ければ 1 つ上（置いた形は &lt;場所&gt;\shiftlock.exe と
+    /// &lt;場所&gt;\agent\shiftlock-agent.exe．native/deploy.ps1）．どちらにも無ければ，同じフォルダのパスを返す（知らせる文に出す）．
+    /// </summary>
+    public static string FindApp(string agentDir)
+    {
+        var here = Path.Combine(agentDir, AppExe);
+        if (File.Exists(here))
+        {
+            return here;
+        }
+        var parent = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(agentDir));
+        var above = parent is null ? null : Path.Combine(parent, AppExe);
+        return above is not null && File.Exists(above) ? above : here;
+    }
+
+    /// <summary>状態を開く: shiftlock.exe を起動する（起動済みならウィンドウの側が前に出す）．</summary>
     private void OpenApp()
     {
-        var exe = Path.Combine(AppContext.BaseDirectory, AppExe);
+        var exe = FindApp(AppContext.BaseDirectory);
         try
         {
             if (File.Exists(exe))
             {
-                using var p = Process.Start(new ProcessStartInfo(exe) { UseShellExecute = false, WorkingDirectory = AppContext.BaseDirectory });
+                using var p = Process.Start(new ProcessStartInfo(exe) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(exe) ?? "" });
                 return;
             }
         }

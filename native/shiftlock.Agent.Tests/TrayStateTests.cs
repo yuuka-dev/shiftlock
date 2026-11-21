@@ -131,6 +131,23 @@ public sealed class TrayStateTests : IDisposable
     }
 
     [Fact]
+    public void FindApp_LooksBesideTheAgent_ThenOneFolderUp()
+    {
+        // 置いた形: <場所>\shiftlock.exe と <場所>\agent\shiftlock-agent.exe
+        var agentDir = _dir.P("agent");
+        Directory.CreateDirectory(agentDir);
+
+        Assert.Equal(Path.Combine(agentDir, "shiftlock.exe"), Tray.FindApp(agentDir));   // どこにも無い → 同じフォルダのパス（知らせる文用）
+
+        _dir.Put("shiftlock.exe", "");
+        Assert.Equal(_dir.P("shiftlock.exe"), Tray.FindApp(agentDir));
+        Assert.Equal(_dir.P("shiftlock.exe"), Tray.FindApp(agentDir + Path.DirectorySeparatorChar));
+
+        _dir.Put("agent/shiftlock.exe", "");
+        Assert.Equal(Path.Combine(agentDir, "shiftlock.exe"), Tray.FindApp(agentDir));   // 同じフォルダが優先
+    }
+
+    [Fact]
     public void AllTipsInBothLanguages_FitWithoutCutting()
     {
         foreach (var lang in new[] { "ja", "ja_kansai" })

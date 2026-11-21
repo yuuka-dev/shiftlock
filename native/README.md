@@ -31,6 +31,47 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 - `shifts.json` が無い・読めないときは知らせるだけ（設定の作成・変更はまだ Python 版の設定メニューで行う）．
 - 強制モードの宣言・解除・設定は画面に置かない．
 
+## 常駐（`shiftlock-agent.exe`）への切り替え
+
+Python 版の見張り（タスク `shiftlock-guard` → `guard.ps1` → `shiftlock.py tick`）を，常駐の Agent に置き換える手順．**切り替えは本人が行う**（Claude Code からは行わない）．管理者権限は要らない．
+
+1. **置く**: `powershell -ExecutionPolicy Bypass -File native\deploy.ps1`
+   - ウィンドウと Agent を Release・win-x64・自己完結で発行し，`%LOCALAPPDATA%\Programs\shiftlock\` に置く（`shiftlock.exe` と `agent\shiftlock-agent.exe`．ビルドのフォルダから常駐させない）．
+   - `-WhatIf` で何をするかだけ表示．動いている Agent があれば先に終わらせ，置いた後に起動し直す．記録データ（`%USERPROFILE%\shift-lock`）には触らない．
+2. **切り替える**: `%LOCALAPPDATA%\Programs\shiftlock\agent\shiftlock-agent.exe --install`
+   - ログオン時の自動起動を登録（`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` の `shiftlock-agent`）→ トーストの名前を登録 → タスク `shiftlock-guard` を**無効化** → Agent を起動．結果を 1 行ずつ出す（成功 0，失敗 1）．
+   - タスクを無効にできなければ，自動起動の登録を取り消して失敗で終わる（Agent と Python 版が二重に見張る状態を残さない）．`shiftlock-report` には触らない．
+3. **戻す**: `...\agent\shiftlock-agent.exe --uninstall`（Agent を終わらせる → 登録を外す → `shiftlock-guard` を有効に戻す）．
+
+切り替えた後の決まり:
+
+- **`shiftlock.py tick` と `guard.ps1`（引数なし）を手で実行しない**（Agent と二重に記録・通知される）．`guard.ps1 -Release`（`kaijo.cmd`）・`-TestNotify`・`-ScanGames`・`-ShowGames` は今までどおり使える．
+- Agent は見張りのたびに `shiftlock-guard` が有効かを確かめ，有効なら見張らない（トレイが「見張りを止めている」見た目になる）．確かめられないときは見張りを続け，`agent.log` に 1 日 1 回書く．
+- 設定の変更・強制モードの宣言（`shl enforce on`）・レポート・Claude Code の hook は Python 版のまま．トレイにあるのは「状態を開く」「緊急解除」「終了」だけ（宣言・再開・設定は置かない）．
+- ログは実行フォルダの `agent.log`（1 MB を超えたら `agent.log.1` に回す）．
+
+通知の出し方（NuGet の追加なし）:
+
+| 種類 | 方法 |
+|---|---|
+| トースト | WinRT（`ToastNotificationManager`）．アプリ名 `shiftlock` で出すため，`HKCU\Software\Classes\AppUserModelId\shiftlock.Agent`（`DisplayName`）を登録する（Agent の起動時と `--install`．`--uninstall` で外す）．例外が出たらポップアップに切り替える |
+| ポップアップ | user32 の `MessageBoxTimeoutW`（最前面・警告アイコン・20 秒で閉じる） |
+| 読み上げ | SAPI（`SAPI.SpVoice`） |
+| 通知音 | WinRT の `MediaPlayer`（WAV・MP3・M4A・WMA．音量と最長秒数） |
+
+確かめ方（本番のフォルダに向けて動かさない）:
+
+```powershell
+$env:SHIFTLOCK_DIR = "<合成データか本番のコピーのフォルダ>"
+$env:SHIFTLOCK_GUARD_TASK = "shiftlock-guard-test"   # 本番のタスクを見に行かせない（無い名前なら「タスクなし」として見張る）
+dotnet build native
+.\native\shiftlock.Agent\bin\Debug\net10.0-windows10.0.26100.0\shiftlock-agent.exe                # 常駐（トレイ）．1 分後に 1 回目の見張り
+.\native\shiftlock.Agent\bin\Debug\net10.0-windows10.0.26100.0\shiftlock-agent.exe --test-notify  # トースト → ポップアップと読み上げ（guard.ps1 -TestNotify と同じ）
+.\native\shiftlock.Agent\bin\Debug\net10.0-windows10.0.26100.0\shiftlock-agent.exe --stop         # 動いている Agent を終わらせる
+```
+
+- テストのうち実際に通知やタスクを出すものは，頼んだときだけ動く: `SHIFTLOCK_TEST_TOAST=1`（無音のトーストを 1 件出して履歴に入るのを見る），`SHIFTLOCK_TEST_TASK=1`（試験用のタスク `shiftlock-guard-test` を作って消す）．
+
 ## 前提
 
 - .NET 10 SDK
