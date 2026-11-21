@@ -29,7 +29,7 @@ public static class Program
 
         var dir = AgentPaths.DataDir;
         var log = new AgentLog(AgentPaths.LogFile);
-        var watcher = new Watcher(dir, new NoProbe(), () => DateTime.Now, () => GuardTaskState.Unknown,
+        var watcher = new Watcher(dir, new WindowsProbe(), () => DateTime.Now, () => GuardTaskState.Unknown,
             (result, _) => log.Write($"actions: {result.Actions.Count} (not delivered)"), log);
 
         // 周期の違う仕事を足すときはここに並べる（今は 5 分の見張りだけ）
@@ -56,14 +56,5 @@ public static class Program
             log.Write("agent stopped");
         }
         return 0;
-    }
-
-    /// <summary>Windows 側の値がまだ無い間の代わり（何も取れない）．</summary>
-    private sealed class NoProbe : ISystemProbe
-    {
-        public double IdleSeconds() => 0;
-        public double? UptimeSeconds() => null;
-        public IReadOnlyList<(string Name, string? Path)> Processes() => [];
-        public IReadOnlyList<string> SteamCommonDirs() => [];
     }
 }
