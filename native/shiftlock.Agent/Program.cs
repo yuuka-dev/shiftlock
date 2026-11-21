@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using Shiftlock.Core;
 
 namespace Shiftlock.Agent;
 
@@ -29,8 +30,20 @@ public static class Program
 
         var dir = AgentPaths.DataDir;
         var log = new AgentLog(AgentPaths.LogFile);
+        try
+        {
+            WindowsNotifier.RegisterToastName();   // トーストを shiftlock の名前で出すための登録（HKCU）
+        }
+        catch (Exception e)
+        {
+            log.Write($"toast name registration failed: {e.GetType().Name}: {e.Message}");
+        }
+
+        // 「終了」で立てる．出している途中の通知を打ち切る
+        using var quit = new CancellationTokenSource();
+        var runner = new ActionRunner(new WindowsNotifier(log), new WindowsPower(), new Store(dir), log);
         var watcher = new Watcher(dir, new WindowsProbe(), () => DateTime.Now, () => GuardTaskState.Unknown,
-            (result, _) => log.Write($"actions: {result.Actions.Count} (not delivered)"), log);
+            (result, _) => runner.Run(result, quit.Token), log);
 
         // 周期の違う仕事を足すときはここに並べる（今は 5 分の見張りだけ）
         using var scheduler = new Scheduler([new Job(WatchJob, FirstDelay, Watcher.Interval, () => watcher.RunOnce())], log);
@@ -52,6 +65,7 @@ public static class Program
         }
         finally
         {
+            quit.Cancel();
             SystemEvents.PowerModeChanged -= OnPower;
             log.Write("agent stopped");
         }

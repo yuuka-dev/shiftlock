@@ -56,7 +56,8 @@ public sealed class Watcher(string dir, ISystemProbe probe, Func<DateTime> clock
     /// <summary>
     /// 見張りを 1 回試す．順番: 前の回が動いている → Busy ／ shiftlock-guard が有効 → GuardTaskEnabled ／
     /// 設定が無い・読めない → NoConfig・BadConfig ／ 5 分たっていない → TooSoon ／ Tick.Run → 警告をログ → deliver → Ran．
-    /// dryRun は強制モードの状態を進めない（Tick に渡すだけ．通知の履歴などは進む）．
+    /// dryRun は強制モードの状態を進めず，結果も出さない（通知を出さない・強制を実行しない．件数をログに書くだけ）．
+    /// 通知の履歴などのファイルは進む（guard.ps1 -DryRun と同じ）．
     /// </summary>
     public WatchOutcome RunOnce(bool dryRun = false)
     {
@@ -132,7 +133,14 @@ public sealed class Watcher(string dir, ISystemProbe probe, Func<DateTime> clock
                 log.Write("warn: " + warning);
             }
         }
-        deliver(result, cfg.Msg);
+        if (dryRun)
+        {
+            log.Write($"dry run: {result.Actions.Count} actions (not delivered)");
+        }
+        else
+        {
+            deliver(result, cfg.Msg);
+        }
         return WatchOutcome.Ran;
     }
 

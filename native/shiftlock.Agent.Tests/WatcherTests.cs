@@ -324,9 +324,9 @@ public sealed class WatcherTests : IDisposable
     }
 
     [Fact]
-    public void DryRun_IsPassedToTheTick()
+    public void DryRun_IsPassedToTheTick_AndNothingIsDelivered()
     {
-        // 宣言済みの強制の実行を dry_run で通しても，状態は進まない（runs が増えない）
+        // 宣言済みの強制の実行に当たる回を dry_run で通す: 状態は進まず（runs が増えない），結果は出さない（強制を実行しない）
         _dir.Put("shifts.json", Shifts);
         _dir.Put("state.json",
             """{"shifts": {"2026-12-07": {"enforce": {"action": "lock", "duration_hours": 2, "declared_at": "2026-12-07T06:00", "consented_at": "2026-12-07T06:00", "via": "shl", "runs": [], "grace_minutes": 15, "relock_minutes": 5, "max_runs": 6, "boot_grace_minutes": 15, "warned_at": "2026-12-07T10:30:00", "seen_at": "2026-12-07T10:40:00"}}}}""");
@@ -334,7 +334,9 @@ public sealed class WatcherTests : IDisposable
 
         Assert.Equal(WatchOutcome.Ran, NewWatcher().RunOnce(dryRun: true));
 
-        Assert.Contains(_delivered[0].Actions, a => a.Method == "enforce");
+        Assert.Empty(_delivered);
+        Assert.Contains(AgentLogLines, l => l.Contains("dry run: ", StringComparison.Ordinal));
+        Assert.Single(_dir.Lines(LogName));
         Assert.Contains("\"runs\": []", File.ReadAllText(_dir.P("state.json")));
         Assert.False(File.Exists(_dir.P("events.log")));
     }
