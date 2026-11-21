@@ -39,13 +39,20 @@ SHARED = REPO / "native" / "shared"
 VECTORS = REPO / "docs" / "test-vectors"
 
 # 書き出すキー。ネイティブ版が使う文だけに絞る（設定メニューや CLI の説明は持っていかない）
-EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPTION_MARK")
+EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPTION_MARK",
+         # 見張り（shiftlock.Agent）が使う文
+         "PHONE_LATE_PREFIX", "PHONE_OKITA", "RECORDS_YASUMI_PAID", "CONFIRM_HOME_HINT", "CONFIRM_MORE", "CONFIRM_USER",
+         # 強制モードは発動と解除で使う文だけ（宣言・状態表示の文は持っていかない。C# に宣言の入口を作らない）
+         "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
+         "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY")
 PREFIXES = ("TIME_DUR_", "RECORDS_KITAKU", "RECORDS_NERU", "RECORDS_OKITA", "RECORDS_SHUPPATSU", "RECORDS_UNDO_",
-            "CONFIG_", "APP_")
+            "CONFIG_", "APP_", "AGENT_",
+            "PHASE_", "AUTOWAKE_", "RECORDS_LATE_", "RECORDS_PAID_", "ABSENCE_", "NOTIFY_", "TICK_", "CAL_")
+SKIP_SUFFIX = "_CTX"   # Claude 向けの文（hook が使う）。ネイティブ版は使わない
 
 
 def _wanted(key: str) -> bool:
-    return key in EXACT or key.startswith(PREFIXES)
+    return (key in EXACT or key.startswith(PREFIXES)) and not key.endswith(SKIP_SUFFIX)
 
 
 def _check_template(key: str, text) -> str:
@@ -107,8 +114,12 @@ def _iso(t: datetime) -> str:
     return t.isoformat(timespec="minutes")
 
 
+DIR_MARK = "{DIR}"   # shifts.json の中でこの文字列は実行フォルダのパス（区切りは /）に置き換える。結果に出たパスは {DIR} に戻す
+
+
 def _put_files(d: Path, files: dict) -> None:
     for name, body in files.items():
+        (d / name).parent.mkdir(parents=True, exist_ok=True)   # "log/pc-2026-12.jsonl" のように / を含む名前
         if body is True:
             (d / name).write_bytes(b"")
         elif isinstance(body, str):
@@ -124,6 +135,9 @@ def _with_config(files: dict, fn):
         with tempfile.TemporaryDirectory() as t:
             _put_files(Path(t), files)
             path = Path(t) / "shifts.json"
+            raw = path.read_bytes()
+            if DIR_MARK.encode() in raw:
+                path.write_bytes(raw.replace(DIR_MARK.encode(), Path(t).resolve().as_posix().encode("utf-8")))
             return fn(sl.load_config(path), sl.Store(path))
     finally:
         i18n.set_lang(before)
@@ -461,6 +475,639 @@ def _snapshot_rows() -> list:
     return rows
 
 
+# ---- 見張り（tick）----
+# input:  {"steps": [{"now", "idle", "game", "uptime"?, "dry_run"?}], "fetch"?: {URL: ics の中身 / null（失敗させる）},
+#          "watch": [最後に比べるファイル]}
+# expect: {"results": [run_tick の戻り値], "files": {watch の名前: JSON（*.json）/ 行の配列（それ以外）/ null（無い）}}
+# 節は run_tick の段ごと。確認の段より前の節は confirm.mode を off にする（毎回全部の段を通るので、確認が state.json を書く）。
+# 各節は自分の段が書くファイルだけを watch に入れる。
+
+def _snapshot_file(store, name: str):
+    path = store.p(name)
+    if not path.exists():
+        return None
+    if name.endswith(".json"):
+        return json.loads(path.read_text(encoding="utf-8"))
+    return path.read_text(encoding="utf-8").splitlines()
+
+
+def _scrub_dir(obj, store):
+    """結果に出た実行フォルダのパスを {DIR} に戻す（一時フォルダの名前をベクタに残さない）。"""
+    text = json.dumps(obj, ensure_ascii=False)
+    for d in {store.dir.as_posix(), str(store.dir)}:
+        text = text.replace(json.dumps(d, ensure_ascii=False)[1:-1], DIR_MARK)
+    return json.loads(text)
+
+
+def _expect_tick(cfg, store, inp) -> dict:
+    from shiftlock import calendar_sync
+    table = inp.get("fetch")
+
+    def fetch(url: str) -> str:
+        if table is None or table.get(url) is None:
+            raise OSError("fetch failed")   # 取得しない設定のケースで呼ばれたら、同期失敗として結果に出る
+        return table[url]
+
+    real = calendar_sync._http_get
+    calendar_sync._http_get = fetch
+    try:
+        results = [sl.run_tick(store.p("shifts.json"), step["idle"], bool(step["game"]), datetime.fromisoformat(step["now"]),
+                               step.get("uptime"), None, bool(step.get("dry_run", False)))
+                   for step in inp["steps"]]
+    finally:
+        calendar_sync._http_get = real
+    return _scrub_dir({"results": results, "files": {name: _snapshot_file(store, name) for name in inp.get("watch", [])}},
+                      store)
+
+
+def _tick_steps(*rows, watch=(), fetch=None, uptime=7200) -> dict:
+    """rows: (時刻, idle 秒, game 0/1) か (時刻, idle 秒, game, {上書き})。"""
+    steps = []
+    for row in rows:
+        step = {"now": row[0], "idle": row[1], "game": row[2], "uptime": uptime}
+        if len(row) > 3:
+            step.update(row[3])
+        steps.append({k: v for k, v in step.items() if v is not None})
+    inp = {"steps": steps, "watch": list(watch)}
+    if fetch is not None:
+        inp["fetch"] = fetch
+    return inp
+
+
+NO_CONFIRM = {"confirm": {"mode": "off"}}
+USAGE_WATCH = ("usage-pc.json", "log/pc-2026-12.jsonl")
+
+
+def _tick_usage_rows() -> list:
+    """稼働・離席の記録（usage-pc.json と log/pc-*.jsonl）。乗務の無い土日を使い、通知が出ない時刻にする。"""
+    b = {"shifts.json": _base(**NO_CONFIRM)}
+    d = "2026-12-05"   # 土曜
+
+    def at(hm, day=d):
+        return f"{day}T{hm}"
+
+    def run(*rows):
+        return _tick_steps(*rows, watch=USAGE_WATCH)
+
+    away = {"events.log": "2026-12-04T16:05\t2026-12-04\tworked\tshuppatsu\n",
+            "state.json": _state("2026-12-04", status="worked", at="2026-12-04T16:05")}
+    many = [[f"2026-12-02T{h:02d}:00", f"2026-12-02T{h:02d}:40"] for h in range(20)]
+    return [
+        ("触っている 3 回", b, run((at("10:00"), 30, 0), (at("10:05"), 30, 0), (at("10:10"), 30, 0))),
+        ("離席して 45 分後に戻る", b,
+         run((at("10:00"), 30, 0), (at("10:25"), 1500, 0), (at("10:30"), 1800, 0), (at("10:45"), 30, 0))),
+        ("30 分未満の離席は gaps に入らない", b, run((at("10:00"), 30, 0), (at("10:25"), 1500, 0), (at("10:30"), 20, 0))),
+        ("31 分空いたら（スリープ）起点を切り直す", b, run((at("10:00"), 30, 0), (at("10:05"), 30, 0), (at("10:36"), 30, 0))),
+        ("30 分ちょうどなら起点はそのまま", b, run((at("10:00"), 30, 0), (at("10:30"), 30, 0))),
+        ("ゲーム中は 150 分の無操作でも触っている。180 分を超えたら離席", b,
+         run((at("13:00"), 9000, 1), (at("13:05"), 10900, 1))),
+        ("game_idle_minutes 0 は無制限", {"shifts.json": _base(usage={"game_idle_minutes": 0}, **NO_CONFIRM)},
+         run((at("13:00"), 100000, 1))),
+        ("game_idle_minutes が壊れていれば 180 分", {"shifts.json": _base(usage={"game_idle_minutes": "長め"}, **NO_CONFIRM)},
+         run((at("13:00"), 10700, 1), (at("13:05"), 10900, 1))),
+        ("idle_reset_minutes 5", {"shifts.json": _base(usage={"idle_reset_minutes": 5}, **NO_CONFIRM)},
+         run((at("10:00"), 299, 0), (at("10:05"), 300, 0))),
+        ("外出中（行ってきます の後）はゲームを見ない", {**b, **away}, run((at("02:00"), 3000, 1))),
+        ("帰ってきた後はゲームを見る",
+         {**b, **away, "events.log": away["events.log"] + "2026-12-05T01:30\t2026-12-07\tkitaku\tclaude 2026-12-05T01:30\n"},
+         run((at("02:00"), 3000, 1))),
+        ("ゲーム中に戻ったら離席の終わりは今", b, run((at("13:00"), 30, 0), (at("13:25"), 1500, 0), (at("14:10"), 1500, 1))),
+        ("gaps は 20 件まで（21 件目で最初の 1 件が落ちる）",
+         {**b, "usage-pc.json": {"gaps": many, "gap_start": "2026-12-05T09:00:00", "start": "2026-12-05T08:00:00",
+                                 "last": "2026-12-05T08:55:00", "last_nag": "2026-12-05T08:30:00"}},
+         run((at("10:00"), 30, 0))),
+        ("idle が負なら 0 として扱う", b, run((at("10:00"), -5, 0))),
+        ("idle の小数は切り捨てて書く", b, run((at("10:00"), 12.9, 0), (at("10:25"), 1500.7, 0))),
+        ("月をまたぐとログのファイルが分かれる", b,
+         _tick_steps(("2026-12-31T23:58", 30, 0), ("2027-01-01T00:03", 30, 0),
+                     watch=USAGE_WATCH + ("log/pc-2027-01.jsonl",))),
+    ]
+
+
+NOTIFY_WATCH = ("notified.json", "usage-pc.json")
+
+
+def _tick_notify_rows() -> list:
+    """フェーズ通知の間引き（1 回だけ・30 分おき・10 分おき）と声かけ。乗務日は 2026-12-01（火）。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    d = "2026-12-01"
+
+    def at(hm, day=d):
+        return f"{day}T{hm}"
+
+    def run(*hms, idle=30, game=0, day=d):
+        return _tick_steps(*[(at(hm, day), idle, game) for hm in hms], watch=NOTIFY_WATCH)
+
+    def used(start, last, day=d):
+        """start から触り続けている usage-pc.json（声かけまでの時間を縮める）。"""
+        return {"usage-pc.json": {"gaps": [], "start": f"{day}T{start}:00", "last": f"{day}T{last}:00"}}
+
+    okita = {"state.json": _state(d, status="okita", at=at("14:00"))}
+    sat = "2026-12-05"
+    return [
+        ("lastcall は 1 回だけ", b, run("07:20", "07:25", "07:30")),
+        ("soft は 30 分おき", b, run("07:55", "08:00", "08:05", "08:30", "08:35")),
+        ("hard は 10 分おき", b, run("10:30", "10:35", "10:40", "10:45", "10:50")),
+        ("go と go_last は 1 回ずつ", {**b, **okita}, run("15:40", "15:45", "15:50", "16:15", "16:20")),
+        ("離席中は出さない。戻ったら出す", b,
+         _tick_steps((at("08:00"), 1500, 0), (at("08:05"), 30, 0), watch=NOTIFY_WATCH)),
+        ("休みにした乗務には出さない", {**b, "state.json": _state(d, status="yasumi", at=at("06:00"))}, run("08:00", "10:30")),
+        ("notify.hard を toast に", cfg(notify={"hard": "toast"}), run("10:30")),
+        ("notify.phase を popup に・読み上げあり", cfg(notify={"phase": "popup", "speak": True}), run("07:20", "10:30")),
+        ("文に入る時間の表記（7.5 と 5.0）", cfg(sleep_target_hours=7.5, sleep_min_hours=5.0), run("08:30", "11:30")),
+        ("声かけは連続 120 分で 1 回、その 30 分後にもう 1 回", {**b, **used("10:00", "11:50", sat)},
+         run("11:55", "12:00", "12:05", "12:30", "12:35", day=sat)),
+        ("離席から戻ると声かけは数え直し", {**b, **used("10:00", "11:50", sat)},
+         _tick_steps((at("11:55", sat), 30, 0), (at("12:20", sat), 1500, 0), (at("12:25", sat), 20, 0), watch=NOTIFY_WATCH)),
+        ("ゲーム中の声かけ", {**b, **used("10:00", "11:55", sat)}, run("12:00", game=1, day=sat)),
+        ("声かけの間隔を変える（10 分から 5 分おき）", cfg(usage={"nag_after_minutes": 10, "nag_every_minutes": 5}),
+         run("10:00", "10:05", "10:10", "10:15", day=sat)),
+        ("notify.nag を popup に", {**cfg(notify={"nag": "popup"}), **used("10:00", "11:55", sat)}, run("12:00", day=sat)),
+        ("同じ回にフェーズ通知と声かけ", {**b, **used("06:00", "07:55")}, run("08:00")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **used("05:20", "07:15")}, run("07:20", "08:00", "10:30")),
+        ("関西弁: 出発", {**cfg(lang="ja_kansai"), **okita}, run("15:45", "16:15")),
+    ]
+
+
+def _tick_sound_rows() -> list:
+    """通知音の解決（種類 → default → なし）と音量・最長秒数。"""
+    d = "2026-12-01"
+
+    def cfg(**notify):
+        return {"shifts.json": _base(notify=notify, **NO_CONFIRM)}
+
+    def run(*hms):
+        return _tick_steps(*[(f"{d}T{hm}", 30, 0) for hm in hms], watch=("notified.json",))
+
+    two = {"usage-pc.json": {"gaps": [], "start": f"{d}T06:00:00", "last": f"{d}T07:55:00"}}   # 08:00 に soft と声かけが重なる
+    return [
+        ("種類ごとの音", {**cfg(sound={"hard": DIR_MARK + "/hard.wav"}), "hard.wav": True}, run("07:20", "10:30")),
+        ("default だけ", {**cfg(sound={"default": DIR_MARK + "/d.wav"}), "d.wav": True}, run("07:20")),
+        ("種類の音が default より先", {**cfg(sound={"default": DIR_MARK + "/d.wav", "lastcall": DIR_MARK + "/l.wav"}),
+                                "d.wav": True, "l.wav": True}, run("07:20")),
+        ("設定なしは空", cfg(), run("07:20")),
+        ("無いファイルの警告は 1 日 1 回", cfg(sound={"hard": DIR_MARK + "/none.wav"}), run("10:30", "10:40")),
+        ("同じ回に 2 件あれば優先の高い 1 件だけ",
+         {**cfg(sound={"soft": DIR_MARK + "/s.wav", "nag": DIR_MARK + "/n.wav"}), **two, "s.wav": True, "n.wav": True},
+         run("08:00")),
+        ("優先の高いほうのファイルが無ければ次の 1 件",
+         {**cfg(sound={"soft": DIR_MARK + "/none.wav", "nag": DIR_MARK + "/n.wav"}), **two, "n.wav": True}, run("08:00")),
+        ("ドライブでも / でも始まらないパスは確かめずに渡す", cfg(sound={"hard": "  chime.wav "}), run("10:30")),
+        ("音量と最長秒数", cfg(sound_volume=0.5, sound_max_seconds=7), run("07:20")),
+        ("数字の文字列と小数の秒数", cfg(sound_volume="0.3", sound_max_seconds=7.9), run("07:20")),
+        ("sound_volume が数字でなければ 0.8 と警告", cfg(sound_volume="大"), run("07:20")),
+        ("sound_max_seconds が数字でなければ両方とも既定と警告", cfg(sound_volume=0.5, sound_max_seconds="7.5"), run("07:20")),
+        ("sound_volume が null でも既定と警告", cfg(sound_volume=None), run("07:20")),
+        ("sound がリストなら空として扱う", cfg(sound=["a.wav"]), run("07:20")),
+    ]
+
+
+STATE_WATCH = ("state.json", "events.log")
+
+
+def _tick_autowake_rows() -> list:
+    """自動「起きた」。乗務日は 2026-12-07（月。前日は休み）と 2026-12-02（水。前日も乗務）。
+    離席は usage-pc.json に離席中（gap_start）を置き、戻った回の見張りで区間が確定する形で作る。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    mon, wed, tue = "2026-12-07", "2026-12-02", "2026-12-01"
+
+    def away(since: str) -> dict:
+        """since（"日付T時:分"）から離席中の usage-pc.json。"""
+        return {"usage-pc.json": {"gaps": [], "gap_start": since + ":00"}}
+
+    def back(when: str, idle=30):
+        """when に戻ってきた（触っている）1 回の見張り。"""
+        return _tick_steps((when, idle, 0), watch=STATE_WATCH)
+
+    neru = {"state.json": _state(mon, sleep_at=f"{mon}T08:10")}
+    prompt = '{"t": "2026-12-07T11:00:00", "k": "p"}\n'
+    return [
+        ("離席だけ 6 時間（auto_wake の既定）", {**b, **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+        ("「ねる」あり＋離席", {**b, **neru, **away(f"{mon}T08:12")}, back(f"{mon}T14:30")),
+        ("「ねる」だけ（PC は切っていた）", {**b, **neru}, back(f"{mon}T14:30")),
+        ("auto_wake が neru なら離席だけでは何もしない", {**cfg(auto_wake="neru"), **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+        ("auto_wake が neru でも「ねる」があれば起きたにする", {**cfg(auto_wake="neru"), **neru, **away(f"{mon}T08:12")},
+         back(f"{mon}T14:30")),
+        ("auto_wake が false なら何もしない", {**cfg(auto_wake=False), **neru, **away(f"{mon}T08:12")}, back(f"{mon}T14:30")),
+        ("5 時間 50 分では足りない", {**b, **away(f"{mon}T08:40")}, back(f"{mon}T14:30")),
+        ("auto_wake_hours 3 なら 3 時間で成立", {**cfg(auto_wake_hours=3), **away(f"{mon}T11:20")}, back(f"{mon}T14:30")),
+        ("no_sleep の時間帯で分断されて足りない",
+         {**cfg(no_sleep=[{"weekday": "mon", "from": "11:00", "to": "12:00"}]), **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+        ("Claude Code のプロンプトで区切られて足りない",
+         {**b, **away(f"{mon}T08:10"), "log/claude-2026-12.jsonl": prompt}, back(f"{mon}T14:30")),
+        ("プロンプト以外の行（k が p でない）は区切らない",
+         {**b, **away(f"{mon}T08:10"), "log/claude-2026-12.jsonl": prompt.replace('"p"', '"s"')}, back(f"{mon}T14:30")),
+        ("離席中（触っていない）は判定しない", {**b, **away(f"{mon}T08:10")}, back(f"{mon}T14:30", idle=1500)),
+        ("もう記録がある乗務は何もしない",
+         {**b, **away(f"{mon}T08:10"), "state.json": _state(mon, status="yasumi", at=f"{mon}T06:00")}, back(f"{mon}T14:30")),
+        ("乗務日の 0 時より前は何もしない", {**b, **away("2026-12-06T15:00")}, back("2026-12-06T23:30")),
+        ("出発の最終を過ぎた分は数えない（足りない）", {**b, **away(f"{mon}T11:00")}, back(f"{mon}T17:00")),
+        ("出発の最終までで足りる（そのまま最終出発の通知も出る）", {**b, **away(f"{mon}T10:20")}, back(f"{mon}T17:00")),
+        ("前日が乗務: 出発目安〜home_by_latest の離席は数えない", {**b, **away(f"{tue}T17:00")}, back(f"{wed}T08:00")),
+        ("前日が乗務: home_by_latest の後から数える", {**b, **away(f"{tue}T17:00")}, back(f"{wed}T15:30")),
+        ("前日が乗務: 帰宅の記録があればそこから数える",
+         {**b, **away(f"{tue}T17:00"), "state.json": _state(wed, kitaku=f"{wed}T07:05")}, back(f"{wed}T13:30")),
+        ("前日が乗務: home_by_latest を変える", {**cfg(home_by_latest="07:30"), **away(f"{tue}T17:00")}, back(f"{wed}T13:40")),
+        ("前日が乗務でも休みにしていれば数える",
+         {**b, **away(f"{tue}T22:00"), "state.json": _state(tue, status="yasumi", at=f"{tue}T12:00")}, back(f"{wed}T06:00")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **away(f"{mon}T08:10")}, back(f"{mon}T14:30")),
+    ]
+
+
+PHONE_WATCH = STATE_WATCH + ("days.json",)
+
+
+def _tick_phone_rows() -> list:
+    """iPhone の記録（mood.csv）の取り込みと事後報告。乗務日は 2026-12-07（月）ほか。"""
+    def cfg(**over):
+        return {"shifts.json": _base(mood_file=DIR_MARK + "/mood.csv", **{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    mon = "2026-12-07"
+
+    def mood(*lines):
+        return {"mood.csv": "".join(ln + "\n" for ln in lines)}
+
+    def run(*whens):
+        return _tick_steps(*[(w, 30, 0) for w in whens], watch=PHONE_WATCH)
+
+    first_log = {"log/pc-2026-12.jsonl": '{"t": "2026-12-01T00:00:00", "idle": 0, "game": 0}\n'}
+    return [_skip_cleanup(row) for row in [
+        ("neru → 寝た時刻", {**b, **mood(f"{mon} 08:10,neru")}, run(f"{mon}T08:15")),
+        ("neru の後の okita → 起きた（時刻は iPhone の記録）", {**b, **mood(f"{mon} 08:10,neru", f"{mon} 14:20,okita")},
+         run(f"{mon}T14:30")),
+        ("2 回の見張りに分かれても同じ", {**b, **mood(f"{mon} 08:10,neru", f"{mon} 14:20,okita")},
+         run(f"{mon}T08:15", f"{mon}T14:30", f"{mon}T14:35")),
+        ("二度寝をまとめて取り込んでも最後の okita が効く",
+         {**b, **mood(f"{mon} 08:10,neru", f"{mon} 10:00,okita", f"{mon} 10:30,neru", f"{mon} 14:20,okita")}, run(f"{mon}T14:30")),
+        ("二度寝を途中で 1 回取り込んでいても最後の okita が効く",
+         {**b, **mood(f"{mon} 08:10,neru", f"{mon} 10:00,okita", f"{mon} 10:30,neru", f"{mon} 14:20,okita")},
+         run(f"{mon}T10:05", f"{mon}T14:30")),
+        ("neru の無い okita は何もしない", {**b, **mood(f"{mon} 14:20,okita")}, run(f"{mon}T14:30")),
+        ("kitaku → 帰宅の時刻。2 回目は書かない", {**b, **mood(f"{mon} 07:05,kitaku")}, run(f"{mon}T07:30", f"{mon}T07:35")),
+        ("日本語の印（ねる・ただいま・起きた）", {**b, **mood(f"{mon} 07:05,ただいま", f"{mon} 08:10,ねる", f"{mon} 14:20,起きた")},
+         run(f"{mon}T14:30")),
+        ("T 区切り・秒つきの日時と前後の空白", {**b, **mood(f"{mon}T08:10:30 , neru ")}, run(f"{mon}T08:15")),
+        ("乗務日の前日の昼より前の印は見ない", {**b, **mood("2026-12-06 11:00,neru")}, run(f"{mon}T08:15")),
+        ("日付つきの yasumi → その日の事後報告。2 回目の見張りでは適用しない",
+         {**b, **mood("2026-12-03 09:50,yasumi:2026-12-02")}, run("2026-12-03T10:00", "2026-12-03T10:05")),
+        ("日付なしの 休んだ → 記録した時点で直近に終わった乗務", {**b, **mood("2026-12-08 09:00,休んだ")}, run("2026-12-08T09:05")),
+        ("日付なしの deta → 直近に終わった乗務", {**b, **mood("2026-12-08 09:00,deta")}, run("2026-12-08T09:05")),
+        ("休みの日（土曜）に deta → 出勤の例外日に足す", {**b, **mood("2026-12-06 10:00,deta:2026-12-05")}, run("2026-12-06T10:05")),
+        ("休みの日に yasumi は記録しない（適用済みには残る）", {**b, **mood("2026-12-06 10:00,yasumi:2026-12-05")},
+         run("2026-12-06T10:05")),
+        ("まだ終わっていない乗務の yasumi は記録しない", {**b, **mood(f"{mon} 09:00,yasumi:{mon}")}, run(f"{mon}T09:05")),
+        ("もう同じ記録がある日は何もしない",
+         {**b, **mood("2026-12-03 09:50,yasumi:2026-12-02"), "state.json": _state("2026-12-02", status="yasumi", at="2026-12-02T06:00")},
+         run("2026-12-03T10:00")),
+        ("未来の時刻と lookback_days より前の印は無視",
+         {**b, **mood("2026-12-20 09:00,yasumi:2026-12-02", "2026-12-01 09:00,yasumi:2026-12-01")}, run("2026-12-10T10:00")),
+        ("気分の行と知らない印は無視", {**b, **mood(f"{mon} 09:00,1,メモ", f"{mon} 09:01,sanpo", "こわれた行")}, run(f"{mon}T09:05")),
+        ("mood_file のファイルが無ければ何も起きない", b, run(f"{mon}T09:05")),
+        ("当日欠勤の目安に達したら一文が付く",
+         {**cfg(absence={"warn_at": 1}), **first_log, **mood("2026-12-03 09:50,yasumi:2026-12-02")}, run("2026-12-03T10:00")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **mood(f"{mon} 08:10,neru", f"{mon} 14:20,okita", "2026-12-07 14:25,休んだ:2026-12-04")},
+         run(f"{mon}T14:30")),
+    ]]
+
+
+def _tick_confirm_rows() -> list:
+    """終わった乗務の「出た？休んだ？」（1 日 1 件、新しい乗務から）。ここからは confirm.mode の既定（ask）。
+    記録開始日は log/pc-2026-12.jsonl の最初の行で作る。いまは 2026-12-10（木）で、昨日の乗務は 12/09。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**over)}
+
+    def log(*stamps, idle=30, game=0):
+        return "".join(json.dumps({"t": s, "idle": idle, "game": game}) + "\n" for s in stamps)
+
+    def state(since="2026-12-01", **shifts):
+        st = {"shifts": {d.replace("_", "-"): v for d, v in shifts.items()}}
+        if since:
+            st["confirm_since"] = since
+        return {"state.json": st}
+
+    def run(*whens, idle=30):
+        return _tick_steps(*[(w, idle, 0) for w in whens], watch=("state.json",))
+
+    worked = {"status": "worked", "at": "2026-12-08T16:00"}
+    older = {f"d2026_12_0{n}": worked for n in (3, 4, 7, 8)}        # 12/09 より前は記録済み
+    start = {"log/pc-2026-12.jsonl": log("2026-12-01T00:00:00")}
+    b = cfg()
+    now = "2026-12-10T10:00"
+
+    def keyed(**shifts):
+        return state(**{k[1:]: v for k, v in shifts.items()})
+
+    evening = [f"2026-12-09T{16 + i // 12:02d}:{i % 12 * 5:02d}:00" for i in range(12)]   # 16:00〜16:55 の 12 行 = 60 分
+    return [
+        ("昨日の乗務が未記録なら聞く", {**b, **start, **keyed(**older)}, run(now)),
+        ("同じ日の 2 回目は聞かない。翌日は次の 1 件", {**b, **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})},
+         run(now, "2026-12-10T10:05", "2026-12-11T10:00")),
+        ("2 件あれば新しいほうと「ほか 1 件」", {**b, **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})}, run(now)),
+        ("起きた記録があれば聞かない（okita_means_worked の既定）",
+         {**b, **start, **keyed(**older, d2026_12_09={"status": "okita", "at": "2026-12-09T14:00"})}, run(now)),
+        ("okita_means_worked が false なら起きた記録があっても聞く",
+         {**cfg(confirm={"okita_means_worked": False}), **start,
+          **keyed(**older, d2026_12_09={"status": "okita", "at": "2026-12-09T14:00"})}, run(now)),
+        ("休みにした乗務は聞かない", {**b, **start, **keyed(**older, d2026_12_09={"status": "yasumi", "at": "2026-12-09T06:00"})}, run(now)),
+        ("乗務の時間帯に PC を 60 分触っていたら一言付く",
+         {**b, "log/pc-2026-12.jsonl": log("2026-12-01T00:00:00") + log(*evening), **keyed(**older)}, run(now)),
+        ("55 分なら付かない",
+         {**b, "log/pc-2026-12.jsonl": log("2026-12-01T00:00:00") + log(*evening[:11]), **keyed(**older)}, run(now)),
+        ("放置（idle 300 秒以上）は数えず、ゲーム中は数える",
+         {**b, "log/pc-2026-12.jsonl": log("2026-12-01T00:00:00") + log(*evening[:6], idle=300) + log(*evening[6:], idle=9000, game=1)
+          + log(*[s.replace("T16", "T17") for s in evening[:6]], idle=299), **keyed(**older)}, run(now)),
+        ("翌朝 07:00（shift_end_earliest）より前は聞かない", {**b, **start, **keyed(**older)},
+         run("2026-12-10T06:55", "2026-12-10T07:00")),
+        ("shift_end_earliest を遅くすると、まだ終わっていない扱い",
+         {**cfg(shift_end_earliest="11:00"), **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})}, run(now)),
+        ("記録開始日より前の乗務は聞かない", {**b, "log/pc-2026-12.jsonl": log("2026-12-09T12:00:00"), **state()}, run(now)),
+        ("confirm_since が無ければ前日を書き、それより前は聞かない", {**b, **start}, run(now)),
+        ("ログが無い初回は聞かない（今日が記録開始日）", b, run(now)),
+        ("lookback_days 2 ならその中だけ", {**cfg(confirm={"lookback_days": 2}), **start, **state()}, run(now)),
+        ("mode が off なら聞かない", {**cfg(**NO_CONFIRM), **start, **keyed(**older)}, run(now)),
+        ("離席中は聞かない", {**b, **start, **keyed(**older)}, run(now, idle=1500)),
+        ("関西弁", {**cfg(lang="ja_kansai"), **start, **keyed(**{k: v for k, v in older.items() if "08" not in k})}, run(now)),
+    ]
+
+
+ENFORCE_WATCH = ("state.json", "events.log", "notified.json")
+
+
+def _declared_enforce(**over) -> dict:
+    """同意済みの宣言（enforce_declare が state.json に書く形）。宣言そのものは Python 版でしか作れない。"""
+    return {"action": "lock", "duration_hours": 2, "declared_at": "2026-12-07T06:00", "consented_at": "2026-12-07T06:00",
+            "via": "shl", "runs": [], "grace_minutes": 15, "relock_minutes": 5, "max_runs": 6, "boot_grace_minutes": 15, **over}
+
+
+def _tick_enforce_rows() -> list:
+    """強制モードの発動判定（宣言・同意済みの乗務だけ）。乗務日は 2026-12-07（月）。最低ラインは 10:30。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    b = cfg()
+    d = "2026-12-07"
+
+    def decl(day=d, shift=None, **over):
+        return {"state.json": {"shifts": {day: {**(shift or {}), "enforce": _declared_enforce(**over)}}}}
+
+    def run(*rows):
+        """rows: "HH:MM" か ("HH:MM", idle) か ("HH:MM", idle, {上書き})。"""
+        steps = []
+        for row in rows:
+            row = (row,) if isinstance(row, str) else row
+            steps.append((f"{d}T{row[0]}", row[1] if len(row) > 1 else 30, 0) + ((row[2],) if len(row) > 2 else ()))
+        return _tick_steps(*steps, watch=ENFORCE_WATCH)
+
+    warned = {"warned_at": f"{d}T10:30:00", "seen_at": f"{d}T10:40:00"}
+    return [
+        ("予告 → あと 5 分 → 実行 → 再予告 → 再実行", {**b, **decl()}, run("10:30", "10:35", "10:40", "10:45", "10:50", "10:55")),
+        ("実行のあと誰も触っていなければ（入力が実行より前）何もしない", {**b, **decl()},
+         run("10:30", "10:35", "10:40", "10:45", ("10:50", 400))),
+        ("回数の上限（max_runs 2）で止まる", {**b, **decl(max_runs=2)},
+         run("10:30", "10:35", "10:40", "10:45", "10:50", "10:55", "11:00", "11:05")),
+        ("時間切れ（duration_hours 0.5）で止まる", {**b, **decl(duration_hours=0.5)},
+         run("10:30", "10:35", "10:40", "10:45", "10:50", "10:55", "11:00", "11:05", "11:10", "11:15", "11:20")),
+        ("12 分以上空いたら予告からやり直し", {**b, **decl()}, run("10:30", "10:43", "10:48", "10:58")),
+        ("実行のあと 12 分以上空いたら再予告からやり直し", {**b, **decl()},
+         run("10:30", "10:35", "10:40", "10:45", "10:50", "11:03", "11:08")),
+        ("STOP.txt があれば何もしない（通知の添え字に書く）", {**b, **decl(), "STOP.txt": "2026-12-07 09:00 kaijo\n"},
+         run("10:30", "10:45")),
+        ("解除済みの宣言は何もしない（添え字も出さない）", {**b, **decl(released_at=f"{d}T09:00")}, run("10:30", "10:45")),
+        ("起動直後（uptime 600 秒）は発動しない", {**b, **decl()}, run(("10:30", 30, {"uptime": 600}), ("10:35", 30, {"uptime": 899}))),
+        ("起動から 15 分ちょうどで発動する", {**b, **decl()}, run(("10:30", 30, {"uptime": 900}))),
+        ("uptime が 0 なら発動しない", {**b, **decl()}, run(("10:30", 30, {"uptime": 0}))),
+        ("uptime が無ければ発動しない", {**b, **decl()}, run(("10:30", 30, {"uptime": None}))),
+        ("dry_run の予告は状態を進めない", {**b, **decl()}, run(("10:30", 30, {"dry_run": True}), "10:35")),
+        ("dry_run の実行は記録しない", {**b, **decl(**warned)}, run(("10:45", 30, {"dry_run": True}))),
+        ("dry_run の「あと 5 分」は何度でも出る", {**b, **decl(**warned)},
+         run(("10:41", 30, {"dry_run": True}), ("10:42", 30, {"dry_run": True}), "10:43", "10:44")),
+        ("宣言があれば lastcall・soft・hard の通知に添え字", {**b, **decl()}, run("07:20", "08:00", "10:30")),
+        ("action が shutdown", {**b, **decl(action="shutdown")}, run("10:30", "10:35", "10:40", "10:45")),
+        ("action が sleep・予告 2.5 分", {**b, **decl(action="sleep", grace_minutes=2.5)}, run("10:30", "10:35")),
+        ("離席中は何もしない", {**b, **decl()}, run(("10:30", 1500), ("10:45", 1500))),
+        ("起きた記録のある乗務は発動しない", {**b, **decl(shift={"status": "okita", "at": f"{d}T10:00"})}, run("10:30", "10:45")),
+        ("宣言が別の乗務日のものなら何もしない", {**b, **decl(day="2026-12-08")}, run("10:30", "10:45")),
+        ("古い宣言（項目が無い）は設定の値を使う",
+         {**cfg(enforce={"grace_minutes": 10, "action": "sleep"}),
+          "state.json": {"shifts": {d: {"enforce": {"consented_at": f"{d}T06:00"}}}}}, run("10:30", "10:40")),
+        ("関西弁", {**cfg(lang="ja_kansai"), **decl()}, run("10:30", "10:40", "10:45", "10:50")),
+    ]
+
+
+def _expect_release(cfg, store, inp) -> dict:
+    """緊急解除（tick を通らない）。input {"now", "reason"}、expect {"message", "state", "events", "stop": STOP.txt の行}。"""
+    msg = sl.enforce_release(cfg, store, datetime.fromisoformat(inp["now"]), inp["reason"])
+    return {"message": msg, "state": _read_state(store) if store.p("state.json").exists() else None,
+            "events": _event_lines(store), "stop": store.p(sl.STOP_FILE).read_text(encoding="utf-8").splitlines()}
+
+
+def _release_rows() -> list:
+    b = {"shifts.json": _base()}
+    inp = {"now": "2026-12-07T11:00", "reason": "tray"}
+    one = {"2026-12-07": {"enforce": _declared_enforce(runs=[{"at": "2026-12-07T10:45:00", "action": "lock"}])}}
+    return [
+        ("宣言が 1 件", {**b, "state.json": {"shifts": one}}, inp),
+        ("宣言が 2 件（別の乗務日）",
+         {**b, "state.json": {"shifts": {"2026-12-08": {"enforce": _declared_enforce(action="sleep")}, **one}}}, inp),
+        ("宣言なし（乗務日は -）", b, inp),
+        ("STOP.txt が既にあって宣言なし", {**b, "STOP.txt": "2026-12-07 09:00 kaijo\n"}, inp),
+        ("STOP.txt が既にあっても宣言があれば解除する", {**b, "STOP.txt": "2026-12-07 09:00 kaijo\n", "state.json": {"shifts": one}}, inp),
+        ("解除済みの宣言と同意の無い宣言には触らない",
+         {**b, "state.json": {"shifts": {"2026-12-04": {"enforce": _declared_enforce(released_at="2026-12-04T11:00")},
+                                         "2026-12-08": {"enforce": {"action": "lock", "declared_at": "2026-12-07T06:00"}},
+                                         "2026-12-09": {"status": "okita", "at": "2026-12-09T14:00"}}}}, inp),
+        ("関西弁", {"shifts.json": _base(lang="ja_kansai"), "state.json": {"shifts": one}}, inp),
+    ]
+
+
+CAL_A = "https://cal.example/a.ics"
+CAL_B = "https://cal.example/b.ics"
+
+
+def _ics(*events) -> str:
+    """iCal の本文（行末は CRLF）。events は _vevent の戻り値。"""
+    return "".join(ln + "\r\n" for ln in ["BEGIN:VCALENDAR", "VERSION:2.0", *[ln for e in events for ln in e], "END:VCALENDAR"])
+
+
+def _vevent(summary, start, end=None, *extra) -> list:
+    """予定 1 件の行。start・end は "名前の後ろ:値"（";VALUE=DATE:20261207" や ":20261207T030000Z"）。"""
+    lines = ["BEGIN:VEVENT", "UID:x@example", "DTSTART" + start]
+    if end is not None:
+        lines.append("DTEND" + end)
+    return [*lines, "SUMMARY:" + summary, *extra, "END:VEVENT"]
+
+
+def _allday(summary, start, end=None, *extra) -> list:
+    return _vevent(summary, ";VALUE=DATE:" + start, None if end is None else ";VALUE=DATE:" + end, *extra)
+
+
+def _tick_calendar_rows() -> list:
+    """カレンダー同期（calendar.json）。同期の結果が乗務日の判定に効くのは次の見張りから（2 回目の就寝準備の通知で見る）。
+    2026-12-07 は月曜（乗務日）、2026-12-05 は土曜（休み）。時刻つきの Z は、どのタイムゾーンで書き出しても同じ日になる時刻にしてある。"""
+    def cfg(**cal):
+        return {"shifts.json": _base(calendar=cal or {"ics_url": CAL_A}, **NO_CONFIRM)}
+
+    one = cfg()
+    mon, sat = "2026-12-07", "2026-12-05"
+
+    def run(day=mon, fetch=None, watch=("calendar.json",), hms=("07:15", "07:20")):
+        return _tick_steps(*[(f"{day}T{hm}", 30, 0) for hm in hms], watch=watch, fetch=fetch)
+
+    def got(*events):
+        return {CAL_A: _ics(*events)}
+
+    def old(fetched, **src):
+        """前回の同期の結果（新形式）。"""
+        return {"calendar.json": {"fetched": fetched, "sources": {"カレンダー": {
+            "fetched": fetched, "error": None, "off": {}, "work": {}, "recurring_skipped": 0, **src}}}}
+
+    two = cfg(sources=[{"name": "会社", "ics_url": CAL_A}, {"name": "私用", "ics_url": CAL_B}])
+    return [
+        ("カレンダー未設定なら何もしない", {"shifts.json": _base(**NO_CONFIRM)}, run()),
+        ("終日の「公休」で乗務日が休みになる", one, run(fetch=got(_allday("公休", "20261207", "20261208")))),
+        ("「出勤」で休みの日が乗務日になる", one, run(sat, fetch=got(_allday("臨時出勤", "20261205", "20261206")))),
+        ("複数日の終日予定（DTEND は翌日）", one, run(fetch=got(_allday("有給", "20261207", "20261210")))),
+        ("DTEND が無い・DTSTART より前なら 1 日だけ", one,
+         run(fetch=got(_allday("公休", "20261207"), _allday("休み", "20261209", "20261208")))),
+        ("VALUE=DATE の無い 8 桁も終日", one, run(fetch=got(_vevent("公休", ":20261207", ":20261208")))),
+        ("Z つきの時刻はローカルの日付", one, run(fetch=got(_vevent("休み", ":20261207T030000Z", ":20261207T040000Z")))),
+        ("時刻つき（TZID）は書いてある日付", one,
+         run(fetch=got(_vevent("公休", ";TZID=Asia/Tokyo:20261207T090000", ";TZID=Asia/Tokyo:20261208T180000")))),
+        ("折り返した行（空白・タブ）", one,
+         run(fetch={CAL_A: _ics(["BEGIN:VEVENT", "DTSTART;VALUE=DATE:2026", " 1207", "SUMMARY:公", "\t休（折り", " 返し）", "END:VEVENT"])})),
+        ("SUMMARY のエスケープを戻す", one, run(fetch=got(_allday("公休\\, 午後\\; メモ\\n2 行目", "20261207")))),
+        ("STATUS:CANCELLED は無視", one,
+         run(fetch=got(_allday("公休", "20261207", None, "STATUS:CANCELLED"), _allday("公休", "20261208", None, "STATUS:CONFIRMED")))),
+        ("RRULE は初回だけ（recurring_skipped 1）", one,
+         run(fetch=got(_allday("公休", "20261207", "20261208", "RRULE:FREQ=WEEKLY;BYDAY=MO")))),
+        ("キーワードの無い予定・DTSTART の無い予定は拾わない", one,
+         run(fetch=got(_allday("歯医者", "20261207"), ["BEGIN:VEVENT", "SUMMARY:公休", "END:VEVENT"]))),
+        ("休みと出勤の両方の言葉があれば休み", one, run(fetch=got(_allday("出勤の代わりに公休", "20261207")))),
+        ("62 日を超える予定は 62 日ぶん", one, run(fetch=got(_allday("休み", "20261207", "20270401")))),
+        ("180 日より先・60 日より前は残さない", one,
+         run(fetch=got(_allday("公休", "20270605"), _allday("公休", "20270606"), _allday("公休", "20261001")))),
+        ("LF だけの行末・VCALENDAR の外の行", one,
+         run(fetch={CAL_A: "X-JUNK:1\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:20261207\nSUMMARY:公休\nEND:VEVENT\nEND:VEVENT\nSUMMARY:出勤\n"})),
+        ("sync_minutes 内は取りに行かない（取りに行けば失敗が書かれる）",
+         {**one, **old("2026-12-07T06:30:00", off={"2026-12-08": "公休"})}, run(hms=("07:15",))),
+        ("sync_minutes を過ぎたら取りに行く", {**one, **old("2026-12-07T06:15:00", off={"2026-12-08": "公休"})},
+         run(fetch=got(_allday("公休", "20261209")), hms=("07:15",))),
+        ("sync_minutes を 10 に", {**cfg(ics_url=CAL_A, sync_minutes=10), **old("2026-12-07T07:00:00")},
+         run(fetch=got(_allday("公休", "20261209")), hms=("07:05", "07:10"))),
+        ("取得に失敗したら前回分が残り error が入る", {**one, **old("2026-12-07T05:00:00", off={mon: "公休"})}, run()),
+        ("初回から失敗", one, run()),
+        ("失敗の後に成功すれば error は消える",
+         {**one, "calendar.json": {"fetched": "2026-12-07T05:00:00", "sources": {"カレンダー": {
+             "fetched": None, "error": "12/07 05:00 OSError: fetch failed"}}}},
+         run(fetch=got(_allday("公休", "20261207")))),
+        ("2 本のうち 1 本だけ失敗", two, run(fetch=got(_allday("公休", "20261207")))),
+        ("旧形式の calendar.json は先頭のソースに引き継ぐ",
+         {**two, "calendar.json": {"fetched": "2026-12-07T07:00:00", "error": None, "off": {mon: "公休"}, "work": {},
+                                   "recurring_skipped": 2}},
+         run(fetch={CAL_B: _ics(_allday("出勤", "20261205"))})),
+        ("同じ URL は 1 本・ics_url が先頭", cfg(ics_url=CAL_A, sources=[{"name": "二重", "ics_url": CAL_A},
+                                                                 {"name": "私用", "ics_url": " " + CAL_B + " "}]),
+         run(fetch={CAL_A: _ics(_allday("公休", "20261207")), CAL_B: _ics(_allday("公休", "20261208"))})),
+        ("名前の重複に ' が付く・名前が無ければ番号", cfg(sources=[{"name": "会社", "ics_url": CAL_A}, {"name": "会社", "ics_url": CAL_B},
+                                                    {"name": " ", "ics_url": CAL_A + "?3"}, {"ics_url": ""}, "x"]),
+         run(fetch={CAL_A: _ics(), CAL_B: _ics(), CAL_A + "?3": _ics()}, hms=("07:15",))),
+        ("ソースごとのキーワード（無ければ calendar の値）",
+         cfg(off_keywords=["明け"], sources=[{"name": "会社", "ics_url": CAL_A, "off_keywords": ["研修"], "work_keywords": ["当番"]},
+                                          {"name": "私用", "ics_url": CAL_B}]),
+         run(fetch={CAL_A: _ics(_allday("研修", "20261207"), _allday("当番", "20261205"), _allday("明け", "20261208")),
+                    CAL_B: _ics(_allday("明け", "20261209"), _allday("研修", "20261210"), _allday("出勤", "20261212"))})),
+        ("設定から消えたソースは calendar.json からも消える",
+         {**one, "calendar.json": {"fetched": "2026-12-07T07:00:00", "sources": {
+             "カレンダー": {"fetched": "2026-12-07T07:00:00", "error": None, "off": {}, "work": {}, "recurring_skipped": 0},
+             "昔の": {"fetched": "2026-12-07T07:00:00", "error": None, "off": {mon: "公休"}, "work": {}, "recurring_skipped": 0}}}},
+         run(hms=("07:15",))),
+        # 日付が読めなければその回は失敗（前回の休みが残る → 就寝準備の通知は出ない）。error の文は言語ごとに違うので calendar.json は比べない
+        ("日付の読めない DTSTART は失敗として前回分を残す", {**one, **old("2026-12-07T05:00:00", off={mon: "公休"})},
+         run(fetch=got(_allday("公休", "2026XX07")), watch=("notified.json",))),
+        ("前回の fetched が読めなければ同期しない（見張りは続く）",
+         {**one, "calendar.json": {"fetched": "x", "sources": {"カレンダー": {"fetched": "こわれた", "off": {mon: "公休"}}}}},
+         run(fetch=got(_allday("公休", "20261208")))),
+    ]
+
+
+def _tick_maintenance_rows() -> list:
+    """1 日 1 回の整理（古い記録を消す）。今は 2027-12-04（土）10:00。既定は days 60 日・ログ 180 日・events 365 日・レポート 3 か月。"""
+    now = "2027-12-04T10:00"
+
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    def log(month, kind="pc"):
+        return f"log/{kind}-{month}.jsonl"
+
+    def line(day):
+        return '{"t": "%sT00:00:00", "idle": 0, "game": 0}\n' % day
+
+    old = {
+        "days.json": {"off": {"2027-10-04": "公休", "2027-10-05": "公休"}, "work": {"2027-10-03": "出勤", "2027-12-11": "出勤"},
+                      "times": {"2027-10-04": {"start_target": "18:00"}, "2027-12-06": {"start_target": "18:00"}}, "memo": "残る"},
+        "state.json": {"shifts": {"2027-10-04": {"status": "worked", "at": "2027-10-04T16:00"},
+                                  "2027-10-05": {"status": "yasumi", "at": "2027-10-05T09:00"}}, "other": 1},
+        log("2026-12"): line("2026-12-01"), log("2027-05"): line("2027-05-01"), log("2027-06"): line("2027-06-01"),
+        log("2027-05", "phone"): line("2027-05-02"), "log/pc-xxxx-yy.jsonl": "x\n", "log/memo.txt": "x\n",
+        "events.log": "2026-12-03T09:00\t2026-12-03\tyasumi\tapp\n\n2026-12-04T09:00\t2026-12-04\tyasumi\tapp\n",
+        "reports/report_2027-07-21_2027-08-20.html": "<html>a</html>\n",
+        "reports/report_2027-08-05_2027-09-04.html": "<html>b</html>\n",
+        "reports/report_2027-07-04_2027-09-03.pdf": "c\n",
+        "reports/report-2027-08-01.html": "<html>d</html>\n",
+        "reports/report-2027-09-04.pdf": "e\n",
+        "reports/memo_2027-01-01_2027-01-31.html": "<html>f</html>\n",
+    }
+    watch = ("maintenance.json", *[k for k in old], "log/pc-2027-12.jsonl")
+
+    def run(*whens, watch=watch):
+        return _tick_steps(*[(w, 30, 0) for w in whens], watch=watch)
+
+    small = ("maintenance.json", "days.json", "state.json", "events.log")
+    return [
+        ("古い記録が消える", {**cfg(), **old}, run(now)),
+        ("同じ日の 2 回目は整理しない", {**cfg(), **old, "maintenance.json": {"last_cleanup": "2027-12-04", "result": {"days": 9}}},
+         run(now)),
+        ("翌日は整理する", {**cfg(), **old, "maintenance.json": {"last_cleanup": "2027-12-03", "result": {"days": 9}, "memo": "残る"}},
+         _tick_steps(("2027-12-03T23:58", 30, 0), ("2027-12-04T00:03", 30, 0), watch=watch)),
+        ("何も無いフォルダ（days.json は空で作られる）", cfg(), run(now, watch=small + ("reports/x.html",))),
+        ("消すものが無ければ events.log は書き直さない",
+         {**cfg(), "events.log": "2026-12-04T09:00\t2026-12-04\tyasumi\tapp\n", "state.json": {"other": 1}}, run(now, watch=small)),
+        ("events.log が全部古ければ空になる", {**cfg(), "events.log": "2026-12-01T09:00\t2026-12-01\tyasumi\tapp\n"},
+         run(now, watch=small)),
+        ("保持期間を変える",
+         {**cfg(retention={"days_keep": 59, "log_keep_days": 150, "events_keep_days": 366}, report={"keep_months": 4}), **old},
+         run(now)),
+        ("保持期間が小数なら日数は切り捨て", {**cfg(retention={"days_keep": 59.5, "log_keep_days": 180, "events_keep_days": 365}), **old},
+         run(now, watch=small)),
+        ("レポートの期限は月末に丸める（12/31 の 1 か月前は 11/30）",
+         {**cfg(report={"keep_months": 1}), "reports/report_2027-10-30_2027-11-29.html": "a\n",
+          "reports/report_2027-10-31_2027-11-30.html": "b\n"},
+         run("2027-12-31T10:00", watch=("maintenance.json", "reports/report_2027-10-30_2027-11-29.html",
+                                        "reports/report_2027-10-31_2027-11-30.html"))),
+        ("レポートの保存が 14 か月（年をまたいで数える）",
+         {**cfg(report={"keep_months": 14}), "reports/report_2026-12-10_2027-01-09.html": "a\n",
+          "reports/report_2026-12-11_2027-01-10.html": "b\n"},
+         run("2028-03-10T10:00", watch=("maintenance.json", "reports/report_2026-12-10_2027-01-09.html",
+                                        "reports/report_2026-12-11_2027-01-10.html"))),
+    ]
+
+
+def _skip_cleanup(row):
+    """その日の整理は済んだことにする（maintenance.json を置く）。1 日 1 回の整理は days.json を書き直すので、
+    days.json を見る節（phone）に整理の書き込みが混ざらないようにする。整理そのものは節 maintenance で見る。"""
+    name, files, inp = row
+    day = inp["steps"][0]["now"][:10]
+    return name, {**files, "maintenance.json": {"last_cleanup": day}}, inp
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -480,6 +1127,18 @@ def build_vectors() -> dict:
         },
         "snapshot.json": {
             "build": _cases(_snapshot_rows(), _expect_snapshot),
+        },
+        "tick.json": {
+            "usage": _cases(_tick_usage_rows(), _expect_tick),
+            "notify": _cases(_tick_notify_rows(), _expect_tick),
+            "sound": _cases(_tick_sound_rows(), _expect_tick),
+            "autowake": _cases(_tick_autowake_rows(), _expect_tick),
+            "phone": _cases(_tick_phone_rows(), _expect_tick),
+            "confirm": _cases(_tick_confirm_rows(), _expect_tick),
+            "enforce": _cases(_tick_enforce_rows(), _expect_tick),
+            "calendar": _cases(_tick_calendar_rows(), _expect_tick),
+            "maintenance": _cases(_tick_maintenance_rows(), _expect_tick),
+            "release": _cases(_release_rows(), _expect_release),
         },
     }
 

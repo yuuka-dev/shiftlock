@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Agent のテスト．Windows 側（値を取る・知らせる・止める）を差し替えて，見張りの流れを確かめる． -->
+  <PropertyGroup>
+    <!-- トーストと通知音に WinRT を使うので Windows の版つき（ウィンドウと同じ版） -->
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <RootNamespace>Shiftlock.Agent.Tests</RootNamespace>
+    <AssemblyName>Shiftlock.Agent.Tests</AssemblyName>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+
+  <!-- 突き合わせ用の入口（TickOnce）を Python 版のベクタで確かめる -->
+  <ItemGroup>
+    <Content Include="../../docs/test-vectors/tick.json" Link="vectors/tick.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\shiftlock.Agent\shiftlock.Agent.csproj" />
+  </ItemGroup>
+
+</Project>
