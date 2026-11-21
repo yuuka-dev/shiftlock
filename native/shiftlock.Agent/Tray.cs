@@ -163,8 +163,17 @@ public sealed class Tray : IDisposable
         // ファイルの書き込みと shutdown /a を UI のスレッドで待たない
         Task.Run(() =>
         {
-            var text = _release.Run(m);
-            Tell(text);
+            var result = _release.RunDetailed(m);
+            if (result.Complete)
+            {
+                Tell(result.Text);
+            }
+            else
+            {
+                // 半端に終わった（STOP.txt が書けなかった，など）．トーストは集中モードなどで黙って消えることがあるので，消えない窓で知らせる
+                _ui.Post(_ => MessageBox.Show(result.Text, m["AGENT_RELEASE_TITLE"], MessageBoxButtons.OK, MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button1, MessageBoxOptions.DefaultDesktopOnly), null);
+            }
             RequestRefresh();
         });
     }

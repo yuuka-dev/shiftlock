@@ -49,10 +49,11 @@ Python 版の見張り（タスク `shiftlock-guard` → `guard.ps1` → `shiftl
 1. **置く**: `powershell -ExecutionPolicy Bypass -File native\deploy.ps1`
    - ウィンドウと Agent を Release・win-x64・自己完結で発行し，`%LOCALAPPDATA%\Programs\shiftlock\` に置く（`shiftlock.exe` と `agent\shiftlock-agent.exe`．ビルドのフォルダから常駐させない）．
    - `-WhatIf` で何をするかだけ表示．動いている Agent があれば先に終わらせ，置いた後に起動し直す．記録データ（`%USERPROFILE%\shift-lock`）には触らない．
-2. **切り替える**: `%LOCALAPPDATA%\Programs\shiftlock\agent\shiftlock-agent.exe --install`
+2. **切り替える**（PowerShell）: `& "$env:LOCALAPPDATA\Programs\shiftlock\agent\shiftlock-agent.exe" --install | Out-Host; $LASTEXITCODE`
+   - 窓のアプリなので，`| Out-Host` を付けないと PowerShell は終わるのを待たず，結果の行も終了コードも見えない．**最後に出る数が 0 であることを確かめる**（1 なら失敗．出た行を読む）．
    - ログオン時の自動起動を登録（`HKCU\Software\Microsoft\Windows\CurrentVersion\Run` の `shiftlock-agent`）→ トーストの名前を登録 → タスク `shiftlock-guard` を**無効化** → Agent を起動．結果を 1 行ずつ出す（成功 0，失敗 1）．
    - タスクを無効にできなければ，自動起動の登録を取り消して失敗で終わる（Agent と Python 版が二重に見張る状態を残さない）．`shiftlock-report` には触らない．
-3. **戻す**: `...\agent\shiftlock-agent.exe --uninstall`（Agent を終わらせる → 登録を外す → `shiftlock-guard` を有効に戻す）．
+3. **戻す**: `& "$env:LOCALAPPDATA\Programs\shiftlock\agent\shiftlock-agent.exe" --uninstall | Out-Host; $LASTEXITCODE`（こちらも 0 を確かめる．1 のときはタスク `shiftlock-guard` が無効のまま＝何も見張っていないことがある．Agent を終わらせる → 登録を外す → `shiftlock-guard` を有効に戻す）．
 
 切り替えた後の決まり:
 

@@ -29,13 +29,16 @@ public sealed class ReleaseFlowTests : IDisposable
     public void WithDeclaration_AbortsShutdownFirst_ThenStopFile_ThenRecords()
     {
         _dir.Put("state.json", Declared);
-        var stopExistedAtAbort = true;
-        _power.OnAbort = () => stopExistedAtAbort = File.Exists(_dir.P("STOP.txt"));
+        var stopSeen = new List<bool>();
+        _power.OnAbort = () => stopSeen.Add(File.Exists(_dir.P("STOP.txt")));
 
-        var text = Flow().Run(_m);
+        var result = Flow().RunDetailed(_m);
+        var text = result.Text;
 
-        Assert.Equal(["abort"], _calls);
-        Assert.False(stopExistedAtAbort);   // 一番急ぐ「シャットダウンの中止」が先
+        // 一番急ぐ「シャットダウンの中止」が先．STOP.txt を置いた後にもう一度（その間に予約された分を止める）
+        Assert.Equal(["abort", "abort"], _calls);
+        Assert.Equal([false, true], stopSeen);
+        Assert.True(result.Complete);
         Assert.Equal(["2026-12-07 11:00 tray"], _dir.Lines("STOP.txt"));
         Assert.Contains("\"released_at\": \"2026-12-07T11:00\"", File.ReadAllText(_dir.P("state.json")));
         Assert.Equal(["2026-12-07T11:00\t2026-12-07\tenforce_release\ttray"], _dir.Lines("events.log"));
@@ -62,8 +65,10 @@ public sealed class ReleaseFlowTests : IDisposable
     {
         _dir.Put("state.json", "{");
 
-        var text = Flow().Run(_m);
+        var result = Flow().RunDetailed(_m);
+        var text = result.Text;
 
+        Assert.False(result.Complete);   // 半端に終わったことは，消えない窓で知らせる（Tray）
         Assert.Equal(["2026-12-07 11:00 tray"], _dir.Lines("STOP.txt"));   // STOP.txt があれば強制は止まる
         Assert.Equal(_m["AGENT_RELEASE_PARTIAL"], text);
         Assert.Equal("{", File.ReadAllText(_dir.P("state.json")));
@@ -95,9 +100,11 @@ public sealed class ReleaseFlowTests : IDisposable
         // 実行フォルダが無い（外したドライブなど）: STOP.txt も記録も書けない．手で置く場所を知らせる
         var missing = _dir.P("無いフォルダ");
 
-        var text = Flow(dir: missing).Run(_m);
+        var result = Flow(dir: missing).RunDetailed(_m);
+        var text = result.Text;
 
-        Assert.Equal(["abort"], _calls);
+        Assert.False(result.Complete);
+        Assert.Equal(["abort", "abort"], _calls);
         Assert.Equal(_m.Format("AGENT_RELEASE_FAILED", ("path", Path.Combine(missing, "STOP.txt"))), text);
     }
 

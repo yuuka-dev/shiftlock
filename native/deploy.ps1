@@ -59,14 +59,35 @@ try {
     }
 
     # 3. 置く（ウィンドウは <場所>，常駐は <場所>\agent。古いファイルが残らないよう，常駐のフォルダは入れ替える）
-    if ($PSCmdlet.ShouldProcess($dest, "ウィンドウを置く")) {
-        if (-not (Test-Path -LiteralPath $dest)) { New-Item -ItemType Directory -Path $dest | Out-Null }
-        Copy-Item -Path (Join-Path $stageApp '*') -Destination $dest -Recurse -Force
-    }
-    if ($PSCmdlet.ShouldProcess($agentDir, "常駐を置く")) {
-        if (Test-Path -LiteralPath $agentDir) { Remove-Item -LiteralPath $agentDir -Recurse -Force }
-        New-Item -ItemType Directory -Path $agentDir | Out-Null
-        Copy-Item -Path (Join-Path $stageAgent '*') -Destination $agentDir -Recurse -Force
+    try {
+        if ($PSCmdlet.ShouldProcess($dest, "ウィンドウを置く")) {
+            if (-not (Test-Path -LiteralPath $dest)) { New-Item -ItemType Directory -Path $dest | Out-Null }
+            Copy-Item -Path (Join-Path $stageApp '*') -Destination $dest -Recurse -Force
+        }
+        if ($PSCmdlet.ShouldProcess($agentDir, "常駐を置く")) {
+            # 入れ替えは「新しいものを隣に置いてから名前を替える」。途中で失敗しても，古い常駐か新しい常駐のどちらかが残る
+            $newDir = "$agentDir.new"
+            $oldDir = "$agentDir.old"
+            foreach ($d in @($newDir, $oldDir)) { if (Test-Path -LiteralPath $d) { Remove-Item -LiteralPath $d -Recurse -Force } }
+            New-Item -ItemType Directory -Path $newDir | Out-Null
+            Copy-Item -Path (Join-Path $stageAgent '*') -Destination $newDir -Recurse -Force
+            if (Test-Path -LiteralPath $agentDir) { Rename-Item -LiteralPath $agentDir -NewName (Split-Path $oldDir -Leaf) }
+            Rename-Item -LiteralPath $newDir -NewName (Split-Path $agentDir -Leaf)
+            if (Test-Path -LiteralPath $oldDir) { Remove-Item -LiteralPath $oldDir -Recurse -Force -ErrorAction SilentlyContinue }
+        }
+    } catch {
+        # 動いていた Agent を止めた後に失敗した: 見張りが止まったままにならないよう，残っている常駐を起動し直してから知らせる
+        if ($wasRunning -and -not $NoStart) {
+            $oldDir = "$agentDir.old"
+            if (-not (Test-Path -LiteralPath $agentExe) -and (Test-Path -LiteralPath $oldDir)) { Rename-Item -LiteralPath $oldDir -NewName (Split-Path $agentDir -Leaf) }
+            if (Test-Path -LiteralPath $agentExe) {
+                Start-Process -FilePath $agentExe -WorkingDirectory $agentDir
+                Write-Warning "置く途中で失敗した。前から在った Agent を起動し直した: $agentExe"
+            } else {
+                Write-Warning "置く途中で失敗し，Agent を起動し直せなかった。いまは何も見張っていない。もう一度 deploy.ps1 を実行するか，Agent の --uninstall で Python 版に戻して"
+            }
+        }
+        throw
     }
 
     # 4. 動いていたなら起動し直す

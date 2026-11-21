@@ -90,8 +90,17 @@ public sealed class Store(string dir)
 
     // ---- 見張り（Tick）が使う読み書き．pc/shiftlock/store.py の同名の関数と同じ形 ----
 
-    /// <summary>name の JSON を読む．無い・壊れている・オブジェクトでない → 空（store._read(path, {})）．</summary>
-    public JsonObject ReadJson(string name) => JsonFiles.ReadObjectOrEmpty(P(name));
+    /// <summary>
+    /// name の JSON を読む．無い・壊れている・オブジェクトでない → 空（store._read(path, {})）．
+    /// 在るのにほかのプロセスが掴んでいて開けないときは（少し待ってやり直してから）StateBusyException．
+    /// 掴まれているだけのものを空として書き戻すと，稼働の記録や通知の履歴が消えるため（Python 版は空として進む）．
+    /// </summary>
+    public JsonObject ReadJson(string name)
+    {
+        var read = new JsonObject();
+        Retry(() => read = JsonFiles.ReadObjectUnlessBusy(P(name)), name + " が読めない");
+        return read;
+    }
 
     /// <summary>name に JSON を書く（.tmp に書いてから置き換え）．書けなければ StateBusyException．</summary>
     public void WriteJson(string name, JsonObject obj) => Retry(() => JsonFiles.Write(P(name), obj), name + " が書けない");

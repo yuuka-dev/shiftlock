@@ -44,7 +44,13 @@ public sealed class FakePower(List<string> calls) : IPowerControl
 
     public void Lock() => calls.Add("lock");
     public void Sleep() => calls.Add("sleep");
-    public void ScheduleShutdown(int seconds) => calls.Add($"shutdown:{seconds}");
+    public Action? OnSchedule { get; set; }
+
+    public void ScheduleShutdown(int seconds)
+    {
+        calls.Add($"shutdown:{seconds}");
+        OnSchedule?.Invoke();
+    }
 
     public void AbortShutdown()
     {
@@ -212,6 +218,17 @@ public sealed class ActionRunnerTests : IDisposable
 
         Assert.Equal([@"sound:C:\s\a.mp3:0.5:15"], _calls);
         Assert.Single(Log, l => l.Contains("STOP.txt", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Enforce_StopFilePlacedWhileScheduling_AbortsTheShutdown()
+    {
+        // 最後に STOP.txt を見た直後に緊急解除が入った: 予約してしまったシャットダウンをすぐ取り消す
+        _power.OnSchedule = () => _dir.Put("STOP.txt", "2026-12-07 11:00 tray\n");
+
+        Run(Enforce("shutdown"));
+
+        Assert.Equal(["shutdown:60", "abort"], _calls);
     }
 
     [Theory]

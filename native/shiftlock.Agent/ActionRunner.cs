@@ -122,6 +122,12 @@ public sealed class ActionRunner(INotifier notifier, IPowerControl power, Store 
                 case "shutdown":
                     log.Write("enforce: shutdown");
                     power.ScheduleShutdown(ShutdownDelaySeconds);
+                    if (store.StopActive)
+                    {
+                        // 最後に STOP.txt を見た直後に緊急解除が入った．予約してしまった分をすぐ取り消す
+                        log.Write("enforce shutdown aborted: STOP.txt (placed while scheduling)");
+                        power.AbortShutdown();
+                    }
                     break;
                 default:
                     log.Write($"enforce: unknown action {act}");
