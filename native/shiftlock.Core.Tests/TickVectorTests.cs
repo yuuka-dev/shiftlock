@@ -38,6 +38,14 @@ public sealed class TickVectorTests
     [MemberData(nameof(Cases), "enforce")]
     public void Enforce(VectorCase c) => TickRunner.RunCase(c);
 
+    [Theory]
+    [MemberData(nameof(Cases), "calendar")]
+    public void Calendar(VectorCase c) => TickRunner.RunCase(c);
+
+    [Theory]
+    [MemberData(nameof(Cases), "maintenance")]
+    public void Maintenance(VectorCase c) => TickRunner.RunCase(c);
+
     /// <summary>緊急解除（tick を通らない）．返事・state.json・events.log・STOP.txt を比べる．</summary>
     [Theory]
     [MemberData(nameof(Cases), "release")]

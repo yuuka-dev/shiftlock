@@ -33,7 +33,8 @@ public static class Tick
     private const int MaxGaps = 20;
 
     /// <summary>
-    /// 見張りを 1 回行う．fetch はカレンダーの取得（URL → 中身）．渡さなければ Core の既定の取得を使う．
+    /// 見張りを 1 回行う．fetch はカレンダーの取得（URL → 中身）．渡さなければ Core の既定の取得（CalendarSync.HttpGet．
+    /// 1 本につき最長 10 秒待つので，画面のスレッドからは呼ばない）を使う．
     /// 設定の値がおかしければ ConfigException，ファイルが読み書きできなければ StateBusyException / IOException
     /// （呼ぶ側はその回を失敗として，次の回に進む）．
     /// </summary>
@@ -47,6 +48,8 @@ public static class Tick
         var gameOn = input.Game && !Usage.ShiftAway(store, now);
         var active = Usage.PcActive(idle, gameOn, reset, Usage.GameIdleLimit(cfg));
         store.LogAppend("pc", now, new JsonObject { ["idle"] = (long)idle.TotalSeconds, ["game"] = input.Game ? 1 : 0 });
+        // カレンダー同期（間隔ごと）と古い記録の整理（1 日 1 回）．同期の結果が効くのは次の回から（設定は読み込み済み）
+        Maintenance.Daily(cfg, store, m, now, fetch);
 
         var u = ReadUsage(store);
         var gaps = u["gaps"]!.AsArray();

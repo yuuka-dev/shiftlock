@@ -927,6 +927,179 @@ def _release_rows() -> list:
     ]
 
 
+CAL_A = "https://cal.example/a.ics"
+CAL_B = "https://cal.example/b.ics"
+
+
+def _ics(*events) -> str:
+    """iCal の本文（行末は CRLF）。events は _vevent の戻り値。"""
+    return "".join(ln + "\r\n" for ln in ["BEGIN:VCALENDAR", "VERSION:2.0", *[ln for e in events for ln in e], "END:VCALENDAR"])
+
+
+def _vevent(summary, start, end=None, *extra) -> list:
+    """予定 1 件の行。start・end は "名前の後ろ:値"（";VALUE=DATE:20261207" や ":20261207T030000Z"）。"""
+    lines = ["BEGIN:VEVENT", "UID:x@example", "DTSTART" + start]
+    if end is not None:
+        lines.append("DTEND" + end)
+    return [*lines, "SUMMARY:" + summary, *extra, "END:VEVENT"]
+
+
+def _allday(summary, start, end=None, *extra) -> list:
+    return _vevent(summary, ";VALUE=DATE:" + start, None if end is None else ";VALUE=DATE:" + end, *extra)
+
+
+def _tick_calendar_rows() -> list:
+    """カレンダー同期（calendar.json）。同期の結果が乗務日の判定に効くのは次の見張りから（2 回目の就寝準備の通知で見る）。
+    2026-12-07 は月曜（乗務日）、2026-12-05 は土曜（休み）。時刻つきの Z は、どのタイムゾーンで書き出しても同じ日になる時刻にしてある。"""
+    def cfg(**cal):
+        return {"shifts.json": _base(calendar=cal or {"ics_url": CAL_A}, **NO_CONFIRM)}
+
+    one = cfg()
+    mon, sat = "2026-12-07", "2026-12-05"
+
+    def run(day=mon, fetch=None, watch=("calendar.json",), hms=("07:15", "07:20")):
+        return _tick_steps(*[(f"{day}T{hm}", 30, 0) for hm in hms], watch=watch, fetch=fetch)
+
+    def got(*events):
+        return {CAL_A: _ics(*events)}
+
+    def old(fetched, **src):
+        """前回の同期の結果（新形式）。"""
+        return {"calendar.json": {"fetched": fetched, "sources": {"カレンダー": {
+            "fetched": fetched, "error": None, "off": {}, "work": {}, "recurring_skipped": 0, **src}}}}
+
+    two = cfg(sources=[{"name": "会社", "ics_url": CAL_A}, {"name": "私用", "ics_url": CAL_B}])
+    return [
+        ("カレンダー未設定なら何もしない", {"shifts.json": _base(**NO_CONFIRM)}, run()),
+        ("終日の「公休」で乗務日が休みになる", one, run(fetch=got(_allday("公休", "20261207", "20261208")))),
+        ("「出勤」で休みの日が乗務日になる", one, run(sat, fetch=got(_allday("臨時出勤", "20261205", "20261206")))),
+        ("複数日の終日予定（DTEND は翌日）", one, run(fetch=got(_allday("有給", "20261207", "20261210")))),
+        ("DTEND が無い・DTSTART より前なら 1 日だけ", one,
+         run(fetch=got(_allday("公休", "20261207"), _allday("休み", "20261209", "20261208")))),
+        ("VALUE=DATE の無い 8 桁も終日", one, run(fetch=got(_vevent("公休", ":20261207", ":20261208")))),
+        ("Z つきの時刻はローカルの日付", one, run(fetch=got(_vevent("休み", ":20261207T030000Z", ":20261207T040000Z")))),
+        ("時刻つき（TZID）は書いてある日付", one,
+         run(fetch=got(_vevent("公休", ";TZID=Asia/Tokyo:20261207T090000", ";TZID=Asia/Tokyo:20261208T180000")))),
+        ("折り返した行（空白・タブ）", one,
+         run(fetch={CAL_A: _ics(["BEGIN:VEVENT", "DTSTART;VALUE=DATE:2026", " 1207", "SUMMARY:公", "\t休（折り", " 返し）", "END:VEVENT"])})),
+        ("SUMMARY のエスケープを戻す", one, run(fetch=got(_allday("公休\\, 午後\\; メモ\\n2 行目", "20261207")))),
+        ("STATUS:CANCELLED は無視", one,
+         run(fetch=got(_allday("公休", "20261207", None, "STATUS:CANCELLED"), _allday("公休", "20261208", None, "STATUS:CONFIRMED")))),
+        ("RRULE は初回だけ（recurring_skipped 1）", one,
+         run(fetch=got(_allday("公休", "20261207", "20261208", "RRULE:FREQ=WEEKLY;BYDAY=MO")))),
+        ("キーワードの無い予定・DTSTART の無い予定は拾わない", one,
+         run(fetch=got(_allday("歯医者", "20261207"), ["BEGIN:VEVENT", "SUMMARY:公休", "END:VEVENT"]))),
+        ("休みと出勤の両方の言葉があれば休み", one, run(fetch=got(_allday("出勤の代わりに公休", "20261207")))),
+        ("62 日を超える予定は 62 日ぶん", one, run(fetch=got(_allday("休み", "20261207", "20270401")))),
+        ("180 日より先・60 日より前は残さない", one,
+         run(fetch=got(_allday("公休", "20270605"), _allday("公休", "20270606"), _allday("公休", "20261001")))),
+        ("LF だけの行末・VCALENDAR の外の行", one,
+         run(fetch={CAL_A: "X-JUNK:1\nBEGIN:VEVENT\nDTSTART;VALUE=DATE:20261207\nSUMMARY:公休\nEND:VEVENT\nEND:VEVENT\nSUMMARY:出勤\n"})),
+        ("sync_minutes 内は取りに行かない（取りに行けば失敗が書かれる）",
+         {**one, **old("2026-12-07T06:30:00", off={"2026-12-08": "公休"})}, run(hms=("07:15",))),
+        ("sync_minutes を過ぎたら取りに行く", {**one, **old("2026-12-07T06:15:00", off={"2026-12-08": "公休"})},
+         run(fetch=got(_allday("公休", "20261209")), hms=("07:15",))),
+        ("sync_minutes を 10 に", {**cfg(ics_url=CAL_A, sync_minutes=10), **old("2026-12-07T07:00:00")},
+         run(fetch=got(_allday("公休", "20261209")), hms=("07:05", "07:10"))),
+        ("取得に失敗したら前回分が残り error が入る", {**one, **old("2026-12-07T05:00:00", off={mon: "公休"})}, run()),
+        ("初回から失敗", one, run()),
+        ("失敗の後に成功すれば error は消える",
+         {**one, "calendar.json": {"fetched": "2026-12-07T05:00:00", "sources": {"カレンダー": {
+             "fetched": None, "error": "12/07 05:00 OSError: fetch failed"}}}},
+         run(fetch=got(_allday("公休", "20261207")))),
+        ("2 本のうち 1 本だけ失敗", two, run(fetch=got(_allday("公休", "20261207")))),
+        ("旧形式の calendar.json は先頭のソースに引き継ぐ",
+         {**two, "calendar.json": {"fetched": "2026-12-07T07:00:00", "error": None, "off": {mon: "公休"}, "work": {},
+                                   "recurring_skipped": 2}},
+         run(fetch={CAL_B: _ics(_allday("出勤", "20261205"))})),
+        ("同じ URL は 1 本・ics_url が先頭", cfg(ics_url=CAL_A, sources=[{"name": "二重", "ics_url": CAL_A},
+                                                                 {"name": "私用", "ics_url": " " + CAL_B + " "}]),
+         run(fetch={CAL_A: _ics(_allday("公休", "20261207")), CAL_B: _ics(_allday("公休", "20261208"))})),
+        ("名前の重複に ' が付く・名前が無ければ番号", cfg(sources=[{"name": "会社", "ics_url": CAL_A}, {"name": "会社", "ics_url": CAL_B},
+                                                    {"name": " ", "ics_url": CAL_A + "?3"}, {"ics_url": ""}, "x"]),
+         run(fetch={CAL_A: _ics(), CAL_B: _ics(), CAL_A + "?3": _ics()}, hms=("07:15",))),
+        ("ソースごとのキーワード（無ければ calendar の値）",
+         cfg(off_keywords=["明け"], sources=[{"name": "会社", "ics_url": CAL_A, "off_keywords": ["研修"], "work_keywords": ["当番"]},
+                                          {"name": "私用", "ics_url": CAL_B}]),
+         run(fetch={CAL_A: _ics(_allday("研修", "20261207"), _allday("当番", "20261205"), _allday("明け", "20261208")),
+                    CAL_B: _ics(_allday("明け", "20261209"), _allday("研修", "20261210"), _allday("出勤", "20261212"))})),
+        ("設定から消えたソースは calendar.json からも消える",
+         {**one, "calendar.json": {"fetched": "2026-12-07T07:00:00", "sources": {
+             "カレンダー": {"fetched": "2026-12-07T07:00:00", "error": None, "off": {}, "work": {}, "recurring_skipped": 0},
+             "昔の": {"fetched": "2026-12-07T07:00:00", "error": None, "off": {mon: "公休"}, "work": {}, "recurring_skipped": 0}}}},
+         run(hms=("07:15",))),
+        # 日付が読めなければその回は失敗（前回の休みが残る → 就寝準備の通知は出ない）。error の文は言語ごとに違うので calendar.json は比べない
+        ("日付の読めない DTSTART は失敗として前回分を残す", {**one, **old("2026-12-07T05:00:00", off={mon: "公休"})},
+         run(fetch=got(_allday("公休", "2026XX07")), watch=("notified.json",))),
+        ("前回の fetched が読めなければ同期しない（見張りは続く）",
+         {**one, "calendar.json": {"fetched": "x", "sources": {"カレンダー": {"fetched": "こわれた", "off": {mon: "公休"}}}}},
+         run(fetch=got(_allday("公休", "20261208")))),
+    ]
+
+
+def _tick_maintenance_rows() -> list:
+    """1 日 1 回の整理（古い記録を消す）。今は 2027-12-04（土）10:00。既定は days 60 日・ログ 180 日・events 365 日・レポート 3 か月。"""
+    now = "2027-12-04T10:00"
+
+    def cfg(**over):
+        return {"shifts.json": _base(**{**NO_CONFIRM, **over})}
+
+    def log(month, kind="pc"):
+        return f"log/{kind}-{month}.jsonl"
+
+    def line(day):
+        return '{"t": "%sT00:00:00", "idle": 0, "game": 0}\n' % day
+
+    old = {
+        "days.json": {"off": {"2027-10-04": "公休", "2027-10-05": "公休"}, "work": {"2027-10-03": "出勤", "2027-12-11": "出勤"},
+                      "times": {"2027-10-04": {"start_target": "18:00"}, "2027-12-06": {"start_target": "18:00"}}, "memo": "残る"},
+        "state.json": {"shifts": {"2027-10-04": {"status": "worked", "at": "2027-10-04T16:00"},
+                                  "2027-10-05": {"status": "yasumi", "at": "2027-10-05T09:00"}}, "other": 1},
+        log("2026-12"): line("2026-12-01"), log("2027-05"): line("2027-05-01"), log("2027-06"): line("2027-06-01"),
+        log("2027-05", "phone"): line("2027-05-02"), "log/pc-xxxx-yy.jsonl": "x\n", "log/memo.txt": "x\n",
+        "events.log": "2026-12-03T09:00\t2026-12-03\tyasumi\tapp\n\n2026-12-04T09:00\t2026-12-04\tyasumi\tapp\n",
+        "reports/report_2027-07-21_2027-08-20.html": "<html>a</html>\n",
+        "reports/report_2027-08-05_2027-09-04.html": "<html>b</html>\n",
+        "reports/report_2027-07-04_2027-09-03.pdf": "c\n",
+        "reports/report-2027-08-01.html": "<html>d</html>\n",
+        "reports/report-2027-09-04.pdf": "e\n",
+        "reports/memo_2027-01-01_2027-01-31.html": "<html>f</html>\n",
+    }
+    watch = ("maintenance.json", *[k for k in old], "log/pc-2027-12.jsonl")
+
+    def run(*whens, watch=watch):
+        return _tick_steps(*[(w, 30, 0) for w in whens], watch=watch)
+
+    small = ("maintenance.json", "days.json", "state.json", "events.log")
+    return [
+        ("古い記録が消える", {**cfg(), **old}, run(now)),
+        ("同じ日の 2 回目は整理しない", {**cfg(), **old, "maintenance.json": {"last_cleanup": "2027-12-04", "result": {"days": 9}}},
+         run(now)),
+        ("翌日は整理する", {**cfg(), **old, "maintenance.json": {"last_cleanup": "2027-12-03", "result": {"days": 9}, "memo": "残る"}},
+         _tick_steps(("2027-12-03T23:58", 30, 0), ("2027-12-04T00:03", 30, 0), watch=watch)),
+        ("何も無いフォルダ（days.json は空で作られる）", cfg(), run(now, watch=small + ("reports/x.html",))),
+        ("消すものが無ければ events.log は書き直さない",
+         {**cfg(), "events.log": "2026-12-04T09:00\t2026-12-04\tyasumi\tapp\n", "state.json": {"other": 1}}, run(now, watch=small)),
+        ("events.log が全部古ければ空になる", {**cfg(), "events.log": "2026-12-01T09:00\t2026-12-01\tyasumi\tapp\n"},
+         run(now, watch=small)),
+        ("保持期間を変える",
+         {**cfg(retention={"days_keep": 59, "log_keep_days": 150, "events_keep_days": 366}, report={"keep_months": 4}), **old},
+         run(now)),
+        ("保持期間が小数なら日数は切り捨て", {**cfg(retention={"days_keep": 59.5, "log_keep_days": 180, "events_keep_days": 365}), **old},
+         run(now, watch=small)),
+        ("レポートの期限は月末に丸める（12/31 の 1 か月前は 11/30）",
+         {**cfg(report={"keep_months": 1}), "reports/report_2027-10-30_2027-11-29.html": "a\n",
+          "reports/report_2027-10-31_2027-11-30.html": "b\n"},
+         run("2027-12-31T10:00", watch=("maintenance.json", "reports/report_2027-10-30_2027-11-29.html",
+                                        "reports/report_2027-10-31_2027-11-30.html"))),
+        ("レポートの保存が 14 か月（年をまたいで数える）",
+         {**cfg(report={"keep_months": 14}), "reports/report_2026-12-10_2027-01-09.html": "a\n",
+          "reports/report_2026-12-11_2027-01-10.html": "b\n"},
+         run("2028-03-10T10:00", watch=("maintenance.json", "reports/report_2026-12-10_2027-01-09.html",
+                                        "reports/report_2026-12-11_2027-01-10.html"))),
+    ]
+
+
 def _skip_cleanup(row):
     """その日の整理は済んだことにする（maintenance.json を置く）。1 日 1 回の整理は days.json を書き直すので、
     days.json を見る節（phone）に整理の書き込みが混ざらないようにする。整理そのものは節 maintenance で見る。"""
@@ -963,6 +1136,8 @@ def build_vectors() -> dict:
             "phone": _cases(_tick_phone_rows(), _expect_tick),
             "confirm": _cases(_tick_confirm_rows(), _expect_tick),
             "enforce": _cases(_tick_enforce_rows(), _expect_tick),
+            "calendar": _cases(_tick_calendar_rows(), _expect_tick),
+            "maintenance": _cases(_tick_maintenance_rows(), _expect_tick),
             "release": _cases(_release_rows(), _expect_release),
         },
     }

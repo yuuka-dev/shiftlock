@@ -357,6 +357,53 @@ def test_release_vectors():
     assert e["state"] == cases["解除済みの宣言と同意の無い宣言には触らない"]["files"]["state.json"]
 
 
+def test_tick_calendar_vectors():
+    """節 calendar: 同期の結果は次の見張りから効く。失敗は前回分を残して error を入れる。取りに行かないケースは書き直さない"""
+    by_name = {c["name"]: c for c in ex.build_vectors()["tick.json"]["calendar"]}
+    kinds = {name: [[a["kind"] for a in r["actions"]] for r in c["expect"]["results"]] for name, c in by_name.items()}
+    assert kinds["カレンダー未設定なら何もしない"] == [[], ["lastcall"]]
+    assert kinds["終日の「公休」で乗務日が休みになる"] == [[], []]
+    assert kinds["「出勤」で休みの日が乗務日になる"] == [[], ["lastcall"]]
+    assert kinds["日付の読めない DTSTART は失敗として前回分を残す"] == [[], []]
+
+    def src(name, source="カレンダー"):
+        return by_name[name]["expect"]["files"]["calendar.json"]["sources"][source]
+
+    assert by_name["カレンダー未設定なら何もしない"]["expect"]["files"]["calendar.json"] is None
+    assert src("RRULE は初回だけ（recurring_skipped 1）")["recurring_skipped"] == 1
+    assert len(src("62 日を超える予定は 62 日ぶん")["off"]) == 62
+    failed = src("取得に失敗したら前回分が残り error が入る")
+    assert failed["error"] == "12/07 07:20 OSError: fetch failed" and failed["off"] == {"2026-12-07": "公休"}
+    assert src("2 本のうち 1 本だけ失敗", "会社")["error"] is None and src("2 本のうち 1 本だけ失敗", "私用")["fetched"] is None
+    for name in ("sync_minutes 内は取りに行かない（取りに行けば失敗が書かれる）", "前回の fetched が読めなければ同期しない（見張りは続く）"):
+        assert by_name[name]["expect"]["files"]["calendar.json"] == by_name[name]["files"]["calendar.json"], name
+    assert list(by_name["名前の重複に ' が付く・名前が無ければ番号"]["expect"]["files"]["calendar.json"]["sources"]) == \
+        ["会社", "会社'", "カレンダー3"]
+    assert src("旧形式の calendar.json は先頭のソースに引き継ぐ", "会社")["recurring_skipped"] == 2
+    # Z つきの時刻は、書き出すマシンのタイムゾーンで日付が変わらない時刻だけ使う（UTC-3 〜 UTC+20 で同じ日）
+    assert src("Z つきの時刻はローカルの日付")["off"] == {"2026-12-07": "休み"}
+
+
+def test_tick_maintenance_vectors():
+    """節 maintenance: 1 日 1 回だけ古い記録を消す。消えたファイルは null"""
+    by_name = {c["name"]: c["expect"]["files"] for c in ex.build_vectors()["tick.json"]["maintenance"]}
+    f = by_name["古い記録が消える"]
+    assert f["maintenance.json"] == {"result": {"days": 3, "state": 1, "logs": 3, "events": 2, "reports": 3},
+                                     "last_cleanup": "2027-12-04"}
+    gone = {k for k, v in f.items() if v is None}
+    assert gone == {"log/pc-2026-12.jsonl", "log/pc-2027-05.jsonl", "log/phone-2027-05.jsonl",
+                    "reports/report_2027-07-21_2027-08-20.html", "reports/report_2027-07-04_2027-09-03.pdf",
+                    "reports/report-2027-08-01.html"}
+    assert f["events.log"] == ["2026-12-04T09:00\t2026-12-04\tyasumi\tapp"]
+    assert list(f["state.json"]["shifts"]) == ["2027-10-05"] and f["days.json"]["memo"] == "残る"
+    same = by_name["同じ日の 2 回目は整理しない"]
+    assert same["maintenance.json"] == {"last_cleanup": "2027-12-04", "result": {"days": 9}}
+    assert not any(v is None for k, v in same.items() if k != "log/pc-2027-12.jsonl")
+    assert by_name["翌日は整理する"]["maintenance.json"]["memo"] == "残る"
+    assert by_name["何も無いフォルダ（days.json は空で作られる）"]["days.json"] == {"off": {}, "work": {}, "times": {}}
+    assert by_name["events.log が全部古ければ空になる"]["events.log"] == []
+
+
 TICK_KEYS = (
     "PHASE_LASTCALL_USER", "PHASE_SOFT_USER", "PHASE_HARD_USER", "PHASE_GO_USER", "PHASE_GO_LAST_USER",
     "AUTOWAKE_OKITA", "PHONE_LATE_PREFIX", "PHONE_OKITA",
