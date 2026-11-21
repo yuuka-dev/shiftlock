@@ -16,8 +16,20 @@ public sealed class TempDir : IDisposable
         File.WriteAllText(P(name), body, new UTF8Encoding(false));
     }
 
-    public string[] Lines(string name) =>
-        File.Exists(P(name)) ? File.ReadAllText(P(name)).Split('\n', StringSplitOptions.RemoveEmptyEntries) : [];
+    /// <summary>ファイルの行（無ければ空）．書いている最中のファイル（agent.log）も読めるよう，書き手を締め出さずに開く．</summary>
+    public string[] Lines(string name)
+    {
+        try
+        {
+            using var stream = new FileStream(P(name), FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+            using var reader = new StreamReader(stream, Encoding.UTF8);
+            return reader.ReadToEnd().Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        }
+        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return [];
+        }
+    }
 
     public void Dispose() => Directory.Delete(Dir, recursive: true);
 }
