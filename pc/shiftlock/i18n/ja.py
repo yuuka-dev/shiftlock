@@ -534,6 +534,7 @@ CLI_HELP = """shiftlock の使い方（pwsh / Windows PowerShell のどのディ
   shl settings               設定メニュー
   shl learned                覚えた言い方 / shl learn neru ばたんきゅー / shl unlearn ばたんきゅー
   shl cleanup                古い記録の整理を今すぐ
+  shl app add <exe> <dev|adobe> / remove <exe> / list   時間を測るアプリの登録（開発・Adobe。ゲームは自動）
   scan-games / show-games    ゲーム判定の確認
 Claude Code のプロンプトに打つ言葉（ねる / おきた / 今日休む / 11/5 休み / 状況 / 予定）は README の「解除ワード」を見てね"""
 CLI_ARG_ENFORCE_OPTS = "on のとき lock|sleep|shutdown と 2h のような時間"
@@ -612,3 +613,16 @@ AGENT_SETUP_ROLLED_BACK = "二重の見張りにならないよう、自動起�
 AGENT_SETUP_STARTED = "Agent を起動したよ"
 AGENT_SETUP_STOPPED = "動いていた Agent を終わらせたよ"
 AGENT_SETUP_FAILED = "失敗したよ: {err}"
+
+# ---- shl app（計測するアプリの登録）----
+APPS_ADDED = "{name} を {cat} で登録したよ"
+APPS_CHANGED = "{name} を {old} から {cat} に付け替えたよ"
+APPS_REMOVED = "{name} の登録を外したよ"
+APPS_NOT_FOUND = "{name} は登録されていないよ"
+APPS_NO_GAME = "ゲームは登録しなくていいよ（自動で判定する。ゲームのフォルダは shl settings で）"
+APPS_BAD_CAT = "カテゴリは dev か adobe だよ（例: shl app add code.exe dev）"
+APPS_BAD_NAME = "exe の名前だけを書いてね（フォルダは書かない。例: code.exe）"
+APPS_BAD_SECTION = "shifts.json の apps の形がおかしいので書き換えないよ"
+APPS_USAGE = "使い方: shl app add <exe名> <dev|adobe> / shl app remove <exe名> / shl app list"
+APPS_LIST_LINE = "{cat}: {names}"
+APPS_LIST_EMPTY = "登録は無いよ（shl app add code.exe dev で足せる）"
