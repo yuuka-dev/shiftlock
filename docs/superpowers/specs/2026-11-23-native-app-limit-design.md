@@ -127,9 +127,9 @@ issue #9．開発の場所は公開リポジトリ．ブランチは `feature/na
   - 「守る名前」は `limit.never` の全部ではなく，狭い一覧 `limit.protect`（既定値: `claude.exe`・`node.exe`・`wsl.exe`・`wslhost.exe`・`discord.exe`・`shiftlock-agent.exe`・`shiftlock.exe`・`shl.exe`）．`conhost.exe` や `cmd.exe` を子に持つだけでは見送らない（ゲームのランチャーが普通に持つため）．
   - 見るのは**子孫だけ**．祖先は見ない（Steam から起動したゲームは祖先に `steam.exe` があるのが普通．上限と一時停止はそのアプリの名前のプロセスとその子孫にだけかかり，祖先にはかからない）．
   - この決まりの結果，ターミナルで `node.exe`・WSL・Claude Code を動かしているエディタは，`limit.apps` に足してあっても見送りになる（Claude Code を巻き込まないことを優先）．`shl app limit add` のときにこの旨を表示する．
-- ☆ セッション 0 のプロセス・Agent 自身と同じ権限で開けないプロセスには手を加えない（開けなかったら見送り，`agent.log` に 1 日 1 回）．
+- ☆ Agent 自身と同じ権限で開けないプロセスには手を加えない．セッション 0 のプロセスを特別扱いはしない（開けなかったら見送る．できなかったことは通知で 1 回知らせ，`agent.log` には 1 日 1 回書く）．
 
-**宣言で固定するもの**（☆）: `limit.steps` と `limit.apps`（足したアプリの一覧）は宣言に写す．宣言の後で `shl app limit add` をしても，その乗務には効かない．**外すほうは固定しない**: `shl app limit exclude`／`remove` は，宣言した乗務にもすぐ効く（ゆるめる方向はいつでもできる，という今の考え方に合わせる）．
+**宣言で固定するもの**（☆）: `limit.steps` と `limit.apps`（足したアプリの一覧）は宣言に写す．宣言の後で `shl app limit add` をしても，その乗務には効かない．**外すほうは今の設定がすぐ効く**: `shl app limit exclude`／`remove` は，宣言した乗務にもすぐ効く（ゆるめる方向はいつでもできる，という今の考え方に合わせる）．★ 最終レビューで足した: 宣言には外したゲーム（`limit.exclude`）も `limit_exclude` として写し，Agent は「宣言の `limit_exclude` ∪ 今の `limit.exclude`」にあるゲームを対象にしない．宣言の後に `shl app limit include` しても，同意の表示に載っていたゲームは，その乗務では対象にならない（広げるのは次の宣言から）．
 
 ### 4.4 アンチチートの判定（★ 自動で外す）
 
@@ -230,7 +230,7 @@ Agent は 10 秒ごとに次を見て，どれかに当たれば**全部を元�
 
 ```json
 "enforce": {"action": "suspend", "declared_at": "...", "consented_at": "...", "via": "shl",
-            "steps": [75, 50, 25, 10], "limit_apps": ["photoshop.exe"],
+            "steps": [75, 50, 25, 10], "limit_apps": ["photoshop.exe"], "limit_exclude": ["apex.exe"],
             "runs": [{"at": "2026-12-07T13:30:00", "action": "suspend", "step": 1}],
             "first_run_at": "...", "released_at": "..."}
 ```
@@ -251,7 +251,7 @@ Agent は 10 秒ごとに次を見て，どれかに当たれば**全部を元�
 
 ### 5.4 `events.log`
 
-- `enforce_run`: 段階ごと（`runs` に足したとき）．メモは `throttle 1`〜`throttle 5`／`suspend 1`〜`suspend 5`．
+- `enforce_run`: 段階ごと（`runs` に足したとき）．メモは `throttle 1`〜`throttle 5`／`suspend 1`〜`suspend 5`．★ `throttle` の段階 5 は割合が段階 4 と同じで変わるものが無いので，段階 4 までにかけていれば `runs`・`enforce_run` に `throttle 5` は出ない（段階 5 で初めて手を加えたときだけ出る）．
 - `limit_release`: 元に戻したとき．メモは §4.7 の表．
 - アプリの名前は書かない（☆）．
 

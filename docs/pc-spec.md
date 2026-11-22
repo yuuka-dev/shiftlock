@@ -446,10 +446,10 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 
 設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](superpowers/specs/2026-11-23-native-app-limit-design.md)，宣言と同意は §17.B．Python 版に実行は無い（宣言・同意の表示・`shl app limit`・hook の印だけ）．10 秒ごとの仕事として Agent の `Scheduler` に載っていて，タスク `shiftlock-guard` が有効でも動く（見張りとは独立．Agent が動いていなければ何も起きない）．判断は `shiftlock.Core`（`LimitPolicy`），Windows に触るのは `shiftlock.Agent`（`WindowsLimitControl`）．
 
-- **対象**: 自動判定のゲーム（`game`）のうちアンチチートの印が無いものと，`shl app limit add` で足した登録アプリだけ．アンチチートの判定はゲームの根のフォルダの 3 階層まで（ファイル・フォルダ名）とツリーのプロセス名を `limit.anticheat_markers` と照合する．exe のパスが取れないものは対象外．`limit.never`（システム・shiftlock・Claude Code・Discord・ゲームの配信元など）は足せず，子孫に `limit.protect`（`claude.exe`・`node.exe` など）が 1 つでもあるアプリは丸ごと見送る（見送りは乗務ごとに 1 回知らせる）．Agent と同じ権限で開けないプロセスも見送る（`agent.log` に 1 日 1 回）．
+- **対象**: 自動判定のゲーム（`game`）のうちアンチチートの印が無いものと，`shl app limit add` で足した登録アプリだけ．アンチチートの判定はゲームの根のフォルダの 3 階層まで（ファイル・フォルダ名）とツリーのプロセス名を `limit.anticheat_markers` と照合する．exe のパスが取れないものは対象外（ゲームのフォルダの直下に置かれた exe は，隣のゲームの印を拾わないよう，そのフォルダの直下だけ見る）．`limit.never`（システム・shiftlock・Claude Code・Discord・ゲームの配信元など）は足せず，子孫に `limit.protect`（`claude.exe`・`node.exe` など）が 1 つでもあるアプリは丸ごと見送る（見送りは乗務ごとに 1 回知らせる）．Agent と同じ権限で開けないプロセスも見送る（セッション 0 の特別扱いはしない．できなかったことは通知で 1 回知らせ，`agent.log` に 1 日 1 回）．ゲームは「宣言の `limit_exclude` ∪ 今の `limit.exclude`」にあれば対象にしない（宣言の後に `include` しても，その乗務では広がらない）．
 - **減速**: アプリ（exe 名）ごとに 1 つのジョブオブジェクトに入れ，CPU のハード上限をかける．上限 = 基準 × 割合．基準はそのアプリの減速前の `log/app-*.jsonl`（直近 `limit.baseline_minutes` 分の `act` が 1 以上の行）の `cpu` の最大で，上限をかける前に決めて `limit.json` に残し乗務日が変わるまで変えない．下限は 0.5%．
 - **一時停止**: `suspend` の段階 5 で `NtSuspendProcess`．止める前に (PID, 開始時刻) を `limit.json` に書き（書けなければ止めない），起動時に今も同じ (PID, 開始時刻) のものを必ず再開する．
-- **戻す**: 出発（`worked`）・今日休む（`yasumi`）・`STOP.txt`／`released_at`・宣言の取り消し・出庫する時刻（`start_latest`）・動作が違う・設定や計測が読めない・対象でなくなった，のどれかで，上限を外し，再開し，`events.log` に `limit_release`．Agent の終了時も戻す（Agent が持っているジョブのハンドルでだけ外す．落ちた後に残った上限は次の起動時に 1 回知らせるだけで，名前で開き直さない）．戻した後，同じ乗務でかけ直さない．
+- **戻す**: 出発（`worked`）・今日休む（`yasumi`）・`STOP.txt`／`released_at`・宣言の取り消し・出庫する時刻（`start_latest`）・動作が違う・宣言の `steps` が壊れている・設定や計測が読めない・対象でなくなった，のどれかで，上限を外し，再開し，`events.log` に `limit_release`．出庫の時刻を過ぎて次の乗務の記録に移った回（`TargetPlan` が次の乗務か null を返す）は，前の乗務の日と理由 `timeout` で 1 回戻して報告する（次の乗務のかけ始めは次の回）．**一時的に判断できないだけ**（計測のサンプルが無い・30 秒より古い・親の PID が取れない，`state.json`・`shifts.json` が掴まれて開けない）の回は，何もせず（判断・記録・通知なし）飛ばし，その状態が 60 秒（`Limiter.UnknownGrace`）続いたら戻す側に倒す．前の回から 30 秒を超えて空いたとき（スリープ復帰・時計の飛び）は数え直す．設定が壊れている・宣言が無い・解除済みなど確かな判断はすぐ戻す．Agent の終了時も戻す（Agent が持っているジョブのハンドルでだけ外す．落ちた後に残った上限は次の起動時に 1 回知らせるだけで，名前で開き直さない）．戻した後，同じ乗務でかけ直さない．
 - **予告と報告**: 各段階の始まりの 5 分前に 1 回，一時停止したとき 1 回，戻したとき 1 回．アプリの名前は入れず数だけ．Claude Code の処理中（`claude-busy.json`）は通知だけ最大 10 分待つ（段階の切り替えは時刻どおり）．
 - **確かめ用**: `shiftlock-agent.exe --limit-once`（今の設定とフォルダで判断を 1 回行い，「すること」を JSON で出す．プロセスにも書き込みにも手を加えない．本番のフォルダは断る．[native/README.md](../native/README.md)）．
 
@@ -567,7 +567,7 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 | `guard.log` | guard.ps1 / make-report.ps1 | tick 失敗・通知失敗・レポート結果・`wsl fallback` の警告（Windows の Python が無いとき，1 日 1 回） |
 | `game-scan.txt` | guard.ps1 -ScanGames | ゲーム判定の一覧 |
 | `report.html` | report | 最新のレポート（`--auto` なら今の期間と同じ） |
-| `limit.json` / `limit-games.json` | ネイティブ版の Agent | 減速・一時停止の記録と見たゲームの判定（個人データ．形は [data-format.md](data-format.md)．§7.6） |
+| `limit.json` / `limit.json.bad` / `limit-games.json` | ネイティブ版の Agent | 減速・一時停止の記録（壊れて読めないときは `limit.json.bad` に名前を変える）と見たゲームの判定（個人データ．形は [data-format.md](data-format.md)．§7.6） |
 | `claude-busy.json` | hook | Claude Code の処理中の印（§5.3） |
 | `STOP.txt` | 本人 / `kaijo.cmd` | ある間は強制モードを一切発動しない（§17.B） |
 | `~/.claude/settings.json.bak-shiftlock` | install-hook | hook を入れる前の設定（初回のみ） |
@@ -648,7 +648,7 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
   | 4 | S + 3D | 10% |
   | 5 | H | `throttle`: 10% のまま ／ `suspend`: 一時停止 |
 
-  割合は `limit.steps`（4 個・1 以上 100 未満・大きい順．そうでなければ宣言を断る）．同意の表示に段階の時刻・割合・対象になるゲームとアンチチートで外したゲーム（Agent が書く `limit-games.json`）・足したアプリ・解除の方法が出て，宣言に `steps` と `limit_apps` を写して固定する（後から設定を変えても，その乗務には効かない．`shl app limit exclude`／`remove` で外すほうだけはすぐ効く）．`throttle`／`suspend` は注意を出して `y` をもらう動作．`enforce_due`（tick）はこの 2 つの動作では何も返さない．宣言には `duration_hours` などロック系の項目を持たず，`runs` は対象のアプリに初めて手を加えた段階ごとに Agent が足す（`runs` が空の間の `shl enforce off` は取り消し）．同じ乗務には 1 動作だけ（ロック系との併用はしない）．
+  割合は `limit.steps`（4 個・1 以上 100 未満・大きい順．そうでなければ宣言を断る）．同意の表示に段階の時刻・割合・対象になるゲームとアンチチートで外したゲーム（Agent が書く `limit-games.json`）・足したアプリ・解除の方法が出て，宣言に `steps`・`limit_apps`・`limit_exclude`（外したゲーム）を写して固定する（後から設定を変えても，その乗務には効かない．`shl app limit exclude`／`remove` で外すほうはすぐ効き，`include` で戻したゲームも，その乗務では「宣言の `limit_exclude` ∪ 今の `limit.exclude`」にあれば対象にならない）．`throttle`／`suspend` は注意を出して `y` をもらう動作．`enforce_due`（tick）はこの 2 つの動作では何も返さない．宣言には `duration_hours` などロック系の項目を持たず，`runs` は対象のアプリに初めて手を加えた段階ごとに Agent が足す（`runs` が空の間の `shl enforce off` は取り消し）．同じ乗務には 1 動作だけ（ロック系との併用はしない）．
 - **`shl app limit`**: `add <exe名>`（登録済みのアプリを対象に足す．`limit.never` は断る．アンチチートの警告を出す）／`remove <exe名>`／`exclude <exe名>`（ゲームを外す）／`include <exe名>`（外したゲームを戻す）／`list`（足したアプリ・外したゲーム・最近見たゲームの判定）．書くのは `limit.apps`・`limit.exclude` だけ．`add` と `include`（きつくする方向）は対話できる端末（`isatty`）からだけ，`remove`・`exclude`・`list` はどこからでも．
 - **記録**: `events.log` に `enforce_declare` `enforce_consent` `enforce_off` `enforce_run` `enforce_release` `enforce_resume`（`throttle`／`suspend` では段階ごとの `enforce_run` と，元に戻したときの `limit_release` も）．レポートの summary に `enforce_declare` / `enforce_run` / `enforce_release`（あれば「強制モード」タイル）．
 
