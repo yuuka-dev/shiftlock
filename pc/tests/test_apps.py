@@ -79,6 +79,22 @@ def test_add_bad_section_is_refused(tmp_path, body):
     _refused(tmp_path, ["add", "code.exe", "dev"], body)
 
 
+@pytest.mark.parametrize("body", ["[]", "null", "5"])
+@pytest.mark.parametrize("args", [["add", "code.exe", "dev"], ["remove", "code.exe"], ["list"]])
+def test_top_level_not_a_dict_is_refused(tmp_path, capsys, body, args):
+    # shifts.json の最上位が辞書でなくても落ちず，形がおかしいと言って書き換えない
+    _refused(tmp_path, args, body)
+    assert "apps の形がおかしい" in capsys.readouterr().out
+
+
+def test_add_replaces_hand_written_keys(tmp_path, capsys):
+    # 手で大文字・.exe 無しで書いたキーが残って二重にならない（付け替えとして扱う）
+    p = _cfg(tmp_path, '{"lang": "ja", "apps": {"registered": {"Code.EXE": "dev", "CODE": "dev", "photoshop.exe": "adobe"}}}')
+    assert main(["app", "add", "code", "adobe", "--config", str(p)]) == 0
+    assert _read(p)["apps"]["registered"] == {"photoshop.exe": "adobe", "code.exe": "adobe"}
+    assert capsys.readouterr().out.strip() == "code.exe を dev から adobe に付け替えたよ"
+
+
 def test_remove(tmp_path, capsys):
     p = _cfg(tmp_path, '{"apps": {"registered": {"Code.EXE": "dev", "photoshop.exe": "adobe"}}}')
     assert main(["app", "remove", "code", "--config", str(p)]) == 0

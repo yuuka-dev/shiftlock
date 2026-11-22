@@ -19,8 +19,10 @@ def normalize_exe(name: str) -> str | None:
     return n if n.endswith(".exe") else n + ".exe"
 
 
-def _registered(raw: dict) -> dict | None:
-    """raw["apps"]["registered"] を返す（無ければ空の辞書）。形がおかしければ None。"""
+def _registered(raw) -> dict | None:
+    """raw["apps"]["registered"] を返す（無ければ空の辞書）。形がおかしければ None（shifts.json の最上位が辞書でないときも）。"""
+    if not isinstance(raw, dict):
+        return None
     apps = raw.get("apps", {})
     if not isinstance(apps, dict):
         return None
@@ -40,7 +42,10 @@ def app_add(cfg_path: Path, name: str, cat: str) -> tuple[int, str]:
     reg = _registered(raw)
     if reg is None:
         return 1, M.APPS_BAD_SECTION
-    old = reg.get(exe)
+    same = [k for k in reg if normalize_exe(k) == exe]   # 手で大文字・.exe 無しで書いたキーも同じアプリとして置き換える
+    old = reg[exe] if exe in reg else (reg[same[0]] if same else None)
+    for k in same:
+        del reg[k]
     reg[exe] = cat
     raw.setdefault("apps", {})["registered"] = reg
     save_raw(cfg_path, raw)

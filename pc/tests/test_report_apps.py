@@ -65,7 +65,8 @@ def test_bucket_is_mid_of_span(tmp_path):
 
 
 def test_hour_is_capped_at_60(tmp_path):
-    app = _line("2026-12-07T21:30:00", {"code.exe": _app("dev", 4000)}, span=1800) + "\n"
+    # 同じ 1 時間に 2 つのアプリが 2000 秒ずつ（act は span 以下）→ 合計 4000 秒でも 60 で頭打ち
+    app = _line("2026-12-07T21:35:00", {"code.exe": _app("dev", 2000), "node.exe": _app("dev", 2000)}, span=2000) + "\n"
     r = _report(tmp_path, app=app)["rows"][0]
     assert r["dev"][21] == 60
 
@@ -132,6 +133,34 @@ def test_unhashable_and_non_finite_values_do_not_crash(tmp_path):
     ]
     r = _report(tmp_path, app="\n".join(raw) + "\n")["rows"][0]
     assert r["dev"][21] == 5 and sum(r["game"]) == 0 and sum(r["adobe"]) == 0
+
+
+def test_huge_and_non_object_lines_do_not_crash(tmp_path):
+    # 桁の多い整数（math.isfinite が OverflowError），有限だが大きすぎる act（足すと inf），
+    # 辞書でない行・t が文字列でない行（log_read）
+    t = "2026-12-07T21:05:00"
+    big = "9" * 400
+    raw = [
+        '{"t": "%s", "span": %s, "apps": {"code.exe": {"cat": "dev", "act": 300}}}' % (t, big),
+        '{"t": "%s", "span": 300, "apps": {"code.exe": {"cat": "dev", "act": %s}}}' % (t, big),
+        '{"t": "%s", "span": 300, "apps": {"code.exe": {"cat": "dev", "act": 1e308}}}' % t,
+        '{"t": "%s", "span": 300, "apps": {"code.exe": {"cat": "dev", "act": 1e308}}}' % t,
+        '{"t": "%s", "span": 300, "apps": {"code.exe": {"cat": "dev", "act": 301}}}' % t,   # act は span を超えない
+        '[1, 2]', '5', 'null', '"x"',
+        '{"t": 5, "span": 300, "apps": {}}',
+        '{"t": ["%s"], "span": 300, "apps": {}}' % t,
+        _line(t, {"code.exe": _app("dev", 300)}),
+    ]
+    r = _report(tmp_path, app="\n".join(raw) + "\n")["rows"][0]
+    assert r["dev"][21] == 5 and sum(r["game"]) == 0 and sum(r["adobe"]) == 0
+
+
+def test_line_with_broken_apps_does_not_hide_pc_game(tmp_path):
+    # apps が辞書でない行は丸ごと飛ばす（そのマスを「計測あり」にしない）→ ゲームは見張りのログの値のまま
+    pc = _pc(*["2026-12-07T20:%02d:00" % m for m in range(5, 35, 5)])
+    app = '{"t": "2026-12-07T20:10:00", "span": 300, "apps": []}\n{"t": "2026-12-07T20:15:00", "span": 300}\n'
+    r = _report(tmp_path, app=app, pc=pc)["rows"][0]
+    assert r["game"][20] == 30
 
 
 # --- レポートの表示（render_report） ---

@@ -150,7 +150,7 @@ def log_read(store: Store, kind: str, start: datetime, end: datetime) -> list[di
                 try:
                     r = json.loads(line)
                     r["_t"] = datetime.fromisoformat(r["t"])
-                except (ValueError, KeyError):
+                except (ValueError, KeyError, TypeError):   # TypeError: 行が辞書でない・t が文字列でない
                     continue
                 if start <= r["_t"] < end:
                     out.append(r)

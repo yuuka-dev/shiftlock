@@ -63,26 +63,36 @@ def closing_period(day: Date, closing) -> tuple[Date, Date]:
 
 def _num(v) -> bool:
     """0 以上の有限の数か（bool は数と見ない。json.loads が通す Infinity・NaN も弾く）。"""
-    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v >= 0
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        return False
+    try:
+        return math.isfinite(v) and v >= 0
+    except OverflowError:   # float にできないほど桁の多い整数
+        return False
 
 
 def _app_seconds(lines: list[dict], away) -> dict:
     """稼働計測の行（log/app-*.jsonl）を (日, 時) → {カテゴリ: 秒} にする。
     計測した区間の中央の時刻でマスを決める。外出中のマスは「計測あり」にするだけで秒は足さない。
-    壊れた行（span・apps・act の型が違う）は飛ばす。"""
+    壊れた行（span・apps の型が違う）は丸ごと飛ばし，そのマスを「計測あり」にしない。壊れた項目（cat・act）はその項目だけ飛ばす。"""
     out: dict = {}
     for r in lines:
         span = r.get("span")
         if not _num(span) or span > 86400:   # 1 行は 5 分ぶん。1 日を超える行は壊れている
             continue
+        apps = r.get("apps")
+        if not isinstance(apps, dict):
+            continue
         mid = r["_t"] - timedelta(seconds=span / 2)
         cell = out.setdefault((mid.date(), mid.hour), {"game": 0.0, "dev": 0.0, "adobe": 0.0})
-        apps = r.get("apps")
-        if _in_any(mid, away) or not isinstance(apps, dict):
+        if _in_any(mid, away):
             continue
         for a in apps.values():
-            if isinstance(a, dict) and isinstance(a.get("cat"), str) and a["cat"] in cell and _num(a.get("act")):
-                cell[a["cat"]] += a["act"]
+            if not isinstance(a, dict) or not isinstance(a.get("cat"), str) or a["cat"] not in cell:
+                continue
+            act = a.get("act")
+            if _num(act) and act <= span:   # アクティブの秒は測れた秒を超えない
+                cell[a["cat"]] += act
     return out
 
 
