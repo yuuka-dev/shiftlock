@@ -31,6 +31,10 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     private LimitState? _known;
     private string? _failedNoticeDay;
 
+    // 終了のための RestoreAll(null) が立てる．以後 Startup・RunOnce は何もせず，進行中の RunOnce も Cap・Suspend の前で打ち切る
+    // （戻した後に遅れた回がかけ直すと，戻す仕事が無いまま Agent が終わる）．排他の外から立てる
+    private volatile bool _closed;
+
     /// <summary>ゲームの根のフォルダの探索結果（Agent が生きている間，根ごとに 1 回だけ探す）．Names が null は読めなかった．</summary>
     private sealed record ScanResult(IReadOnlyList<string>? Names);
 
@@ -49,6 +53,10 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
         }
         try
         {
+            if (_closed)
+            {
+                return;
+            }
             StartupLocked(notices);
         }
         catch (Exception e)
@@ -72,6 +80,10 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
         var notices = new List<TickAction>();
         try
         {
+            if (_closed)
+            {
+                return;
+            }
             RunLocked(notices);
         }
         catch (Exception e)
@@ -92,6 +104,10 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     /// </summary>
     public void RestoreAll(string? reason)
     {
+        if (reason is null)
+        {
+            _closed = true;   // 排他を待つ前に立てる（取れずに諦める道でも，進行中の回を止める）
+        }
         if (!_gate.Wait(GateWait))
         {
             once.Write("limit-restore", "limit restore skipped: busy", Today());
@@ -280,10 +296,10 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
             switch (op)
             {
                 case CapOp c:
-                    if (!wrote)
+                    if (!wrote || _closed)
                     {
                         Revert(capped, prior, c.Exe);
-                        failed = true;
+                        failed |= !wrote;
                     }
                     else if (Try("limit-cap", () => control.Cap(c.Job, c.Procs, c.Percent)))
                     {
@@ -297,14 +313,14 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
                     }
                     break;
                 case SuspendOp s:
-                    if (wrote && Try("limit-suspend", () => control.Suspend(s.Proc.Key)))
+                    if (wrote && !_closed && Try("limit-suspend", () => control.Suspend(s.Proc.Key)))
                     {
                         acted = true;
                     }
                     else
                     {
                         suspended.Remove(s.Proc);
-                        failed = true;
+                        failed |= !_closed || !wrote;
                     }
                     break;
                 case UncapOp u:

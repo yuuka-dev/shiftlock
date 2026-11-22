@@ -286,7 +286,11 @@ public sealed class LimiterTests : IDisposable
         NewLimiter().RunOnce();
 
         Assert.Equal(2, _control.Count("suspend"));
-        Assert.All(seen, text => Assert.Contains("\"pid\": 100", text, StringComparison.Ordinal));
+        Assert.All(seen, text =>
+        {
+            Assert.Contains("\"pid\": 100", text, StringComparison.Ordinal);
+            Assert.Contains("\"pid\": 101", text, StringComparison.Ordinal);   // ツリーの全部が止める前に載っている
+        });
         Assert.Equal(2, ReadState().Suspended.Count);
     }
 
@@ -742,5 +746,75 @@ public sealed class LimiterTests : IDisposable
 
         Assert.Equal(2, _control.Count("suspend"));
         Assert.Contains(AgentLogLines, l => l.Contains("notify failed", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void RunOnce_after_exit_restore_does_nothing()
+    {
+        _now = Stage(5).AddMinutes(1);
+        PutState(State(baseline: [Elden], suspended: [Susp(100)]));
+        var limiter = NewLimiter();
+        limiter.RestoreAll(null);
+        _control.Calls.Clear();
+
+        limiter.RunOnce();
+        limiter.Startup();
+
+        Assert.Empty(_control.Calls);
+        Assert.Empty(ReadState().Suspended);
+    }
+
+    [Fact]
+    public void RestoreAll_kaijo_does_not_close()
+    {
+        PutState(State(baseline: [Elden]));
+        var limiter = NewLimiter();
+        limiter.RestoreAll("kaijo");
+
+        limiter.RunOnce();
+
+        Assert.Equal(1, _control.Count("cap"));
+    }
+
+    [Fact]
+    public async Task Exit_restore_during_a_running_round_stops_it_before_the_next_cap()
+    {
+        AddGame(200, Apex, @"C:\Games\Apex\apex.exe");
+        PutState(State(baseline: [Elden, Apex]));
+        _control.CapEntered = new ManualResetEventSlim();
+        _control.CapHold = new ManualResetEventSlim();
+        var limiter = NewLimiter();
+
+        var round = Task.Run(limiter.RunOnce);
+        Assert.True(_control.CapEntered.Wait(TimeSpan.FromSeconds(10)));
+        var exit = Task.Run(() => limiter.RestoreAll(null));   // 排他を待つ間に終了の印が立つ
+        await Task.Delay(200);
+        _control.CapHold.Set();
+        await round.WaitAsync(TimeSpan.FromSeconds(10));
+        await exit.WaitAsync(TimeSpan.FromSeconds(15));
+
+        Assert.Equal(1, _control.Count("cap"));   // 2 つ目は打ち切られた
+        Assert.Empty(ReadState().Capped);          // 終了の戻しが 1 つ目を外した
+    }
+
+    [Fact]
+    public void RunOnce_suspend_succeeded_but_final_write_failed_does_not_suspend_twice()
+    {
+        _now = Stage(5).AddMinutes(1);
+        PutState(State(baseline: [Elden]));
+        var limiter = NewLimiter();
+        FileStream? hold = null;
+        // Suspend の後（最終の書き込みの前）に記録を置き換えられなくする
+        _control.OnSuspend = _ => hold ??= new FileStream(_dir.P("limit.json"), FileMode.Open, FileAccess.Read, FileShare.Read);
+
+        limiter.RunOnce();
+        hold!.Dispose();
+        var firstRound = _control.Count("suspend");
+        _now = _now.AddSeconds(10);
+        limiter.RunOnce();
+
+        Assert.Equal(2, firstRound);
+        Assert.Equal(2, _control.Count("suspend"));   // 2 回目の回は止めない（Before の記録が残っている）
+        Assert.Equal(2, ReadState().Suspended.Count);
     }
 }
