@@ -10,6 +10,7 @@ from .config import calendar_sources, load_config
 from .confirm import unconfirmed_shifts
 from .days import days_set, schedule_text
 from .enforce import _declared, stop_active
+from .limit import LIMIT_ACTIONS
 from .keywords import (KW_KITAKU, KW_NERU, KW_OKITA, KW_SCHEDULE, KW_SHUPPATSU, KW_STATUS, KW_UNDO, KW_UNDO_FUZZY, KW_YASUMI)
 from .plan import current, is_workday, make_plan, plans, target_plan
 from .records import do_kitaku, do_neru, do_okita, do_shuppatsu, late_report, month_yasumi_count, undo_fuzzy
@@ -98,9 +99,11 @@ def status_text(cfg: dict, store: Store, now: datetime) -> str:
         parts = []
         for d, e in recent:
             state = M.STATUS_ENFORCE_RELEASED if e.get("released_at") else M.STATUS_ENFORCE_RUNS.format(n=len(e.get("runs", [])))
-            parts.append(M.STATUS_ENFORCE_ITEM.format(day=f"{Date.fromisoformat(d):%m/%d}",
-                                                      label=M.ENFORCE_LABEL.get(e.get("action"), e.get("action")),
-                                                      hours=f"{float(e.get('duration_hours', 2)):g}", state=state))
+            day, label = f"{Date.fromisoformat(d):%m/%d}", M.ENFORCE_LABEL.get(e.get("action"), e.get("action"))
+            if e.get("action") in LIMIT_ACTIONS:   # 減速・一時停止には「N 時間」が無い
+                parts.append(M.STATUS_ENFORCE_ITEM_LIMIT.format(day=day, label=label, state=state))
+            else:
+                parts.append(M.STATUS_ENFORCE_ITEM.format(day=day, label=label, hours=f"{float(e.get('duration_hours', 2)):g}", state=state))
         lines.append(M.STATUS_ENFORCE.format(stop=M.STATUS_ENFORCE_STOP if stop_active(store) else "", items=M.STATUS_ENFORCE_SEP.join(parts)))
     lines.append(M.STATUS_SCHEDULE_HEAD)
     lines.append(schedule_text(cfg, now.date()))

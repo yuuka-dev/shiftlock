@@ -9,7 +9,8 @@ from pathlib import Path
 
 from . import i18n as M
 from .console import StdIO
-from .limit import LIMIT_ACTIONS
+from .apps import normalize_exe
+from .limit import LIMIT_ACTIONS, agent_seems_running, check_steps, limit_stages, read_games
 from .notify import _once
 from .plan import Plan, target_plan
 from .store import _read, Store, _write
@@ -19,7 +20,7 @@ from .timeutil import fmt, fmt_d
 STOP_FILE = "STOP.txt"   # 実行フォルダにあれば強制は一切しない（緊急解除。エクスプローラーで置くだけでええ）
 
 ENFORCE_ACTIONS = ("lock", "sleep", "shutdown") + LIMIT_ACTIONS   # action の妥当性はこれで見る（表示の言葉は i18n）
-CAUTION_ACTIONS = ("sleep", "shutdown")           # 注意を出して y をもらう action（遠隔から戻せへん）
+CAUTION_ACTIONS = ("sleep", "shutdown") + LIMIT_ACTIONS   # 注意を出して y をもらう action（遠隔から戻せへん・アプリが止まる）
 
 
 def stop_active(store: Store) -> bool:
@@ -43,8 +44,54 @@ def set_enforce(store: Store, day: str, e: dict | None, now: datetime, kind: str
             f.write(f"{now.isoformat(timespec='minutes')}\t{day}\t{kind}\t{note}\n")
 
 
-def enforce_terms(cfg: dict, p: Plan, action: str, hours: float) -> str:
-    """同意の前に見せる内容（何を・いつから・どれだけ・解除方法・注意）。"""
+def _names(exes) -> str:
+    return " / ".join(sorted(exes))
+
+
+def _limit_apps(cfg: dict) -> list[str]:
+    """宣言に写す，足したアプリの exe 名（normalize_exe でそろえて重複を除き，並べ替える）。"""
+    raw = cfg["limit"].get("apps", [])
+    return sorted({x for x in (normalize_exe(a) for a in raw if isinstance(a, str)) if x}) if isinstance(raw, list) else []
+
+
+def _limit_terms(cfg: dict, p: Plan, action: str, store: Store | None, now: datetime | None) -> str:
+    """throttle／suspend の同意の表示。段階の時刻と割合・対象・戻る時刻・解除の方法・注意。勧める文は入れない。"""
+    lc = cfg["limit"]
+    stages = "\n".join(
+        M.ENFORCE_TERMS_LIMIT_STAGE.format(
+            step=st["step"], at=fmt(st["at"]),
+            what=M.ENFORCE_TERMS_LIMIT_STOPPED if st["percent"] is None else M.ENFORCE_TERMS_LIMIT_PERCENT.format(percent=st["percent"]))
+        for st in limit_stages(p.soft_close, p.hard_close, check_steps(lc.get("steps")) or [0, 0, 0, 0], action))
+    seen = read_games(store, now) if store is not None and now is not None else {}
+    excluded = {x for x in (normalize_exe(str(e)) for e in lc.get("exclude", [])) if x}
+    targets = [g for g, v in seen.items() if v == "target" and g not in excluded]
+    anticheat = [g for g, v in seen.items() if v == "anticheat"]
+    unknown = [g for g, v in seen.items() if v == "unknown"]
+    games = [M.ENFORCE_TERMS_LIMIT_GAMES.format(names=_names(targets)) if targets else M.ENFORCE_TERMS_LIMIT_GAMES_NONE]
+    if anticheat:
+        games.append(M.ENFORCE_TERMS_LIMIT_EXCLUDED.format(names=_names(anticheat)))
+    if unknown:
+        games.append(M.ENFORCE_TERMS_LIMIT_UNKNOWN.format(names=_names(unknown)))
+    apps = _limit_apps(cfg)
+    text = M.ENFORCE_TERMS_LIMIT.format(
+        day=f"{p.start_latest:%m/%d}", what=M.ENFORCE_TERMS_WHAT[action], hard=fmt(p.hard_close), stages=stages,
+        games="\n".join(games), back=fmt(p.start_latest),
+        apps=M.ENFORCE_TERMS_LIMIT_APPS.format(names=_names(apps)) if apps else M.ENFORCE_TERMS_LIMIT_APPS_NONE)
+    text += "\n" + M.ENFORCE_TERMS_LIMIT_ANTICHEAT_NOTE
+    if action == "suspend":
+        text += "\n" + M.ENFORCE_TERMS_LIMIT_SUSPEND_NOTE
+    text += "\n" + M.ENFORCE_TERMS_CAUTION_LINE.format(caution=M.ENFORCE_CAUTION[action])
+    if store is not None and now is not None and not agent_seems_running(store, now):
+        text += "\n" + M.ENFORCE_LIMIT_NO_AGENT
+    return text
+
+
+def enforce_terms(cfg: dict, p: Plan, action: str, hours: float | None, store: Store | None = None,
+                  now: datetime | None = None) -> str:
+    """同意の前に見せる内容（何を・いつから・どれだけ・解除方法・注意）。
+    throttle／suspend は段階・対象の表示で，store・now があればゲームの判定と Agent の動作確認も出す。"""
+    if action in LIMIT_ACTIONS:
+        return _limit_terms(cfg, p, action, store, now)
     ec = cfg["enforce"]
     end = p.hard_close + timedelta(minutes=ec["grace_minutes"]) + timedelta(hours=hours)
     text = M.ENFORCE_TERMS.format(day=f"{p.start_latest:%m/%d}", what=M.ENFORCE_TERMS_WHAT[action], hard=fmt(p.hard_close),
@@ -82,12 +129,20 @@ def enforce_declare(cfg: dict, store: Store, now: datetime, action: str | None =
     action = (action or ec["action"]).lower()
     if action not in ENFORCE_ACTIONS:
         return M.ENFORCE_BAD_ACTION
-    try:
-        hours = float(str(hours).lower().rstrip("h")) if hours is not None else float(ec["duration_hours"])
-    except ValueError:
-        return M.ENFORCE_BAD_HOURS
-    if not 0.5 <= hours <= 12:
-        return M.ENFORCE_HOURS_RANGE
+    limit = action in LIMIT_ACTIONS
+    if limit:   # 減速・一時停止は時間を持たない（最低ラインから出庫の時刻まで）．時間の指定は断る
+        if hours is not None:
+            return M.ENFORCE_LIMIT_NO_HOURS
+        steps = check_steps(cfg["limit"].get("steps"))
+        if steps is None:
+            return M.ENFORCE_LIMIT_BAD_STEPS
+    else:
+        try:
+            hours = float(str(hours).lower().rstrip("h")) if hours is not None else float(ec["duration_hours"])
+        except ValueError:
+            return M.ENFORCE_BAD_HOURS
+        if not 0.5 <= hours <= 12:
+            return M.ENFORCE_HOURS_RANGE
     p = target_plan(cfg, now)
     if p is None:
         return M.ENFORCE_NO_PLAN
@@ -99,26 +154,36 @@ def enforce_declare(cfg: dict, store: Store, now: datetime, action: str | None =
     if isinstance(io, StdIO) and not sys.stdin.isatty():
         # パイプ（echo y |）や Claude Code の Bash からは同意できへん。対話できる端末だけ
         return M.ENFORCE_NEED_TTY
-    io.print(enforce_terms(cfg, p, action, hours))
+    io.print(enforce_terms(cfg, p, action, hours, store, now))
     try:
         ans = io.input(M.ENFORCE_ASK_OK).strip().lower()
     except EOFError:
         ans = ""
     if ans != "y":
         return M.ENFORCE_DECLINED
-    if isinstance(io, StdIO) and not windows_confirm(
-            M.ENFORCE_DIALOG_TEXT.format(day=f"{p.start_latest:%m/%d}", label=M.ENFORCE_LABEL[action], hours=f"{hours:g}")):
+    dialog = (M.ENFORCE_DIALOG_TEXT_LIMIT.format(day=f"{p.start_latest:%m/%d}", label=M.ENFORCE_LABEL[action]) if limit else
+              M.ENFORCE_DIALOG_TEXT.format(day=f"{p.start_latest:%m/%d}", label=M.ENFORCE_LABEL[action], hours=f"{hours:g}"))
+    if isinstance(io, StdIO) and not windows_confirm(dialog):
         # 端末の y だけやと擬似端末で真似できるので、Windows のダイアログで本人に押してもらう（画面の前におる人しか押せへん）
         return M.ENFORCE_DIALOG_DENIED
-    e = {"action": action, "duration_hours": hours, "declared_at": now.isoformat(timespec="minutes"),
-         "consented_at": now.isoformat(timespec="minutes"), "via": "shl", "runs": [],
-         # 同意した内容を固定する（あとで設定を変えても、この乗務には効かない）
-         "grace_minutes": int(ec["grace_minutes"]), "relock_minutes": int(ec["relock_minutes"]),
-         "max_runs": int(ec["max_runs"]), "boot_grace_minutes": int(ec["boot_grace_minutes"])}
-    set_enforce(store, p.day, e, now, "enforce_declare", f"{action} {hours:g}h")
+    e = {"action": action, "declared_at": now.isoformat(timespec="minutes"),
+         "consented_at": now.isoformat(timespec="minutes"), "via": "shl", "runs": []}
+    if limit:
+        # 同意した割合と足したアプリを固定する（あとで設定を変えても、この乗務には効かない）
+        e.update({"steps": steps, "limit_apps": _limit_apps(cfg)})
+        note = action
+    else:
+        e.update({"duration_hours": hours,
+                  # 同意した内容を固定する（あとで設定を変えても、この乗務には効かない）
+                  "grace_minutes": int(ec["grace_minutes"]), "relock_minutes": int(ec["relock_minutes"]),
+                  "max_runs": int(ec["max_runs"]), "boot_grace_minutes": int(ec["boot_grace_minutes"])})
+        note = f"{action} {hours:g}h"
+    set_enforce(store, p.day, e, now, "enforce_declare", note)
     with open(store.p("events.log"), "a", encoding="utf-8", newline="\n") as f:
-        f.write(f"{now.isoformat(timespec='minutes')}\t{p.day}\tenforce_consent\t{action} {hours:g}h\n")
+        f.write(f"{now.isoformat(timespec='minutes')}\t{p.day}\tenforce_consent\t{note}\n")
     extra = M.ENFORCE_STOP_NOTE if stop_active(store) else ""
+    if limit:
+        return M.ENFORCE_DECLARED_LIMIT.format(day=f"{p.start_latest:%m/%d}", label=M.ENFORCE_LABEL[action], extra=extra)
     return M.ENFORCE_DECLARED.format(day=f"{p.start_latest:%m/%d}", label=M.ENFORCE_LABEL[action], hours=f"{hours:g}", extra=extra)
 
 
@@ -201,10 +266,14 @@ def enforce_status_text(cfg: dict, store: Store, now: datetime) -> str:
         state = (M.ENFORCE_STATE_RELEASED.format(at=e["released_at"][11:16]) if e.get("released_at") else
                  M.ENFORCE_STATE_RUNNING if runs else M.ENFORCE_STATE_WARNED if e.get("warned_at") else
                  M.ENFORCE_STATE_CONSENTED if e.get("consented_at") else M.ENFORCE_STATE_PENDING)
-        lines.append(M.ENFORCE_STATUS_LINE.format(
-            day=f"{Date.fromisoformat(d):%m/%d}", label=M.ENFORCE_LABEL.get(e.get("action"), e.get("action")),
-            hours=f"{float(e.get('duration_hours', 2)):g}", state=state, runs=len(runs),
-            last=M.ENFORCE_STATUS_LAST.format(at=runs[-1]["at"][11:16]) if runs else ""))
+        label = M.ENFORCE_LABEL.get(e.get("action"), e.get("action"))
+        last = M.ENFORCE_STATUS_LAST.format(at=runs[-1]["at"][11:16]) if runs else ""
+        if e.get("action") in LIMIT_ACTIONS:   # 減速・一時停止には「N 時間」が無い
+            lines.append(M.ENFORCE_STATUS_LINE_LIMIT.format(day=f"{Date.fromisoformat(d):%m/%d}", label=label, state=state,
+                                                            runs=len(runs), last=last))
+        else:
+            lines.append(M.ENFORCE_STATUS_LINE.format(day=f"{Date.fromisoformat(d):%m/%d}", label=label,
+                                                      hours=f"{float(e.get('duration_hours', 2)):g}", state=state, runs=len(runs), last=last))
     if not found:
         lines.append(M.ENFORCE_STATUS_NONE)
     return "\n".join(lines)

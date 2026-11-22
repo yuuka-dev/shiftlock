@@ -36,7 +36,7 @@ from .autowake import (slept_before, maybe_auto_okita)
 from .intents import (norm_kw, LEARNED_KINDS, to_hira, norm_text, phrase_core, INTENT_PATTERNS, NEGATE, WEAK, REQUEST, AFFIRM, DENY, load_learned, learn, detect_intents, weak_intent, ASK_COOLDOWN, can_ask, set_pending, take_pending, clear_pending, learned_text, unlearn)
 from .confirm import (last_asked_unconfirmed, unconfirmed_shifts, mark_confirm_asked, can_ask_confirm, confirm_since, pick_unconfirmed, home_activity_minutes, confirm_text, kakunin_text)
 from .enforce import (STOP_FILE, ENFORCE_ACTIONS, CAUTION_ACTIONS, stop_active, enforce_state, set_enforce, enforce_terms, windows_confirm, enforce_declare, enforce_off, enforce_release, enforce_resume, enforce_suffix, enforce_status_text, enforce_due)
-from .limit import (LIMIT_ACTIONS, check_steps, limit_stages)
+from .limit import (LIMIT_ACTIONS, check_steps, limit_stages, read_games, agent_seems_running)
 from .notify import (NOTIFY_EVERY, SOUND_PRIORITY, resolve_sound, attach_sounds)
 from .days import (days_set, schedule_text)
 from .attendance import (absence_stats, absence_note)
@@ -171,6 +171,8 @@ __all__ = [
     "LIMIT_ACTIONS",
     "check_steps",
     "limit_stages",
+    "read_games",
+    "agent_seems_running",
     "NOTIFY_EVERY",
     "SOUND_PRIORITY",
     "resolve_sound",

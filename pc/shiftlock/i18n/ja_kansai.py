@@ -145,13 +145,15 @@ CONFIRM_KAKUNIN_HEAD = "未確認の乗務（『出た』『休んだ』か、sh
 # ================================================================ enforce（強制モード）
 
 ENFORCE_LABEL = {"lock": "ロック", "sleep": "スリープ", "shutdown": "シャットダウン", "throttle": "アプリの減速", "suspend": "アプリの一時停止"}
-ENFORCE_CAUTION = {"sleep": "スリープは遠隔（Parsec）から戻せへん。",
+ENFORCE_CAUTION = {"throttle": "上限がかかったアプリは遅くなる。終了はせえへん。",
+                   "suspend": "止まったアプリは再開するまで操作できへん。終了はせえへん。",
+                   "sleep": "スリープは遠隔（Parsec）から戻せへん。",
                    "shutdown": "シャットダウンは未保存の作業が消える（60 秒の猶予のあと強制終了）。遠隔（Parsec）から戻せへん。"}
 ENFORCE_TERMS_WHAT = {"lock": "ロック（ログインし直せば続きはできる）",
                       "sleep": "スリープ（未保存の作業は残るけど、遠隔からは戻せへん）",
                       "shutdown": "シャットダウン（60 秒の猶予のあと強制終了。未保存の作業は消える。遠隔からは戻せへん）",
-                      "throttle": "アプリの減速（ゲームと登録したアプリの CPU の上限を、段階的に下げる。終了はせえへん）",
-                      "suspend": "アプリの一時停止（上限を下げたあと、最低ラインで止める。終了はせえへん。解除したら続きから動く）"}
+                      "throttle": "アプリの減速（対象のアプリの CPU 使用率の上限を、段階的に下げる。終了はせえへん。解除したら戻る）",
+                      "suspend": "アプリの一時停止（上限を下げたあと、最低ラインで対象のアプリを止める。終了はせえへん。解除したら続きから動く）"}
 ENFORCE_TERMS = ("強制モードの内容（{day} の乗務）\n"
                  "  何を    : {what}\n"
                  "  いつから: 最低ライン {hard} 以降に PC を触ったら、{grace} 分前に予告してから\n"
@@ -159,9 +161,35 @@ ENFORCE_TERMS = ("強制モードの内容（{day} の乗務）\n"
                  "  解除    : kaijo.cmd（shl kaijo）か、実行フォルダに STOP.txt を置く。解除は記録に残る\n"
                  "  注意    : 『おきた』は寝た記録（『ねる』か 2.5 時間以上の離席）があるときだけ効く。リモート（Parsec）の検出は未対応で、遠隔操作中でも発動する")
 ENFORCE_TERMS_CAUTION_LINE = "  ！      : {caution}"
+ENFORCE_TERMS_LIMIT = ("強制モードの内容（{day} の乗務）\n"
+                       "  何を    : {what}\n"
+                       "  段階    : 上限の割合は、そのアプリの直近の使用率（減速を始める前の最大値）に対するもの。最低ラインは {hard}\n"
+                       "{stages}\n"
+                       "  対象    : ゲーム（Agent が自動で判定）と、足したアプリだけ\n"
+                       "{games}\n"
+                       "{apps}\n"
+                       "  戻る    : 『行ってきます』か『今日休む』を記録したとき、または {back} になったら、全部元に戻るで\n"
+                       "  解除    : kaijo.cmd（shl kaijo）か、実行フォルダに STOP.txt を置く。すぐ元に戻り、解除は記録に残る")
+ENFORCE_TERMS_LIMIT_STAGE = "            段階 {step}: {at} から {what}"
+ENFORCE_TERMS_LIMIT_PERCENT = "上限 {percent}%"
+ENFORCE_TERMS_LIMIT_STOPPED = "一時停止"
+ENFORCE_TERMS_LIMIT_GAMES = "  ゲーム  : {names}"
+ENFORCE_TERMS_LIMIT_GAMES_NONE = "  ゲーム  : まだ見たゲームはないで（Agent が動いている間に見たものだけ載る）"
+ENFORCE_TERMS_LIMIT_EXCLUDED = "  外した  : {names}（アンチチートの印があるので手を加えへん）"
+ENFORCE_TERMS_LIMIT_UNKNOWN = "  外した  : {names}（アンチチートを調べられへんので手を加えへん）"
+ENFORCE_TERMS_LIMIT_APPS = "  アプリ  : {names}（足したもの）"
+ENFORCE_TERMS_LIMIT_APPS_NONE = "  アプリ  : 足したものはないで"
+ENFORCE_TERMS_LIMIT_ANTICHEAT_NOTE = "  注意    : アンチチートの判定は一覧との照合やから、見逃すことがある。見逃したゲームにも手を加えてしまうし、ゲーム側がどう反応するかは分からへん"
+ENFORCE_TERMS_LIMIT_SUSPEND_NOTE = "  注意    : 止まったアプリの窓は『応答なし』になる。内容は残るけど、保存してへん作業は先に保存しとき"
+ENFORCE_LIMIT_NO_AGENT = "  ！      : Agent が動いてへんみたいやから、このままでは効かへん（shiftlock-agent を起動しとき）"
+ENFORCE_LIMIT_NO_HOURS = PREFIX + "アプリの減速・一時停止に時間の指定はいらんで（最低ラインまでの時間で段階が決まる）。時間を付けんと指定してな。"
+ENFORCE_LIMIT_BAD_STEPS = PREFIX + "設定 limit.steps は、1 以上 100 未満の整数を大きい順に 4 個（例 [75, 50, 25, 10]）。直してからもう一回な。"
+ENFORCE_DIALOG_TEXT_LIMIT = "{day} の乗務を強制モード（{label}）にする。ええ？\n解除は kaijo.cmd か STOP.txt。"
+ENFORCE_DECLARED_LIMIT = PREFIX + "了解。{day} の乗務は強制モード（{label}）。解除は kaijo.cmd か STOP.txt。{extra}"
+ENFORCE_STATUS_LINE_LIMIT = "  {day}: {label} / {state} / 実行 {runs} 回{last}"
 ENFORCE_DIALOG_TITLE = "shiftlock 強制モードの同意"
 ENFORCE_DIALOG_TEXT = "{day} の乗務を強制モード（{label} {hours}h）にする。ええ？\n解除は kaijo.cmd か STOP.txt。"
-ENFORCE_BAD_ACTION = PREFIX + "action は lock / sleep / shutdown のどれかで。"
+ENFORCE_BAD_ACTION = PREFIX + "action は lock / sleep / shutdown / throttle / suspend のどれかで。"
 ENFORCE_BAD_HOURS = PREFIX + "時間は 2 や 3h みたいに書いてな。"
 ENFORCE_HOURS_RANGE = PREFIX + "時間は 0.5〜12 で。"
 ENFORCE_NO_PLAN = COMMON_NO_PLAN
@@ -239,6 +267,7 @@ STATUS_UNCONFIRMED_SEP = ", "
 STATUS_ENFORCE_RELEASED = "解除済み"
 STATUS_ENFORCE_RUNS = "実行 {n} 回"
 STATUS_ENFORCE_ITEM = "{day} {label} {hours}h（{state}）"
+STATUS_ENFORCE_ITEM_LIMIT = "{day} {label}（{state}）"
 STATUS_ENFORCE_STOP = "STOP.txt で解除中 "
 STATUS_ENFORCE = "  強制モード: {stop}{items}"
 STATUS_ENFORCE_SEP = "、"
@@ -543,7 +572,7 @@ CLI_HELP = """shiftlock の使い方（pwsh / Windows PowerShell のどのディ
   shl app add <exe> <dev|adobe> / remove <exe> / list   時間を測るアプリの登録（開発・Adobe。ゲームは自動）
   scan-games / show-games    ゲーム判定の確認
 Claude Code のプロンプトに打つ言葉（ねる / おきた / 今日休む / 11/5 休み / 状況 / 予定）は README の「解除ワード」を見てな"""
-CLI_ARG_ENFORCE_OPTS = "on のとき lock|sleep|shutdown と 2h のような時間"
+CLI_ARG_ENFORCE_OPTS = "on のとき lock|sleep|shutdown と 2h のような時間、または throttle|suspend（時間は付けへん）"
 CLI_ARG_SLEEP_WHEN = "時刻（と日付）を付けると後から足す睡眠の記録（例: 11/7 23:30。末尾に 取消 で消す）"
 CLI_ARG_PAST_DATE = "日付を付けると終わった乗務の事後報告（例: 11/3）"
 CLI_ARG_PAID = "有給 / 有給なし（休みに有給の印を付ける／外す。当日欠勤の目安に数えへん）"
