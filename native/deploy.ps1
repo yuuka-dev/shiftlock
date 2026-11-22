@@ -8,6 +8,7 @@
 #   <場所>\agent\shiftlock-agent.exe ほか  常駐（自己完結）。ウィンドウと同じフォルダに混ぜない
 #                                          （どちらも .NET のランタイム一式を抱えている。同じ名前のファイルを上書きし合わないように分ける）
 # 動いている Agent があれば先に終わらせ，置いた後に起動し直す（-NoStart なら起動しない）。
+# 置く場所のウィンドウ（shiftlock.exe）が開いていたら，何もせずに止まる（閉じてからやり直す）。
 # Python 版の見張りからの切り替え（自動起動の登録とタスク shiftlock-guard の無効化）は，置いた後に本人が
 #   <場所>\agent\shiftlock-agent.exe --install      戻すときは --uninstall
 # を実行する（native/README.md）。このスクリプトは切り替えをしない。
@@ -36,7 +37,24 @@ function Invoke-Publish([string]$project, [string]$out, [string[]]$extra) {
     if ($LASTEXITCODE -ne 0) { throw "発行に失敗: $project（dotnet publish の終了コード $LASTEXITCODE）" }
 }
 
+# 置く場所のウィンドウ（shiftlock.exe）が開いていると，掴まれたファイルを上書きできず途中で止まる（ウィンドウ側が新旧まじりになる）。
+# 何も触る前に調べて止まる。ウィンドウは記録を見るだけなので，こちらから終わらせずに本人に閉じてもらう。
+function Assert-WindowClosed {
+    $prefix = $dest.TrimEnd('\') + '\'
+    $open = @(Get-Process -Name 'shiftlock' -ErrorAction SilentlyContinue | Where-Object {
+        $p = $null
+        try { $p = $_.Path } catch { }
+        # 置く場所から動いているものだけ見る。場所が分からないもの（Path が取れない）は開いているものとして扱う
+        (-not $p) -or $p.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)
+    })
+    if ($open.Count -eq 0) { return }
+    $msg = "shiftlock のウィンドウが開いている（$(Join-Path $dest 'shiftlock.exe')）。閉じてからやり直して"
+    if ($WhatIfPreference) { Write-Warning $msg } else { throw $msg }
+}
+
 try {
+    Assert-WindowClosed   # 発行（時間がかかる）の前に
+
     # 1. 発行（一時フォルダへ。失敗したら置いてあるものには触らない）
     if ($PSCmdlet.ShouldProcess("shiftlock.App と shiftlock.Agent（Release・win-x64・自己完結）", "発行")) {
         Invoke-Publish 'shiftlock.App\shiftlock.App.csproj' $stageApp @('-p:Platform=x64', '-p:PublishTrimmed=false')   # 使わない部分を削る発行（Release の既定）は警告で止まるので使わない
@@ -45,6 +63,8 @@ try {
             if (-not (Test-Path -LiteralPath $f)) { throw "発行物に見つからない: $f" }
         }
     }
+
+    Assert-WindowClosed   # 発行の間に開かれたかもしれないので，Agent を止める前にもう一度
 
     # 2. 動いている Agent を終わらせる（置いてある exe の --stop。アイコンを消して終わる）
     $wasRunning = [bool](Get-Process -Name 'shiftlock-agent' -ErrorAction SilentlyContinue)

@@ -23,6 +23,26 @@ public sealed class ConfigTests
         return Vectors.Materialize(new JsonObject { ["shifts.json"] = shifts });
     }
 
+    [Fact]
+    public void Defaults_HaveApps()
+    {
+        using var folder = Folder();
+        var cfg = ShiftConfig.Load(folder.ShiftsJson);
+        var apps = cfg.Raw["apps"]!.AsObject();
+        Assert.Empty(apps["registered"]!.AsObject());
+        Assert.Equal(5, apps["active_input_minutes"]!.GetValue<double>());
+        Assert.Equal(5, apps["active_cpu_percent"]!.GetValue<double>());
+    }
+
+    [Fact]
+    public void Load_MergesAppsRegistered()
+    {
+        using var folder = Folder("""{"apps":{"registered":{"code.exe":"dev"}}}""");
+        var apps = ShiftConfig.Load(folder.ShiftsJson).Raw["apps"]!.AsObject();
+        Assert.Equal("dev", apps["registered"]!["code.exe"]!.GetValue<string>());
+        Assert.Equal(5, apps["active_input_minutes"]!.GetValue<double>());
+    }
+
     [Theory]
     [MemberData(nameof(WorkdayCases))]
     public void IsWorkday_MatchesPython(VectorCase c)

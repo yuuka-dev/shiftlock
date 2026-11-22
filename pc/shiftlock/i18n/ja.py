@@ -469,6 +469,8 @@ REPORT_TIP_NODATA = "記録なし"
 REPORT_TIP_AWAY = "乗務で外出中"
 REPORT_TIP_PC = "PC {pc}分"
 REPORT_TIP_GAME = " / ゲーム {game}分"
+REPORT_TIP_DEV = " / 開発 {dev}分"
+REPORT_TIP_ADOBE = " / Adobe {adobe}分"
 REPORT_TIP_CLAUDE = " / Claude {n}回"
 REPORT_TIP_VISIT = "（訪問の時間帯）"
 REPORT_TIP_CELL = "{label} {h}時台: {tip}"
@@ -486,6 +488,8 @@ REPORT_ABSENCE_NOTE = ("「当日欠勤」は『今日休む』『休んだ』�
 REPORT_LEGEND_PC = "PCを触っていた時間（1時間あたり）"
 REPORT_LEGEND_RAMP = "0 → 60分"
 REPORT_LEGEND_GAME = "ゲーム15分以上"
+REPORT_LEGEND_DEV = "開発15分以上"
+REPORT_LEGEND_ADOBE = "Adobe15分以上"
 REPORT_LEGEND_CLAUDE = "Claude Code 使用"
 REPORT_LEGEND_AWAY = "乗務で外出中"
 REPORT_LEGEND_NODATA = "記録なし"
@@ -497,6 +501,8 @@ REPORT_COL_OKITA = "起きた"
 REPORT_COL_SLEEP = "睡眠"
 REPORT_COL_PC = "PC(h)"
 REPORT_COL_GAME = "ゲーム(h)"
+REPORT_COL_DEV = "開発(h)"
+REPORT_COL_ADOBE = "Adobe(h)"
 REPORT_COL_CLAUDE = "Claude"
 REPORT_COL_MOOD = "気分"
 REPORT_COL_MEMO = "メモ"
@@ -534,6 +540,7 @@ CLI_HELP = """shiftlock の使い方（pwsh / Windows PowerShell のどのディ
   shl settings               設定メニュー
   shl learned                覚えた言い方 / shl learn neru ばたんきゅー / shl unlearn ばたんきゅー
   shl cleanup                古い記録の整理を今すぐ
+  shl app add <exe> <dev|adobe> / remove <exe> / list   時間を測るアプリの登録（開発・Adobe。ゲームは自動）
   scan-games / show-games    ゲーム判定の確認
 Claude Code のプロンプトに打つ言葉（ねる / おきた / 今日休む / 11/5 休み / 状況 / 予定）は README の「解除ワード」を見てね"""
 CLI_ARG_ENFORCE_OPTS = "on のとき lock|sleep|shutdown と 2h のような時間"
@@ -613,3 +620,16 @@ AGENT_SETUP_ROLLBACK_FAILED = "自動起動の登録を取り消せなかった�
 AGENT_SETUP_STARTED = "Agent を起動したよ"
 AGENT_SETUP_STOPPED = "動いていた Agent を終わらせたよ"
 AGENT_SETUP_FAILED = "失敗したよ: {err}"
+
+# ---- shl app（計測するアプリの登録）----
+APPS_ADDED = "{name} を {cat} で登録したよ"
+APPS_CHANGED = "{name} を {old} から {cat} に付け替えたよ"
+APPS_REMOVED = "{name} の登録を外したよ"
+APPS_NOT_FOUND = "{name} は登録されていないよ"
+APPS_NO_GAME = "ゲームは登録しなくていいよ（自動で判定する。ゲームのフォルダは shl settings で）"
+APPS_BAD_CAT = "カテゴリは dev か adobe だよ（例: shl app add code.exe dev）"
+APPS_BAD_NAME = "exe の名前だけを書いてね（フォルダは書かない。例: code.exe）"
+APPS_BAD_SECTION = "shifts.json の apps の形がおかしいので書き換えないよ"
+APPS_USAGE = "使い方: shl app add <exe名> <dev|adobe> / shl app remove <exe名> / shl app list"
+APPS_LIST_LINE = "{cat}: {names}"
+APPS_LIST_EMPTY = "登録は無いよ（shl app add code.exe dev で足せる）"

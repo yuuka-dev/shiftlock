@@ -38,9 +38,10 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 - 通知: トースト（`shiftlock` の名前）・ポップアップ（20 秒）・読み上げ・通知音．宣言済みの強制の実行（ロック・スリープ・60 秒後のシャットダウン）は，直前と音の後に `STOP.txt` を見てから．
 - トレイ: アイコンはフェーズで変わる（平常／注意／警告／設定エラー／見張りを止めている）．ホバーは残り時間の行．メニューは「状態を開く」（`shiftlock.exe` を起動）「緊急解除」（確認あり．既定は「いいえ」）「終了」（確認なし）．
 - `shifts.json` が無い・読めないときは終了せず，設定エラーの見た目で待つ（次の回に読み直す）．
+- 稼働計測: 見張りとは別の仕事として 10 秒ごとにプロセスと前面のウィンドウを見て，5 分の区切りで `log/app-YYYY-MM.jsonl` に 1 行書く（`shifts.json` の `apps` に登録した exe とゲームだけ名前つき．終了のときはたまった分を書く）．Python 版のタスクの状態は見ないので，見張りを止めている間も動く．プロセスには手を加えない．登録は Python 版の `shl app`．仕様は [docs/pc-spec.md](../docs/pc-spec.md) §7.5．
 - 同時に動く Agent は 1 つだけ．データのフォルダは `SHIFTLOCK_DIR`（無ければ `%USERPROFILE%\shift-lock`）．
 - 強制モードの宣言・再開・設定はトレイにも引数にも無い（同意は Python 版の `shl enforce on` の対話入力だけ）．
-- 引数: `--install`／`--uninstall`（下の切り替え），`--stop`，`--test-notify`，`--tick-once`（Python 版との突き合わせ用．`pc/tools/tick_once.py` と同じ引数・同じ出力．本番のフォルダは断る）．
+- 引数: `--install`／`--uninstall`（下の切り替え），`--stop`，`--test-notify`，`--meter-once`（下の確かめ方），`--tick-once`（Python 版との突き合わせ用．`pc/tools/tick_once.py` と同じ引数・同じ出力．本番のフォルダは断る）．
 
 ## 常駐（`shiftlock-agent.exe`）への切り替え
 
@@ -82,6 +83,7 @@ dotnet build native
 .\native\shiftlock.Agent\bin\Debug\net10.0-windows10.0.26100.0\shiftlock-agent.exe --stop         # 動いている Agent を終わらせる
 ```
 
+- `--meter-once`: 稼働計測を 10 秒あけて 2 回測り，書くはずの行を JSON 1 行（`parents`・`procs`・`line`）で出す．ファイルは書かない（読むのは `shifts.json` だけ．ただしプロセスの一覧が代替（System.Diagnostics.Process）に落ちたときだけ，`agent.log` に 1 行書く）ので，上のように `SHIFTLOCK_DIR` を合成データのフォルダ（`pc\shifts.example.json` を `shifts.json` として置いたもの）に向けて使う．`NtQuerySystemInformation` が実機で動くか（`parents` が `true` か）を見られる．**`dotnet run` 経由ではコンソールに出力が出ない**ので，ビルドした `shiftlock-agent.exe` を直接動かす（出力を取るなら `Start-Process -RedirectStandardOutput`）．
 - テストのうち実際に通知やタスクを出すものは，頼んだときだけ動く: `SHIFTLOCK_TEST_TOAST=1`（無音のトーストを 1 件出して履歴に入るのを見る），`SHIFTLOCK_TEST_TASK=1`（試験用のタスク `shiftlock-guard-test` を作って消す）．
 
 ## 前提

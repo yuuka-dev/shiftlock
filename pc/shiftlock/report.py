@@ -1,6 +1,7 @@
 """訪看さん向けレポートの集計（本人が記録した睡眠・外出除外・締め期間）と reports/ の管理。"""
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime, timedelta, date as Date
 from pathlib import Path
@@ -58,6 +59,41 @@ def closing_period(day: Date, closing) -> tuple[Date, Date]:
         return _clamp_day(py, pm, closing) + timedelta(days=1), this_close
     ny, nm = (day.year + 1, 1) if day.month == 12 else (day.year, day.month + 1)
     return this_close + timedelta(days=1), _clamp_day(ny, nm, closing)
+
+
+def _num(v) -> bool:
+    """0 以上の有限の数か（bool は数と見ない。json.loads が通す Infinity・NaN も弾く）。"""
+    if not isinstance(v, (int, float)) or isinstance(v, bool):
+        return False
+    try:
+        return math.isfinite(v) and v >= 0
+    except OverflowError:   # float にできないほど桁の多い整数
+        return False
+
+
+def _app_seconds(lines: list[dict], away) -> dict:
+    """稼働計測の行（log/app-*.jsonl）を (日, 時) → {カテゴリ: 秒} にする。
+    計測した区間の中央の時刻でマスを決める。外出中のマスは「計測あり」にするだけで秒は足さない。
+    壊れた行（span・apps の型が違う）は丸ごと飛ばし，そのマスを「計測あり」にしない。壊れた項目（cat・act）はその項目だけ飛ばす。"""
+    out: dict = {}
+    for r in lines:
+        span = r.get("span")
+        if not _num(span) or span > 86400:   # 1 行は 5 分ぶん。1 日を超える行は壊れている
+            continue
+        apps = r.get("apps")
+        if not isinstance(apps, dict):
+            continue
+        mid = r["_t"] - timedelta(seconds=span / 2)
+        cell = out.setdefault((mid.date(), mid.hour), {"game": 0.0, "dev": 0.0, "adobe": 0.0})
+        if _in_any(mid, away):
+            continue
+        for a in apps.values():
+            if not isinstance(a, dict) or not isinstance(a.get("cat"), str) or a["cat"] not in cell:
+                continue
+            act = a.get("act")
+            if _num(act) and act <= span:   # アクティブの秒は測れた秒を超えない
+                cell[a["cat"]] += act
+    return out
 
 
 def build_report(cfg: dict, store: Store, now: datetime, days: int = 28,
@@ -126,6 +162,7 @@ def build_report(cfg: dict, store: Store, now: datetime, days: int = 28,
                 break
         away.append((dep, home))
 
+    metered = _app_seconds(log_read(store, "app", t0 - timedelta(days=1), t1), away)
     game_idle = game_idle_limit(cfg)
     pieces = []
     for g in _gaps_from_ticks(ticks, away, game_idle):
@@ -139,6 +176,7 @@ def build_report(cfg: dict, store: Store, now: datetime, days: int = 28,
         ds = d.isoformat()
         ds0 = datetime.combine(d, datetime.min.time())
         pc, game, cl, cov = [0] * 24, [0] * 24, [0] * 24, [False] * 24
+        dev, adobe = [0] * 24, [0] * 24
         for r in ticks:
             mid = r["_t"] - timedelta(minutes=TICK_MIN / 2)
             if mid.date() != d:
@@ -151,6 +189,10 @@ def build_report(cfg: dict, store: Store, now: datetime, days: int = 28,
                 pc[h] = min(60, pc[h] + TICK_MIN)
             if g and on:   # 起動したまま game_idle_minutes 触っていないゲームは PC にもゲームにも足さない
                 game[h] = min(60, game[h] + TICK_MIN)
+        for h in range(24):   # 稼働計測のあるマスは game もこちらの値にする（pc の game は使わない）
+            m = metered.get((d, h))
+            if m is not None:
+                game[h], dev[h], adobe[h] = (min(60, int(m[k] + 30) // 60) for k in ("game", "dev", "adobe"))
         for r in claude:
             if r["_t"].date() == d and r.get("k") == "p":
                 cl[r["_t"].hour] += 1
@@ -185,14 +227,15 @@ def build_report(cfg: dict, store: Store, now: datetime, days: int = 28,
             flags.append("low")       # 低活動
         rows.append({
             "date": ds, "label": f"{d:%m/%d}({WD_JA[d.weekday()]})", "weekday": d.weekday(),
-            "pc": pc, "game": game, "claude": cl, "cov": cov, "away": mask, "visit": visit,
+            "pc": pc, "game": game, "claude": cl, "cov": cov, "dev": dev, "adobe": adobe, "away": mask, "visit": visit,
             "shift": shift, "future": d > now.date(),
             # 寝た／起きた はその日に記録した時刻、睡眠はその日に起きた分の合計（寝た・起きたが組になった記録だけ）
             "neru": [f"{s['neru']:%H:%M}" for s in sessions if s["neru"] and s["neru"].date() == d],
             "okita": [f"{s['okita']:%H:%M}" for s in sessions if s["okita"] and s["okita"].date() == d],
             "sleep_min": sum(int((s["okita"] - s["neru"]).total_seconds() // 60) for s in slept) if slept else None,
             "sleep_span": " / ".join(f"{s['neru']:%H:%M}–{s['okita']:%H:%M}" for s in slept),
-            "pc_total": pc_total, "game_total": sum(game), "claude_total": sum(cl),
+            "pc_total": pc_total, "game_total": sum(game), "dev_total": sum(dev), "adobe_total": sum(adobe),
+            "claude_total": sum(cl),
             "covered_hours": covered, "flags": flags,
             "mood": [{"hm": f"{m['t']:%H:%M}", "v": m["v"], "memo": m["memo"]}
                      for m in moods if m["t"].date() == d],

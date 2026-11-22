@@ -15,6 +15,7 @@ namespace Shiftlock.Agent;
 ///   --install       Python 版の見張りから切り替える（自動起動を登録し，タスク shiftlock-guard を無効にして，Agent を起動）
 ///   --uninstall     戻す（Agent を終わらせ，登録を外し，タスク shiftlock-guard を有効に戻す）
 ///   --stop          動いている Agent を終わらせる（発行物を置き直すとき用）
+///   --meter-once    稼働計測を 10 秒あけて 2 回測り，書くはずの行を JSON で出す（ファイルは書かない．MeterOnce）
 ///   --tick-once     時刻と値を指定して見張りを 1 回だけ行い，結果の JSON を出す（Python 版との突き合わせ用．TickOnce）
 /// 強制モードの宣言・解除・設定を行う引数は無い（解除はトレイのメニューだけ）．
 /// </summary>
@@ -40,6 +41,7 @@ public static class Program
                 "--uninstall" => RunSetup(install: false),
                 "--stop" => StopAgent(),
                 "--tick-once" => RunTickOnce(args),
+                "--meter-once" => RunMeterOnce(),
                 _ => 2,
             };
         }
@@ -77,17 +79,24 @@ public static class Program
         var power = new WindowsPower();
         var store = new Store(dir);
         var runner = new ActionRunner(notifier, power, store, log);
-        var watcher = new Watcher(dir, new WindowsProbe(), clock, new GuardTask(GuardTask.ConfiguredName).State,
+        var windowsProbe = new WindowsProbe();
+        var once = new OncePerDay(log);
+        var meter = new Meter(dir, new FallbackProcessSource(new NtProcessSource(), new DiagnosticsProcessSource(), once, clock),
+            windowsProbe, windowsProbe, clock, () => Stopwatch.GetElapsedTime(0), once);
+        var watcher = new Watcher(dir, windowsProbe, clock, new GuardTask(GuardTask.ConfiguredName).State,
             (result, _) => runner.Run(result, quit.Token), log);
         using var tray = new Tray(dir, watcher, clock, notifier, new ReleaseFlow(power, store, clock, log), log, Quit);
         Volatile.Write(ref ui, SynchronizationContext.Current);
 
-        // 周期の違う仕事を足すときはここに並べる（今は 5 分の見張りだけ）
-        using var scheduler = new Scheduler([new Job(WatchJob, FirstDelay, Watcher.Interval, () =>
-        {
-            watcher.RunOnce();
-            tray.RequestRefresh();
-        })], log);
+        // 周期の違う仕事を足すときはここに並べる（5 分の見張りと 10 秒の稼働計測）．計測はスリープ復帰で急かさない
+        using var scheduler = new Scheduler([
+            new Job(WatchJob, FirstDelay, Watcher.Interval, () =>
+            {
+                watcher.RunOnce();
+                tray.RequestRefresh();
+            }),
+            new Job("meter", Meter.Interval, Meter.Interval, meter.RunOnce),
+        ], log);
 
         void OnPower(object sender, PowerModeChangedEventArgs e)
         {
@@ -110,6 +119,9 @@ public static class Program
         {
             quit.Cancel();
             SystemEvents.PowerModeChanged -= OnPower;
+            // タイマーを止めてから，たまっている計測を書く（Dispose は 2 回呼んでも害は無い）
+            scheduler.Dispose();
+            meter.Flush();
             log.Write("agent stopped");
         }
         return 0;
@@ -185,6 +197,16 @@ public static class Program
     {
         OpenConsole();
         return TickOnce.Run(args[1..], Console.Out, Console.Error);
+    }
+
+    /// <summary>稼働計測の動作確認（--meter-once）．10 秒かかる．何も書かない．</summary>
+    private static int RunMeterOnce()
+    {
+        OpenConsole();
+        var windowsProbe = new WindowsProbe();
+        return MeterOnce.Run(AgentPaths.DataDir, new FallbackProcessSource(new NtProcessSource(), new DiagnosticsProcessSource(),
+            new OncePerDay(new AgentLog(AgentPaths.LogFile)), () => DateTime.Now), windowsProbe, windowsProbe,
+            Console.Out, Console.Error, Thread.Sleep);
     }
 
     /// <summary>動いている Agent を終わらせる（--stop）．終わらせた・動いていなかった → 0，止められない → 1．</summary>
