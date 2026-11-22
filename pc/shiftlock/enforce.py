@@ -63,7 +63,8 @@ def _limit_terms(cfg: dict, p: Plan, action: str, store: Store | None, now: date
             what=M.ENFORCE_TERMS_LIMIT_STOPPED if st["percent"] is None else M.ENFORCE_TERMS_LIMIT_PERCENT.format(percent=st["percent"]))
         for st in limit_stages(p.soft_close, p.hard_close, check_steps(lc.get("steps")) or [0, 0, 0, 0], action))
     seen = read_games(store, now) if store is not None and now is not None else {}
-    excluded = {x for x in (normalize_exe(str(e)) for e in lc.get("exclude", [])) if x}
+    ex = lc.get("exclude", [])
+    excluded = {x for x in (normalize_exe(str(e)) for e in (ex if isinstance(ex, list) else [])) if x}   # リストでなければ空として扱う
     targets = [g for g, v in seen.items() if v == "target" and g not in excluded]
     anticheat = [g for g, v in seen.items() if v == "anticheat"]
     unknown = [g for g, v in seen.items() if v == "unknown"]

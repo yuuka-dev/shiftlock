@@ -52,7 +52,7 @@ from .report_html import (render_report)
 from .calendar_sync import (parse_ics, sync_calendar)
 from .maintenance import (cleanup, daily_maintenance)
 from .settings_menu import (settings_menu, games_menu, calendar_menu, enforce_menu, SOUND_KIND_KEYS, sound_menu, learned_menu, days_menu)
-from .apps import (APP_CATEGORIES, normalize_exe, app_add, app_remove, app_list)
+from .apps import (APP_CATEGORIES, normalize_exe, app_add, app_remove, app_list, limit_add, limit_remove, limit_exclude, limit_include, limit_list)
 from .install import (MARKER, HOOK_EVENTS, hook_command, merge_hooks, install)
 
 __all__ = [
@@ -239,4 +239,9 @@ __all__ = [
     "app_add",
     "app_remove",
     "app_list",
+    "limit_add",
+    "limit_remove",
+    "limit_exclude",
+    "limit_include",
+    "limit_list",
 ]

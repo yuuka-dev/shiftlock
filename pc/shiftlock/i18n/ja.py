@@ -573,6 +573,7 @@ CLI_HELP = """shiftlock の使い方（pwsh / Windows PowerShell のどのディ
   shl learned                覚えた言い方 / shl learn neru ばたんきゅー / shl unlearn ばたんきゅー
   shl cleanup                古い記録の整理を今すぐ
   shl app add <exe> <dev|adobe> / remove <exe> / list   時間を測るアプリの登録（開発・Adobe。ゲームは自動）
+  shl app limit add|remove|exclude|include <exe> / list   減速・一時停止の対象（add・include は自分の端末から）
   scan-games / show-games    ゲーム判定の確認
 Claude Code のプロンプトに打つ言葉（ねる / おきた / 今日休む / 11/5 休み / 状況 / 予定）は README の「解除ワード」を見てね"""
 CLI_ARG_ENFORCE_OPTS = "on のとき lock|sleep|shutdown と 2h のような時間、または throttle|suspend（時間は付けない）"
@@ -665,3 +666,28 @@ APPS_BAD_SECTION = "shifts.json の apps の形がおかしいので書き換え
 APPS_USAGE = "使い方: shl app add <exe名> <dev|adobe> / shl app remove <exe名> / shl app list"
 APPS_LIST_LINE = "{cat}: {names}"
 APPS_LIST_EMPTY = "登録は無いよ（shl app add code.exe dev で足せる）"
+
+# ---- shl app limit（減速・一時停止の対象）----
+APPS_LIMIT_USAGE = "使い方: shl app limit add <exe名> / remove <exe名> / exclude <exe名> / include <exe名> / list"
+APPS_LIMIT_NEED_TTY = "対象を広げる操作（add・include）は，自分で端末を開いて打ってね（ここからは足せないよ）"
+APPS_LIMIT_NOT_REGISTERED = "{name} は登録されていないので足せないよ（先に shl app add {name} dev か adobe で登録してね）"
+APPS_LIMIT_NEVER = "{name} は手を加えない名前の一覧に入っているので足せないよ（limit.never）"
+APPS_LIMIT_ADDED = "{name} を減速・一時停止の対象に足したよ（次に宣言する乗務から効く）"
+APPS_LIMIT_ANTICHEAT_WARN = "注意: アンチチートのあるアプリに上限や一時停止をかけると，切断などが起きることがあるよ"
+APPS_LIMIT_PROTECT_NOTE = "注意: 子プロセスに claude.exe・node.exe・wsl.exe などが居るアプリは，ターミナルで Claude Code が動いているかもしれないので手を加えず見送るよ（エディタなど）"
+APPS_LIMIT_REMOVED = "{name} を対象から外したよ"
+APPS_LIMIT_NOT_FOUND = "{name} は足されていないよ"
+APPS_LIMIT_EXCLUDED = "{name} を対象から外したよ（ゲームは自動で対象になるので，外す印を付けた）"
+APPS_LIMIT_INCLUDED = "{name} を対象に戻したよ（次に宣言する乗務から効く）"
+APPS_LIMIT_NOT_EXCLUDED = "{name} は外していないよ"
+APPS_LIMIT_LIST_APPS = "足したアプリ: {names}"
+APPS_LIMIT_LIST_APPS_NONE = "足したアプリ: なし"
+APPS_LIMIT_LIST_EXCLUDED = "外したゲーム: {names}"
+APPS_LIMIT_LIST_EXCLUDED_NONE = "外したゲーム: なし"
+APPS_LIMIT_LIST_GAMES = "最近見たゲーム:"
+APPS_LIMIT_LIST_GAMES_NONE = "最近見たゲーム: なし（Agent が動いている間に見たものだけ載る）"
+APPS_LIMIT_LIST_GAME_LINE = "  {name}: {verdict}{excluded}"
+APPS_LIMIT_LIST_GAME_EXCLUDED = "（手で外してある）"
+APPS_LIMIT_VERDICT_TARGET = "対象"
+APPS_LIMIT_VERDICT_ANTICHEAT = "アンチチートの印があるので対象外"
+APPS_LIMIT_VERDICT_UNKNOWN = "調べられないので対象外"

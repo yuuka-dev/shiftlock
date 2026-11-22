@@ -330,3 +330,10 @@ def test_agent_seems_running_looks_at_previous_month_file():
     d = cp.parent / "log"; d.mkdir(exist_ok=True)
     (d / "app-2026-10.jsonl").write_text(json.dumps({"t": "2026-10-31T23:55:00"}) + "\n")
     assert agent_seems_running(st, dt("2026-11-01 00:03")) is True
+
+
+@pytest.mark.parametrize("bad", [None, "a.exe", 5])
+def test_terms_limit_exclude_not_a_list_is_empty(bad):
+    # limit.exclude が壊れていても同意の表示は途中で落ちない（空として扱う）
+    cp, _ = env(days={}, limit={"exclude": bad}); _games(cp, {"eldenring.exe": "target"}); _applog(cp, "2026-11-02T11:55:00")
+    assert "eldenring.exe" in _terms(cp, "throttle")
