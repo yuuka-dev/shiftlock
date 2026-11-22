@@ -230,6 +230,33 @@ public static class Enforce
     }
 
     /// <summary>
+    /// 減速・一時停止の段階の実行を記録する（設計書 §5.2・§5.4）．runs に {at, action, step} を足し，first_run_at が無ければ入れ，
+    /// events.log に enforce_run（メモは "throttle 1" の形．アプリの名前は書かない）．
+    /// 宣言が無い・同意が無い・released_at がある → 何も書かない．duration_hours などロック用の値は足さない．
+    /// 既にある runs が配列でなければ InvalidDataException（壊れた値を上書きしない）．
+    /// </summary>
+    public static void AppendLimitRun(Store store, string day, string action, int step, DateTime now)
+    {
+        var e = State(store, day);
+        if (e.Count == 0 || !JsonX.Truthy(e["consented_at"]) || JsonX.Truthy(e["released_at"]))
+        {
+            return;
+        }
+        if (e["runs"] is null)
+        {
+            e["runs"] = new JsonArray();
+        }
+        var runs = e["runs"] as JsonArray ?? throw Unreadable("runs");
+        var at = Store.IsoSeconds(now);
+        runs.Add(new JsonObject { ["at"] = at, ["action"] = action, ["step"] = step });
+        if (!JsonX.Truthy(e["first_run_at"]))
+        {
+            e["first_run_at"] = at;
+        }
+        SetEnforce(store, day, e, now, "enforce_run", $"{action} {step}");
+    }
+
+    /// <summary>
     /// 宣言を state.json に書く（enforce.set_enforce）．kind が enforce_state 以外なら events.log にも 1 行足す．
     /// 新しい宣言を作る入口ではない（呼ぶのは発動の経過と解除の記録だけ）．
     /// </summary>

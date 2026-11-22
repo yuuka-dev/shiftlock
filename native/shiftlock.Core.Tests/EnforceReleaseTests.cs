@@ -12,6 +12,8 @@ public sealed class EnforceReleaseTests
         """{"lang":"ja","work_weekdays":["mon","tue","wed","thu","fri"],"start_target":"17:00","start_latest":"17:30","prep_minutes":60,"sleep_target_hours":8,"sleep_min_hours":6,"lastcall_minutes":40,"confirm":{"mode":"off"}}""";
 
     private const string Day = "2026-12-07";
+    private const string Tab = "\t";
+    private const string Lf = "\n";
 
     private static readonly DateTime Hard = new(2026, 12, 7, 10, 30, 0);
 
@@ -193,5 +195,59 @@ public sealed class EnforceReleaseTests
 
         File.Delete(folder.P("STOP.txt"));                   // STOP.txt を消しても，解除した宣言は戻らない
         Assert.Empty(EnforceActions(Run(folder, T("2026-12-07T10:50"))));
+    }
+
+    // ---- 減速・一時停止の実行の記録（AppendLimitRun） ----
+
+    [Fact]
+    public void AppendLimitRun_AddsRunFirstRunAtAndEvent()
+    {
+        using var folder = Folder("""{"action":"suspend","runs":[]}""");
+        var store = new Store(folder.Dir);
+
+        Enforce.AppendLimitRun(store, Day, "suspend", 1, T("2026-12-07T13:30"));
+        Enforce.AppendLimitRun(store, Day, "suspend", 2, T("2026-12-07T14:22"));
+
+        var e = EnforceState(folder);
+        var runs = e["runs"]!.AsArray();
+        Assert.Equal(2, runs.Count);
+        Assert.Equal("2026-12-07T13:30:00", runs[0]!["at"]!.GetValue<string>());
+        Assert.Equal(1, runs[0]!["step"]!.GetValue<int>());
+        Assert.Equal("2026-12-07T14:22:00", runs[1]!["at"]!.GetValue<string>());
+        Assert.Equal("suspend", runs[1]!["action"]!.GetValue<string>());
+        Assert.Equal(2, runs[1]!["step"]!.GetValue<int>());
+        Assert.Equal("2026-12-07T13:30:00", e["first_run_at"]!.GetValue<string>());   // 最初の 1 回だけ
+        var log = File.ReadAllText(folder.P("events.log"));
+        Assert.Contains("2026-12-07T13:30" + Tab + Day + Tab + "enforce_run" + Tab + "suspend 1" + Lf, log);
+        Assert.Contains("2026-12-07T14:22" + Tab + Day + Tab + "enforce_run" + Tab + "suspend 2" + Lf, log);
+    }
+
+    [Fact]
+    public void AppendLimitRun_DoesNotAddLockFields()
+    {
+        using var folder = Folder("""{"action":"throttle"}""");
+        var before = EnforceState(folder).Select(kv => kv.Key).Order().ToArray();
+        Enforce.AppendLimitRun(new Store(folder.Dir), Day, "throttle", 1, T("2026-12-07T13:30"));
+        var added = EnforceState(folder).Select(kv => kv.Key).Except(before).Order().ToArray();
+        Assert.Equal(["first_run_at"], added);   // runs は元からある．足すのは first_run_at だけ
+    }
+
+    [Fact]
+    public void AppendLimitRun_NoDeclarationOrReleased_WritesNothing()
+    {
+        using var none = Vectors.Materialize(new JsonObject
+        {
+            ["shifts.json"] = JsonNode.Parse(Base),
+            ["state.json"] = new JsonObject { ["shifts"] = new JsonObject() },
+        });
+        Enforce.AppendLimitRun(new Store(none.Dir), Day, "suspend", 1, T("2026-12-07T13:30"));
+        Assert.False(File.Exists(none.P("events.log")));
+        Assert.DoesNotContain("enforce", File.ReadAllText(none.P("state.json")));
+
+        using var released = Folder("""{"action":"suspend","released_at":"2026-12-07T11:00"}""");
+        var stateBefore = File.ReadAllText(released.P("state.json"));
+        Enforce.AppendLimitRun(new Store(released.Dir), Day, "suspend", 1, T("2026-12-07T13:30"));
+        Assert.False(File.Exists(released.P("events.log")));
+        Assert.Equal(stateBefore, File.ReadAllText(released.P("state.json")));
     }
 }
