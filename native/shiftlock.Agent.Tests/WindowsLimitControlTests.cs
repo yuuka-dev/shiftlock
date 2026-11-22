@@ -150,6 +150,48 @@ public sealed class WindowsLimitControlTests : IDisposable
     }
 
     [Fact]
+    public void Cap_ignores_a_process_that_already_exited()
+    {
+        var child = StartChild();
+        var gone = StartChild();
+        var goneKey = KeyOf(gone);
+        Cleanup(gone);
+        try
+        {
+            var job = JobName();
+            Assert.True(_control.Cap(job, [KeyOf(child), goneKey], 50.0));
+            Assert.True(_control.Uncap(job));
+        }
+        finally
+        {
+            Cleanup(child);
+        }
+    }
+
+    [Fact]
+    public void Cap_touches_nothing_when_one_process_cannot_be_opened()
+    {
+        var child = StartChild();
+        var other = StartChild();
+        try
+        {
+            var denied = KeyOf(other);
+            using var control = new WindowsLimitControl { DeniedForTest = k => k == denied };
+            var job = JobName();
+
+            Assert.False(control.Cap(job, [KeyOf(child), denied], 50.0));
+            Assert.False(control.Uncap(job));   // ジョブを持っていない（一部だけ入れて上限をかけていない）
+            Assert.True(control.Cap(job, [KeyOf(child)], 50.0));   // 開けるものだけなら，同じ名前でかけられる
+            Assert.True(control.Uncap(job));
+        }
+        finally
+        {
+            Cleanup(child);
+            Cleanup(other);
+        }
+    }
+
+    [Fact]
     public void Uncap_unknown_job_returns_false()
     {
         Assert.False(_control.Uncap(JobName()));

@@ -24,6 +24,7 @@ public sealed class WindowsLimitControl : ILimitControl, IDisposable
     private const uint CpuRateEnable = 0x1;
     private const uint CpuRateHardCap = 0x4;
     private const uint StillActive = 259;
+    private const int ErrorInvalidParameter = 87;   // OpenProcess: その pid のプロセスが無い
     private const int MinRate = 1;
     private const int MaxRate = 10000;
 
@@ -49,41 +50,74 @@ public sealed class WindowsLimitControl : ILimitControl, IDisposable
 
             lock (_gate)
             {
-                var created = false;
-                if (!_jobs.TryGetValue(jobName, out var job))
+                // 先に全部を開く．権限が無くて開けないものが 1 つでもあれば，何も入れずに失敗にする
+                // （アプリの一部だけを遅くしない．設計書 §4.3）．居なくなったもの（終わった・pid の使い回し）は数えない
+                var handles = new List<IntPtr>();
+                try
                 {
-                    job = CreateJobObjectW(IntPtr.Zero, jobName);
-                    if (job == IntPtr.Zero)
+                    foreach (var proc in procs)
+                    {
+                        switch (Open(proc, AssignAccess, out var handle))
+                        {
+                            case Opened.Ok:
+                                handles.Add(handle);
+                                break;
+                            case Opened.Denied:
+                                return false;
+                        }
+                    }
+                    if (handles.Count == 0)
                     {
                         return false;
                     }
-                    created = true;
-                }
 
-                var inJob = 0;
-                foreach (var proc in procs)
+                    var created = false;
+                    if (!_jobs.TryGetValue(jobName, out var job))
+                    {
+                        job = CreateJobObjectW(IntPtr.Zero, jobName);
+                        if (job == IntPtr.Zero)
+                        {
+                            return false;
+                        }
+                        created = true;
+                    }
+
+                    // 入れられないものがあれば失敗（入れる間に終わったものは数えない）．上限をかける前なので，
+                    // 新しいジョブなら何も効かない．既にあるジョブなら呼ぶ側が Uncap で外す
+                    var all = true;
+                    foreach (var handle in handles)
+                    {
+                        var inJob = IsProcessInJob(handle, job, out var already) && already || AssignProcessToJobObject(job, handle);
+                        if (!inJob && IsRunning(handle))
+                        {
+                            all = false;
+                            break;
+                        }
+                    }
+
+                    var info = new CpuRateControlInformation { ControlFlags = CpuRateEnable | CpuRateHardCap, CpuRate = rate };
+                    var set = all && SetInformationJobObject(job, JobObjectCpuRateControlInformation, ref info, (uint)Marshal.SizeOf<CpuRateControlInformation>());
+
+                    if (created)
+                    {
+                        if (set)
+                        {
+                            _jobs[jobName] = job;
+                        }
+                        else
+                        {
+                            CloseHandle(job);   // 上限をかけられなかった新しいジョブは持たない
+                        }
+                    }
+                    return set;
+                }
+                finally
                 {
-                    if (AddToJob(job, proc))
+                    foreach (var handle in handles)
                     {
-                        inJob++;
+                        CloseHandle(handle);
                     }
                 }
-
-                var info = new CpuRateControlInformation { ControlFlags = CpuRateEnable | CpuRateHardCap, CpuRate = rate };
-                var set = inJob > 0 && SetInformationJobObject(job, JobObjectCpuRateControlInformation, ref info, (uint)Marshal.SizeOf<CpuRateControlInformation>());
-
-                if (created)
-                {
-                    if (set)
-                    {
-                        _jobs[jobName] = job;
-                    }
-                    else
-                    {
-                        CloseHandle(job);   // 何も入れられなかった新しいジョブは持たない
-                    }
-                }
-                return set;
             }
         }
         catch (Exception)
@@ -131,10 +165,40 @@ public sealed class WindowsLimitControl : ILimitControl, IDisposable
         }
     }
 
-    private static bool AddToJob(IntPtr job, ProcKey proc) =>
-        WithProcess(proc, AssignAccess, h =>
-            IsProcessInJob(h, job, out var already) && already
-            || AssignProcessToJobObject(job, h));
+    private enum Opened
+    {
+        Ok,
+        Gone,
+        Denied,
+    }
+
+    /// <summary>テスト用．真を返したプロセスは「権限が無くて開けない」として扱う（実機で開けないプロセスを用意できないため）．</summary>
+    public Func<ProcKey, bool>? DeniedForTest { get; init; }
+
+    /// <summary>
+    /// pid を開いて開始時刻を確かめる．Ok なら handle は呼ぶ側が閉じる．居ない（pid が無い・開始時刻が違う・終わっている）は Gone，
+    /// それ以外で開けないのは Denied（権限が無い，など）．
+    /// </summary>
+    private Opened Open(ProcKey proc, uint access, out IntPtr handle)
+    {
+        handle = IntPtr.Zero;
+        if (DeniedForTest?.Invoke(proc) == true)
+        {
+            return Opened.Denied;
+        }
+        var h = OpenProcess(access, false, (uint)proc.Pid);
+        if (h == IntPtr.Zero)
+        {
+            return Marshal.GetLastWin32Error() == ErrorInvalidParameter ? Opened.Gone : Opened.Denied;
+        }
+        if (StartOf(h) != proc.Start || !IsRunning(h))
+        {
+            CloseHandle(h);
+            return Opened.Gone;
+        }
+        handle = h;
+        return Opened.Ok;
+    }
 
     /// <summary>pid を開き，開始時刻が proc と同じときだけ action を呼ぶ．開けない・時刻が違う・例外 → false．</summary>
     private static bool WithProcess(ProcKey proc, uint access, Func<IntPtr, bool> action)

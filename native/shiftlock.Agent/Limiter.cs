@@ -47,6 +47,11 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     private DateTime? _unknownSince;
     private DateTime? _lastRun;
 
+    // この Agent が上限をかけたジョブ（control がハンドルを持っている）と，外すのに続けて失敗した回数（排他の中だけで触る）
+    private const int UncapRetries = 3;
+    private readonly HashSet<string> _heldJobs = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _uncapFailures = new(StringComparer.Ordinal);
+
     /// <summary>ゲームの根のフォルダの探索結果（Agent が生きている間，根ごとに 1 回だけ探す）．Names が null は読めなかった．</summary>
     private sealed record ScanResult(IReadOnlyList<string>? Names);
 
@@ -334,7 +339,7 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
 
     /// <summary>
     /// 「すること」を実行して記録を書く．止める・上限をかける前に，その分を入れた記録を書く（書けなければ止めない・かけない）．
-    /// 失敗したものは記録から外す（上限は外しておく）．再開に失敗して今も在るものは記録に残す．
+    /// 失敗したものは記録から外す（上限は外しておく）．再開に失敗して今も在るもの・外すのに失敗した上限は記録に残す．
     /// </summary>
     private void Execute(Store store, Env env, LimitDecision d, LimitState prior, DateTime now, List<TickAction> notices, bool collectNotices)
     {
@@ -358,6 +363,7 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
                     else if (Try("limit-cap", () => control.Cap(c.Job, c.Procs, c.Percent)))
                     {
                         acted = true;
+                        _heldJobs.Add(c.Job);
                     }
                     else
                     {
@@ -378,9 +384,14 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
                     }
                     break;
                 case UncapOp u:
-                    if (!Try("limit-uncap", () => control.Uncap(u.Job)))
+                    if (Try("limit-uncap", () => control.Uncap(u.Job)))
+                    {
+                        _uncapFailures.Remove(u.Job);
+                    }
+                    else
                     {
                         failed = true;
+                        KeepForRetry(capped, prior, u);
                     }
                     break;
                 case ResumeOp r:
@@ -596,6 +607,27 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
         {
             once.Write(key, "limit: " + key[6..] + " failed: " + e.GetType().Name, Today());
         }
+    }
+
+    /// <summary>
+    /// 外せなかった上限は，記録に残して次の回にやり直す（記録から消すと，上限が効いたまま二度と外しに行かない）．
+    /// 残すのは，この Agent がかけたジョブ（ハンドルを持っている）だけ．持っていないジョブは何度やっても外せないので残さない
+    /// （起動時の知らせに任せる）．続けて UncapRetries 回だめなら諦めて記録から外す（10 秒ごとに解除の通知を出し続けない）．
+    /// </summary>
+    private void KeepForRetry(Dictionary<string, CappedApp> capped, LimitState prior, UncapOp u)
+    {
+        if (!_heldJobs.Contains(u.Job) || !prior.Capped.TryGetValue(u.Exe, out var old))
+        {
+            return;
+        }
+        var n = _uncapFailures.GetValueOrDefault(u.Job) + 1;
+        if (n >= UncapRetries)
+        {
+            _uncapFailures.Remove(u.Job);
+            return;
+        }
+        _uncapFailures[u.Job] = n;
+        capped.TryAdd(u.Exe, old);   // 同じ回にかけ直していれば（乗務日が変わった），新しい記録を残す
     }
 
     /// <summary>skip した上限は，前の記録にあればそれに戻し，無ければ記録から外す．</summary>

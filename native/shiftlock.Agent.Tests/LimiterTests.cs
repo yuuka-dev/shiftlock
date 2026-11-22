@@ -724,6 +724,63 @@ public sealed class LimiterTests : IDisposable
         Assert.Contains(_notices, n => n.Text == _m["AGENT_LIMIT_RELEASED"]);
     }
 
+    private void Depart() =>
+        _dir.Put("state.json",
+            "{\"shifts\":{\"" + Day + "\":{\"status\":\"worked\",\"enforce\":{\"action\":\"suspend\",\"consented_at\":\"2026-12-07T06:00\","
+            + "\"steps\":[75,50,25,10],\"limit_apps\":[],\"runs\":[]}}}}");
+
+    [Fact]
+    public void RunOnce_failed_uncap_stays_in_the_record_and_is_retried()
+    {
+        PutState(State(baseline: [Elden]));
+        var limiter = NewLimiter();
+        limiter.RunOnce();   // この Agent が上限をかける
+        Assert.Single(ReadState().Capped);
+
+        Depart();
+        _control.UncapResult = false;
+        _now = _now.AddSeconds(10);
+        limiter.RunOnce();
+        Assert.Single(ReadState().Capped);   // 外せなかった上限は記録に残る
+
+        _control.UncapResult = true;
+        _now = _now.AddSeconds(10);
+        limiter.RunOnce();
+        Assert.Equal(2, _control.Count("uncap"));
+        Assert.Empty(ReadState().Capped);
+    }
+
+    [Fact]
+    public void RunOnce_failed_uncap_gives_up_after_three_rounds()
+    {
+        PutState(State(baseline: [Elden]));
+        var limiter = NewLimiter();
+        limiter.RunOnce();
+        Depart();
+        _control.UncapResult = false;
+
+        for (var i = 0; i < 5; i++)
+        {
+            _now = _now.AddSeconds(10);
+            limiter.RunOnce();
+        }
+
+        Assert.Equal(3, _control.Count("uncap"));
+        Assert.Empty(ReadState().Capped);
+    }
+
+    [Fact]
+    public void RunOnce_failed_uncap_of_a_job_this_agent_never_capped_is_dropped()
+    {
+        PutState(State(baseline: [Elden], capped: [Elden]));   // 前の Agent の記録（ハンドルを持っていない）
+        Depart();
+        _control.UncapResult = false;
+
+        NewLimiter().RunOnce();
+
+        Assert.Empty(ReadState().Capped);
+    }
+
     // ---- 排他 ----
 
     [Fact]

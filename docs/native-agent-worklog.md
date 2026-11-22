@@ -185,6 +185,11 @@ issue #9．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](s
 - 未処理の例外で落ちるときも `RestoreAll(null)` を呼ぶ（`AppDomain.UnhandledException`）．排他の待ちは 3 秒（`CrashRestore.Wait`）．画面のスレッドの例外は今までどおり WinForms 既定の扱い（`SetUnhandledExceptionMode`・`ThreadException` は触らない．Agent 全体の落ち方を変えないため）— 設計書 §6.3 の「代わりの案」の要件 — 画面のスレッドの例外で「終了」を選んだときに `finally` の `RestoreAll(null)` を通るかは未確認（下の先送りを参照）
 - 既定の動作（`enforce.action`）が `throttle`／`suspend` でも，設定メニュー（19）が落ちず，状態表示に「2h」を出さない
 
+## PR #10 の Copilot の指摘の直し（2026-11-23）
+
+- 上限を外すのに失敗したら，その上限を記録（`limit.json` の `capped`）に残して次の回にやり直す — 記録から消すと，上限が効いたまま二度と外しに行かないため．残すのはこの Agent がかけたジョブだけ（前の Agent の記録はハンドルが無く，何度やっても外せない．起動時の知らせに任せる）．続けて 3 回だめなら諦めて記録から外す — やり直しの回ごとに解除の報告と `limit_release` が出るので，出し続けないため（やり直した回は報告と `limit_release` が重なって出る．直していない）
+- 上限をかける前にツリーの全プロセスを開き，権限が無くて開けないものが 1 つでもあれば，何も入れずに失敗にする（設計書 §4.3 の「開けなかったら見送る」．今までは開けたものだけに上限がかかった）．居なくなったプロセス（終わった・PID の使い回し）は数えない．見送ったアプリは次の回にまた試す（開けない間は 10 秒ごとに失敗する．通知は 1 日 1 回）．開けないプロセスは実機で用意できないので，テストは差し替えの入口（`WindowsLimitControl.DeniedForTest`）で確かめた
+
 ## 確かめたこと（2026-11-23）
 
 - 自動テスト: `dotnet test native` は Core 852・Agent 221，pytest（WSL）338，`export_native.py --check` と `make_test_vectors.py --check` は一致．
