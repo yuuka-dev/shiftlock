@@ -243,7 +243,7 @@ Agent は 10 秒ごとに次を見て，どれかに当たれば**全部を元�
 
 | ファイル | 書く人 | 中身 |
 |---|---|---|
-| `limit.json` | Agent | いまかけている上限と一時停止．`{"day", "baseline": {"<exe>": %}, "capped": {"<exe>": {"job": "<ジョブの名前>", "percent": %}}, "suspended": [{"pid", "start", "exe"}], "skipped": ["<exe>"]}`．何もかけていなければ `{}` かファイル無し |
+| `limit.json` | Agent | いまかけている上限と一時停止．`{"day", "baseline": {"<exe>": %}, "capped": {"<exe>": {"job": "<ジョブの名前>", "percent": %}}, "suspended": [{"pid", "start", "exe"}], "skipped": ["<exe>"], "announced": ["<予告・報告を出した段階の印>"], "pending": {"<待たせている通知の印>": "<待ち始めた時刻>"}}`．何もかけていなければ `{}` かファイル無し．壊れていて読めないとき，Agent は `limit.json.bad` に名前を変えて知らせる |
 | `limit-games.json` | Agent | 見たゲームの判定．`{"<exe>": {"verdict": "target"｜"anticheat"｜"unknown", "seen": "<時刻>"}}`．30 日見なかったものは消す |
 | `claude-busy.json` | hook | §4.8 |
 
