@@ -52,15 +52,14 @@ public sealed class Setup(SetupDeps deps, Messages m, string taskName)
         catch (Exception e)
         {
             deps.Output(m.Format("AGENT_SETUP_FAILED", ("err", e.Message)));
-            Try(deps.AutoStart.Remove);
+            RollBackAutoStart(announce: false);
             return 1;
         }
         deps.Output(m["AGENT_SETUP_AUTOSTART_ON"]);
 
         if (!Switch(enable: false))
         {
-            Try(deps.AutoStart.Remove);
-            deps.Output(m["AGENT_SETUP_ROLLED_BACK"]);
+            RollBackAutoStart(announce: true);
             return 1;
         }
         try
@@ -135,15 +134,24 @@ public sealed class Setup(SetupDeps deps, Messages m, string taskName)
         return true;
     }
 
-    private static void Try(Action action)
+    /// <summary>
+    /// 自動起動の登録を取り消す．取り消せなかったら「取り消した」とは言わず，登録が残ったこと（＝次のログオンから
+    /// 二重の見張りになること）と直し方を知らせる．announce は，取り消せたときに知らせるかどうか．
+    /// </summary>
+    private void RollBackAutoStart(bool announce)
     {
         try
         {
-            action();
+            deps.AutoStart.Remove();
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // 取り消しの失敗は，元の失敗の知らせを優先する
+            deps.Output(m.Format("AGENT_SETUP_ROLLBACK_FAILED", ("err", e.Message)));
+            return;
+        }
+        if (announce)
+        {
+            deps.Output(m["AGENT_SETUP_ROLLED_BACK"]);
         }
     }
 }

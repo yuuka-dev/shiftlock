@@ -609,6 +609,7 @@ AGENT_SETUP_TASK_ENABLED = "タスク {task} を有効に戻したよ（Python �
 AGENT_SETUP_TASK_MISSING = "タスク {task} は無いので、そのままにするよ"
 AGENT_SETUP_TASK_FAILED = "タスク {task} を切り替えられなかったよ: {err}"
 AGENT_SETUP_ROLLED_BACK = "二重の見張りにならないよう、自動起動の登録は取り消したよ"
+AGENT_SETUP_ROLLBACK_FAILED = "自動起動の登録を取り消せなかったよ: {err}（このままだと次のログオンから二重の見張りになる。shiftlock-agent.exe --uninstall で外してね）"
 AGENT_SETUP_STARTED = "Agent を起動したよ"
 AGENT_SETUP_STOPPED = "動いていた Agent を終わらせたよ"
 AGENT_SETUP_FAILED = "失敗したよ: {err}"

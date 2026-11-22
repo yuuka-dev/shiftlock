@@ -134,6 +134,35 @@ public sealed class SetupTests
     }
 
     [Fact]
+    public void Install_CannotDisableTheTask_AndCannotRollBack_SaysTheRegistrationRemains()
+    {
+        // 取り消しも失敗したら「取り消した」と言わない（登録が残り，次のログオンから二重の見張りになる）
+        _guard.FailOnSet = true;
+        _auto.FailOnRemove = true;
+
+        Assert.Equal(1, NewSetup().Install(Exe));
+
+        Assert.NotNull(_auto.Value);
+        Assert.DoesNotContain(_m["AGENT_SETUP_ROLLED_BACK"], _out);
+        Assert.Contains(_m.Format("AGENT_SETUP_ROLLBACK_FAILED", ("err", "外せない")), _out);
+    }
+
+    [Fact]
+    public void Install_ToastCannotBeRegistered_AndCannotRollBack_SaysTheRegistrationRemains()
+    {
+        _auto.FailOnRemove = true;
+        var setup = new Setup(new SetupDeps(_auto, _guard,
+            RegisterToast: () => throw new InvalidOperationException("登録できない"),
+            UnregisterToast: () => { }, StartAgent: _ => { }, StopAgent: () => false, Output: _out.Add), _m, "shiftlock-guard");
+
+        Assert.Equal(1, setup.Install(Exe));
+
+        Assert.NotNull(_auto.Value);
+        Assert.Contains(_m.Format("AGENT_SETUP_ROLLBACK_FAILED", ("err", "外せない")), _out);
+        Assert.Equal(GuardTaskState.Enabled, _guard.Current);
+    }
+
+    [Fact]
     public void Install_AgentCannotStart_Fails_ButKeepsTheSwitch()
     {
         // 登録は済んでいるので次のログオンからは動く．今は動いていないことを知らせる
@@ -219,8 +248,14 @@ public sealed class SetupTests
             Value = command;
         }
 
+        public bool FailOnRemove { get; set; }
+
         public void Remove()
         {
+            if (FailOnRemove)
+            {
+                throw new UnauthorizedAccessException("外せない");
+            }
             calls.Add("auto:remove");
             Value = null;
         }
