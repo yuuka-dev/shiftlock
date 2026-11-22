@@ -133,7 +133,7 @@ issue #6．設計は [superpowers/specs/2026-11-22-native-app-meter-design.md](s
 ## 本番で確かめたこと（2026-11-22．本人が反映）
 
 - `native\deploy.ps1` と `pc\deploy.ps1` で反映し，Agent を起動し直して `shl app add` で 1 件登録した．
-- `logpp-*.jsonl` に 5 分の区切りごとの行が出る．登録した exe は `dev` で載り，登録していない名前は載らない．
+- `log\app-*.jsonl` に 5 分の区切りごとの行が出る．登録した exe は `dev` で載り，登録していない名前は載らない．
 - 10 分放置すると，最後の入力から 5 分でアクティブが止まり，次の区間は 0 秒になる（決まりどおり）．
 - `agent.log` に `meter failed`・`fell back`・`not measuring` は無い（`NtQuerySystemInformation` は代替に落ちていない）．
 - 確認の途中で分かったこと（計測の不具合ではない）: ゲームのコントローラーをつないだままにすると，Windows の無操作秒数（`GetLastInputInfo`）が 0 のまま増えない．見張りのログの `idle` も同じ間ずっと 0 だった．抜くと正しく増える．Steam がスティックをマウス操作に変換しているためと見ている（推測）．つないだまま正しく測るには別の手当てが要る（未着手．issue も未発行）．
