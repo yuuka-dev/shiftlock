@@ -10,7 +10,7 @@ namespace Shiftlock.Agent;
 /// Windows から値を取る（pc/guard.ps1 の アイドル秒数・起動からの秒数・Get-Process・Get-SteamCommonDirs と同じもの）．
 /// どれも例外を出さない．
 /// </summary>
-public sealed class WindowsProbe : ISystemProbe
+public sealed class WindowsProbe : ISystemProbe, IMeterProbe
 {
     private const string DefaultSteamRoot = @"C:\Program Files (x86)\Steam";
     private const uint ProcessQueryLimitedInformation = 0x1000;
@@ -117,8 +117,27 @@ public sealed class WindowsProbe : ISystemProbe
         return found;
     }
 
+    /// <summary>前面の窓を持つプロセスの pid．窓が無い・pid 0 は null．</summary>
+    public int? ForegroundPid()
+    {
+        try
+        {
+            var window = GetForegroundWindow();
+            if (window == IntPtr.Zero)
+            {
+                return null;
+            }
+            _ = GetWindowThreadProcessId(window, out var pid);
+            return pid == 0 ? null : (int)pid;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
     /// <summary>プロセスの exe のフルパス．取れなければ null（権限の無いプロセスでも，名前だけは Processes が返す）．</summary>
-    private static string? ImagePath(int pid)
+    public string? ImagePath(int pid)
     {
         var handle = OpenProcess(ProcessQueryLimitedInformation, false, (uint)pid);
         if (handle == IntPtr.Zero)
@@ -147,6 +166,12 @@ public sealed class WindowsProbe : ISystemProbe
     [DllImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool GetLastInputInfo(ref LastInputInfo info);
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
 
     [DllImport("kernel32.dll", SetLastError = true)]
     private static extern IntPtr OpenProcess(uint access, [MarshalAs(UnmanagedType.Bool)] bool inherit, uint pid);

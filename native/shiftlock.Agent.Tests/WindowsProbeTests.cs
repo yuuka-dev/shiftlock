@@ -8,6 +8,21 @@ public sealed class WindowsProbeTests
     private readonly WindowsProbe _probe = new();
 
     [Fact]
+    public void ForegroundPid_DoesNotThrow()
+    {
+        var pid = _probe.ForegroundPid();
+
+        Assert.True(pid is null || pid > 0);
+    }
+
+    [Fact]
+    public void ImagePath_OfThisProcess_IsTheProcessPath_AndInvalidPidIsNull()
+    {
+        Assert.Equal(Environment.ProcessPath, _probe.ImagePath(Environment.ProcessId), ignoreCase: true);
+        Assert.Null(_probe.ImagePath(-1));
+    }
+
+    [Fact]
     public void IdleSeconds_IsNotNegative_AndNotAbsurd()
     {
         var idle = _probe.IdleSeconds();
