@@ -29,6 +29,40 @@ public static class JsonFiles
     }
 
     /// <summary>
+    /// 無い・壊れている・オブジェクトでない → 空．在るのに開けない（ほかのプロセスが掴んでいる・権限が無い）→ IOException．
+    /// 読んだものを書き戻すファイル用: 掴まれているだけのものを空として書き戻すと中身が消えるので，壊れた中身とは分ける．
+    /// </summary>
+    public static JsonObject ReadObjectUnlessBusy(string path)
+    {
+        byte[] bytes;
+        try
+        {
+            bytes = File.ReadAllBytes(path);
+        }
+        catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
+        {
+            return new JsonObject();
+        }
+        catch (UnauthorizedAccessException e)
+        {
+            throw new IOException(e.Message, e);
+        }
+        try
+        {
+            if (JsonNode.Parse(bytes) is JsonObject parsed)
+            {
+                Touch(parsed);
+                return parsed;
+            }
+        }
+        catch (Exception e) when (e is JsonException or ArgumentException)
+        {
+            // 壊れた中身は無いものとして進む
+        }
+        return new JsonObject();
+    }
+
+    /// <summary>
     /// 無いファイルは true で空．在るのに読めない（壊れている・オブジェクトでない・他のプロセスが掴んでいる）は false で空．
     /// 書き戻す前に読むときはこちらを使う（読めなかったものを空として書き戻すと中身が消える）．
     /// </summary>

@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="shiftlock.Agent.Tests/shiftlock.Agent.Tests.csproj" />
+  <Project Path="shiftlock.Agent/shiftlock.Agent.csproj" />
   <Project Path="shiftlock.App/shiftlock.App.csproj">
     <Platform Project="x64" />
   </Project>

@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- 常駐（トレイ）．5 分おきの見張り（Core の Tick.Run）を呼び，通知と強制の実行を Windows に出す．
+       判断は Core に置き，ここは Windows に触る部分だけ（docs/superpowers/specs/2026-11-17-native-agent-design.md §5.2）．
+       WinUI は使わない．トレイとメッセージの窓のために Windows Forms を使う． -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <!-- トーストと通知音に WinRT を使うので Windows の版つき（ウィンドウと同じ版） -->
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <UseWindowsForms>true</UseWindowsForms>
+    <RootNamespace>Shiftlock.Agent</RootNamespace>
+    <AssemblyName>shiftlock-agent</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\shiftlock.Core\shiftlock.Core.csproj" />
+  </ItemGroup>
+
+</Project>

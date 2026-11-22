@@ -16,6 +16,9 @@ public static class Vectors
 {
     private static readonly UTF8Encoding Utf8NoBom = new(false);
 
+    /// <summary>shifts.json の中でこの文字列は実行フォルダのパスに置き換える．結果に出たパスはこれに戻して比べる．</summary>
+    public const string DirMark = "{DIR}";
+
     /// <summary>file（"plan.json" など）の節 section の全ケース．xUnit の MemberData 用．</summary>
     public static IEnumerable<object[]> Cases(string file, string section)
     {
@@ -42,7 +45,13 @@ public static class Vectors
         foreach (var (name, body) in files)
         {
             var path = folder.P(name);
-            if (body is JsonValue v && v.TryGetValue<bool>(out _))
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);   // "log/pc-2026-12.jsonl" のように / を含む名前
+            if (name == "shifts.json" && body is JsonObject or JsonArray && body.ToJsonString() is var json && json.Contains(DirMark))
+            {
+                // {DIR} は実行フォルダのパス（区切りは /）．書き出す側（export_native.py）と同じ置き換え
+                File.WriteAllText(path, json.Replace(DirMark, folder.Dir.Replace('\\', '/')), Utf8NoBom);
+            }
+            else if (body is JsonValue v && v.TryGetValue<bool>(out _))
             {
                 File.WriteAllBytes(path, []);
             }

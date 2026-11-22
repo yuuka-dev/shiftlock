@@ -257,12 +257,7 @@ public static class Records
     }
 
     /// <summary>乗務の状態を変える（store.set_shift_status）．休み以外にするときは有給の印を外す．</summary>
-    private static void SetStatus(JsonObject shift, string status, DateTime now)
-    {
-        shift["status"] = status;
-        shift["at"] = TimeUtil.Iso(now);
-        shift.Remove("paid");
-    }
+    private static void SetStatus(JsonObject shift, string status, DateTime now) => Store.ApplyStatus(shift, status, now);
 
     private static JsonObject? Shifts(JsonObject state, bool create)
     {
