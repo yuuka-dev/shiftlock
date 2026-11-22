@@ -212,6 +212,7 @@ ENFORCE_SUFFIX_LIMIT = " 今日は強制モード（{label}）やで{stop}。解
 ENFORCE_SUFFIX = " 今日は強制モード（{label} {hours}h）やで{stop}。解除は kaijo.cmd。"
 ENFORCE_STATUS_HEAD = PREFIX + "強制モード（宣言は shl enforce on、解除は kaijo.cmd か STOP.txt）"
 ENFORCE_STATUS_DEFAULT = "  既定: {label} / {hours}h / 予告 {grace}分（settings の 19）"
+ENFORCE_STATUS_DEFAULT_LIMIT = "  既定: {label}（settings の 19）"
 ENFORCE_STATUS_STOP = "  STOP.txt: {stop}"
 ENFORCE_STATUS_STOP_ON = "あり（解除中。shl enforce resume で再開）"
 ENFORCE_STATUS_STOP_OFF = "なし"

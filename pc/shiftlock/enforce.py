@@ -54,6 +54,12 @@ def _limit_apps(cfg: dict) -> list[str]:
     return sorted({x for x in (normalize_exe(a) for a in raw if isinstance(a, str)) if x}) if isinstance(raw, list) else []
 
 
+def _limit_exclude(cfg: dict) -> list[str]:
+    """宣言に写す，手で外したゲームの exe 名（limit.exclude を normalize_exe でそろえて重複を除き，並べ替える。リストでなければ空）。"""
+    raw = cfg["limit"].get("exclude", [])
+    return sorted({x for x in (normalize_exe(str(a)) for a in raw) if x}) if isinstance(raw, list) else []
+
+
 def _limit_terms(cfg: dict, p: Plan, action: str, store: Store | None, now: datetime | None) -> str:
     """throttle／suspend の同意の表示。段階の時刻と割合・対象・戻る時刻・解除の方法・注意。勧める文は入れない。"""
     lc = cfg["limit"]
@@ -63,8 +69,7 @@ def _limit_terms(cfg: dict, p: Plan, action: str, store: Store | None, now: date
             what=M.ENFORCE_TERMS_LIMIT_STOPPED if st["percent"] is None else M.ENFORCE_TERMS_LIMIT_PERCENT.format(percent=st["percent"]))
         for st in limit_stages(p.soft_close, p.hard_close, check_steps(lc.get("steps")) or [0, 0, 0, 0], action))
     seen = read_games(store, now) if store is not None and now is not None else {}
-    ex = lc.get("exclude", [])
-    excluded = {x for x in (normalize_exe(str(e)) for e in (ex if isinstance(ex, list) else [])) if x}   # リストでなければ空として扱う
+    excluded = set(_limit_exclude(cfg))   # リストでなければ空として扱う
     targets = [g for g, v in seen.items() if v == "target" and g not in excluded]
     anticheat = [g for g, v in seen.items() if v == "anticheat"]
     unknown = [g for g, v in seen.items() if v == "unknown"]
@@ -171,7 +176,8 @@ def enforce_declare(cfg: dict, store: Store, now: datetime, action: str | None =
          "consented_at": now.isoformat(timespec="minutes"), "via": "shl", "runs": []}
     if limit:
         # 同意した割合と足したアプリを固定する（あとで設定を変えても、この乗務には効かない）
-        e.update({"steps": steps, "limit_apps": _limit_apps(cfg)})
+        # 外したゲームも固定する（宣言のあとで shl app limit include しても，この乗務では対象に戻らへん。同意の表示にも外したと出てる）
+        e.update({"steps": steps, "limit_apps": _limit_apps(cfg), "limit_exclude": _limit_exclude(cfg)})
         note = action
     else:
         e.update({"duration_hours": hours,
@@ -254,8 +260,11 @@ def enforce_suffix(store: Store, p: Plan, phase: str = "hard") -> str:
 def enforce_status_text(cfg: dict, store: Store, now: datetime) -> str:
     lines = [M.ENFORCE_STATUS_HEAD]
     ec = cfg["enforce"]
-    lines.append(M.ENFORCE_STATUS_DEFAULT.format(label=M.ENFORCE_LABEL[ec["action"]], hours=f"{float(ec['duration_hours']):g}",
-                                                 grace=ec["grace_minutes"]))
+    if ec["action"] in LIMIT_ACTIONS:   # 減速・一時停止には「N 時間」「予告」が無い
+        lines.append(M.ENFORCE_STATUS_DEFAULT_LIMIT.format(label=M.ENFORCE_LABEL[ec["action"]]))
+    else:
+        lines.append(M.ENFORCE_STATUS_DEFAULT.format(label=M.ENFORCE_LABEL[ec["action"]], hours=f"{float(ec['duration_hours']):g}",
+                                                     grace=ec["grace_minutes"]))
     lines.append(M.ENFORCE_STATUS_STOP.format(stop=M.ENFORCE_STATUS_STOP_ON if stop_active(store) else M.ENFORCE_STATUS_STOP_OFF))
     found = False
     for d, v in sorted(store.shift_status().items()):

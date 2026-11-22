@@ -127,7 +127,7 @@ def test_declare_suspend_fixes_steps_and_apps():
     msg, io = _decl(cp, "suspend")
     e = _st(cp)["2026-11-02"]["enforce"]
     assert e == {"action": "suspend", "via": "shl", "runs": [], "steps": [75, 50, 25, 10], "limit_apps": ["photoshop.exe"],
-                 "declared_at": "2026-11-02T12:00", "consented_at": "2026-11-02T12:00"}
+                 "limit_exclude": [], "declared_at": "2026-11-02T12:00", "consented_at": "2026-11-02T12:00"}
     assert "duration_hours" not in e and "{" not in msg and "時間" not in msg
     ev = (cp.parent / "events.log").read_text()
     assert "enforce_declare\tsuspend\n" in ev and "enforce_consent\tsuspend\n" in ev
@@ -137,6 +137,34 @@ def test_declare_limit_apps_sorted_and_deduped():
     cp, _ = env(days={}, limit={"apps": ["notepad.exe", "Code", "code.exe", ""]})
     _decl(cp, "throttle")
     assert _st(cp)["2026-11-02"]["enforce"]["limit_apps"] == ["code.exe", "notepad.exe"]
+
+
+def test_declare_limit_exclude_is_fixed_sorted_and_deduped():
+    cp, _ = env(days={}, limit={"exclude": ["Apex.exe", "eldenring", "apex.exe", ""]})
+    _decl(cp, "suspend")
+    assert _st(cp)["2026-11-02"]["enforce"]["limit_exclude"] == ["apex.exe", "eldenring.exe"]
+
+
+def test_declare_limit_exclude_not_a_list_is_empty():
+    cp, _ = env(days={}, limit={"exclude": "apex.exe"})
+    _decl(cp, "suspend")
+    assert _st(cp)["2026-11-02"]["enforce"]["limit_exclude"] == []
+
+
+def test_status_text_default_action_limit_has_no_hours():
+    cp, _ = env(days={}, enforce={"action": "throttle"})
+    out = sl.enforce_status_text(sl.load_config(cp), sl.Store(cp), dt("2026-11-02 12:00"))
+    line = [l for l in out.splitlines() if "既定" in l][0]
+    assert M.ENFORCE_LABEL["throttle"] in line and "2h" not in line and "h /" not in line and "{" not in line
+
+
+def test_enforce_menu_with_limit_default_action_does_not_crash():
+    cp, _ = env(days={}, enforce={"action": "suspend"})
+    raw = json.loads(cp.read_text()); c = sl.deep_merge(sl.DEFAULTS, raw)
+    io = _IO(["", "", ""])   # 全部そのまま（空 Enter）
+    sl.enforce_menu(raw, c, io)
+    assert any("suspend" in line for line in io.out)   # いまの値をそのまま見せる
+    assert raw == json.loads(cp.read_text())
 
 
 def test_declare_limit_has_no_lock_only_fields():
