@@ -44,6 +44,10 @@ public static class Enforce
         {
             return [];
         }
+        if (LimitStages.IsLimitAction(JsonX.Str(e["action"])))
+        {
+            return [];   // 減速・一時停止は Agent の段階の処理が持つ．ここは何も返さず，seen_at・warned_at も書かない
+        }
         var ec = cfg.Section("enforce");
         if (remote && (!ec.TryGetPropertyValue("skip_if_remote", out var skip) || JsonX.Truthy(skip)))
         {
@@ -161,6 +165,10 @@ public static class Enforce
         }
         var action = ShiftConfig.PyText(e["action"]);
         var label = m.Map("ENFORCE_LABEL").TryGetValue(action, out var known) ? known : action;
+        if (LimitStages.IsLimitAction(action))
+        {
+            return m.Format("ENFORCE_SUFFIX_LIMIT", ("label", label), ("stop", store.StopActive ? m["ENFORCE_SUFFIX_STOP"] : ""));
+        }
         var hours = !e.ContainsKey("duration_hours") ? "2"
             : Py.Float(e["duration_hours"]) is { } h ? G(h)
             : ShiftConfig.PyText(e["duration_hours"]);   // 読めない値はそのまま見せる（通知を止めない）

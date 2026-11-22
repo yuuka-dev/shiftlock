@@ -9,6 +9,7 @@ from pathlib import Path
 
 from . import i18n as M
 from .console import StdIO
+from .limit import LIMIT_ACTIONS
 from .notify import _once
 from .plan import Plan, target_plan
 from .store import _read, Store, _write
@@ -17,7 +18,7 @@ from .timeutil import fmt, fmt_d
 
 STOP_FILE = "STOP.txt"   # 実行フォルダにあれば強制は一切しない（緊急解除。エクスプローラーで置くだけでええ）
 
-ENFORCE_ACTIONS = ("lock", "sleep", "shutdown")   # action の妥当性はこれで見る（表示の言葉は i18n）
+ENFORCE_ACTIONS = ("lock", "sleep", "shutdown") + LIMIT_ACTIONS   # action の妥当性はこれで見る（表示の言葉は i18n）
 CAUTION_ACTIONS = ("sleep", "shutdown")           # 注意を出して y をもらう action（遠隔から戻せへん）
 
 
@@ -178,6 +179,8 @@ def enforce_suffix(store: Store, p: Plan, phase: str = "hard") -> str:
     if not e.get("consented_at") or e.get("released_at"):
         return ""
     stop = M.ENFORCE_SUFFIX_STOP if stop_active(store) else ""
+    if e.get("action") in LIMIT_ACTIONS:   # 減速・一時停止には「N 時間」が無い
+        return M.ENFORCE_SUFFIX_LIMIT.format(label=M.ENFORCE_LABEL[e["action"]], stop=stop)
     return M.ENFORCE_SUFFIX.format(label=M.ENFORCE_LABEL.get(e.get("action"), e.get("action")),
                                    hours=f"{float(e.get('duration_hours', 2)):g}", stop=stop)
 
@@ -218,6 +221,8 @@ def enforce_due(cfg: dict, store: Store, now: datetime, phase: str, p: Plan | No
     e = enforce_state(store, p.day)
     if not e.get("consented_at") or e.get("released_at") or stop_active(store):
         return []
+    if e.get("action") in LIMIT_ACTIONS:
+        return []   # 減速・一時停止は Agent の段階の処理（予告・実行）が持つ．ここは何も返さず，seen_at・warned_at も書かない
     ec = cfg["enforce"]
     if remote and ec.get("skip_if_remote", True):
         return []

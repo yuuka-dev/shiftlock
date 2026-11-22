@@ -95,6 +95,41 @@ public sealed class EnforceReleaseTests
         Assert.False(File.Exists(folder.P("events.log")));
     }
 
+    [Theory]
+    [InlineData("suspend")]
+    [InlineData("throttle")]
+    public void LimitActions_DueReturnsNothing_AndLeavesStateUntouched(string action)
+    {
+        // 減速・一時停止は Agent の段階の処理が持つ．見張りは予告も実行もせず，seen_at・warned_at も書かない
+        using var folder = Folder($$"""{"action":"{{action}}","steps":[75,50,25,10]}""");
+        var before = EnforceState(folder).ToJsonString();
+
+        foreach (var min in new[] { 0, 5, 15, 30 })
+        {
+            Assert.Empty(EnforceActions(Run(folder, Hard.AddMinutes(min))));
+        }
+
+        var e = EnforceState(folder);
+        Assert.False(e.ContainsKey("seen_at"));
+        Assert.False(e.ContainsKey("warned_at"));
+        Assert.Empty(e["runs"]!.AsArray());
+        Assert.Equal(before, e.ToJsonString());   // 宣言は 1 バイトも変わらない
+        Assert.False(File.Exists(folder.P("events.log")));
+    }
+
+    [Theory]
+    [InlineData("suspend", "アプリの一時停止")]
+    [InlineData("throttle", "アプリの減速")]
+    public void LimitActions_SuffixHasNoHours(string action, string label)
+    {
+        using var folder = Folder($$"""{"action":"{{action}}","steps":[75,50,25,10]}""");
+
+        var hard = Run(folder, Hard).Actions.Single(a => a.Kind == "hard");
+
+        Assert.Contains($" 今日は強制モード（{label}）だよ。解除は kaijo.cmd。", hard.Text);
+        Assert.DoesNotContain("時間", hard.Text.Split("今日は強制モード")[1]);
+    }
+
     [Fact]
     public void Run_IsLastInTheList_AndSpeaks()
     {

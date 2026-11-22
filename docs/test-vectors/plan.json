@@ -611,6 +611,63 @@
    }
   },
   {
+   "name": "limit が配列",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "limit": [
+      75,
+      50,
+      25,
+      10
+     ]
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "limit は {...} の形で書いてね（settings.cmd で直せる）"
+   }
+  },
+  {
+   "name": "limit が null",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "limit": null
+    }
+   },
+   "input": {},
+   "expect": {
+    "error": "limit は {...} の形で書いてね（settings.cmd で直せる）"
+   }
+  },
+  {
    "name": "calendar.sources が辞書",
    "files": {
     "shifts.json": {

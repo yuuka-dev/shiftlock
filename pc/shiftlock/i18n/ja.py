@@ -147,12 +147,14 @@ CONFIRM_KAKUNIN_HEAD = "未確認の乗務（『出た』『休んだ』か、sh
 
 # ================================================================ enforce（強制モード）
 
-ENFORCE_LABEL = {"lock": "ロック", "sleep": "スリープ", "shutdown": "シャットダウン"}
+ENFORCE_LABEL = {"lock": "ロック", "sleep": "スリープ", "shutdown": "シャットダウン", "throttle": "アプリの減速", "suspend": "アプリの一時停止"}
 ENFORCE_CAUTION = {"sleep": "スリープは遠隔（Parsec）から戻せない。",
                    "shutdown": "シャットダウンは未保存の作業が消える（60 秒の猶予のあと強制終了）。遠隔（Parsec）から戻せない。"}
 ENFORCE_TERMS_WHAT = {"lock": "ロック（ログインし直せば続きはできる）",
                       "sleep": "スリープ（未保存の作業は残るが、遠隔からは戻せない）",
-                      "shutdown": "シャットダウン（60 秒の猶予のあと強制終了。未保存の作業は消える。遠隔からは戻せない）"}
+                      "shutdown": "シャットダウン（60 秒の猶予のあと強制終了。未保存の作業は消える。遠隔からは戻せない）",
+                      "throttle": "アプリの減速（ゲームと登録したアプリの CPU の上限を、段階的に下げる。終了はしない）",
+                      "suspend": "アプリの一時停止（上限を下げたあと、最低ラインで止める。終了はしない。解除すれば続きから動く）"}
 ENFORCE_TERMS = ("強制モードの内容（{day} の乗務）\n"
                  "  何を    : {what}\n"
                  "  いつから: 最低ライン {hard} 以降に PC を触ったら、{grace} 分前に予告してから\n"
@@ -181,6 +183,7 @@ ENFORCE_RELEASED = PREFIX + "強制を解除したよ（STOP.txt）。再開は 
 ENFORCE_RESUME_NONE = PREFIX + "解除中ではないよ（STOP.txt は無い）。"
 ENFORCE_RESUMED = PREFIX + "再開したよ（STOP.txt を消した）。解除した乗務の宣言はやり直し（shl enforce on）。"
 ENFORCE_SUFFIX_STOP = "（STOP.txt があるので今は効かない）"
+ENFORCE_SUFFIX_LIMIT = " 今日は強制モード（{label}）だよ{stop}。解除は kaijo.cmd。"
 ENFORCE_SUFFIX = " 今日は強制モード（{label} {hours}h）だよ{stop}。解除は kaijo.cmd。"
 ENFORCE_STATUS_HEAD = PREFIX + "強制モード（宣言は shl enforce on、解除は kaijo.cmd か STOP.txt）"
 ENFORCE_STATUS_DEFAULT = "  既定: {label} / {hours}h / 予告 {grace}分（settings の 19）"

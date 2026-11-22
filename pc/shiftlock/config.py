@@ -54,6 +54,20 @@ DEFAULTS: dict = {
                 "max_runs": 6, "boot_grace_minutes": 15, "skip_if_remote": True},
     # アプリの稼働計測（ネイティブ版の Agent）。registered は exe 名（小文字・.exe つき）→ "dev"｜"adobe"。書くのは shl app
     "apps": {"registered": {}, "active_input_minutes": 5, "active_cpu_percent": 5},
+    # 強制モードの throttle／suspend（アプリの減速・一時停止）。steps = 段階 1〜4 の上限（基準の使用率に対する %）。
+    # apps = 対象に足した登録アプリ、exclude = 外したゲーム（書くのは shl app limit）。never = 手を加えない、protect = 絶対に止めない
+    "limit": {"steps": [75, 50, 25, 10], "baseline_minutes": 30, "apps": [], "exclude": [],
+              "anticheat_markers": ["EasyAntiCheat*", "BattlEye*", "BEService*", "BEClient*", "GameGuard*", "*.des", "EAAntiCheat*",
+                                    "xigncode*", "*.xem", "mhyprot*", "ACE-*", "AntiCheatExpert*", "PunkBuster*", "pb*.dll", "vgc*",
+                                    "FACEIT*", "EQU8*", "nProtect*", "Denuvo*Anti*Cheat*"],
+              "never": ["system", "csrss.exe", "wininit.exe", "winlogon.exe", "services.exe", "lsass.exe", "smss.exe", "svchost.exe",
+                        "dwm.exe", "explorer.exe", "fontdrvhost.exe", "sihost.exe", "taskmgr.exe",
+                        "shiftlock-agent.exe", "shiftlock.exe", "shl.exe", "python.exe", "pythonw.exe", "python3.exe",
+                        "claude.exe", "node.exe", "wsl.exe", "wslhost.exe", "vmmemwsl", "vmmem", "windowsterminal.exe", "conhost.exe",
+                        "openconsole.exe", "powershell.exe", "pwsh.exe", "cmd.exe", "bash.exe",
+                        "discord.exe", "steam.exe", "steamwebhelper.exe", "steamservice.exe"],
+              "protect": ["claude.exe", "node.exe", "wsl.exe", "wslhost.exe", "discord.exe",
+                          "shiftlock-agent.exe", "shiftlock.exe", "shl.exe"]},
 }
 
 
@@ -150,7 +164,7 @@ def load_config(path: Path) -> dict:
     bad = [w for w in cfg["work_weekdays"] if w not in WEEKDAYS]
     if bad:
         raise ValueError(M.CONFIG_BAD_WEEKDAY.format(bad=bad))
-    for k in ("usage", "notify", "calendar", "retention", "report", "confirm", "enforce", "absence"):
+    for k in ("usage", "notify", "calendar", "retention", "report", "confirm", "enforce", "absence", "limit"):
         if not isinstance(cfg.get(k), dict):
             raise ValueError(M.CONFIG_NOT_DICT.format(key=k))
     if not isinstance(cfg["calendar"].get("sources", []), list):

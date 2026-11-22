@@ -84,13 +84,16 @@
  "ENFORCE_LABEL": {
   "lock": "ロック",
   "sleep": "スリープ",
-  "shutdown": "シャットダウン"
+  "shutdown": "シャットダウン",
+  "throttle": "アプリの減速",
+  "suspend": "アプリの一時停止"
  },
  "ENFORCE_RELEASED": "[shiftlock] 強制を解除したよ（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
  "ENFORCE_RELEASE_ALREADY": "[shiftlock] もう解除中だよ（STOP.txt あり）。再開は shl enforce resume。",
  "ENFORCE_REWARN": "{relock}分後にまた{label}するよ（強制モード）。やめるなら kaijo.cmd。",
  "ENFORCE_RUN": "{label}するよ（強制モード）",
  "ENFORCE_SUFFIX": " 今日は強制モード（{label} {hours}h）だよ{stop}。解除は kaijo.cmd。",
+ "ENFORCE_SUFFIX_LIMIT": " 今日は強制モード（{label}）だよ{stop}。解除は kaijo.cmd。",
  "ENFORCE_SUFFIX_STOP": "（STOP.txt があるので今は効かない）",
  "ENFORCE_WARN": "強制モード: {grace}分後に{label}するよ。寝るか、やめるなら kaijo.cmd。",
  "ENFORCE_WARN_SOON": "あと{mins}分で{label}するよ（強制モード）。やめるなら kaijo.cmd。",
