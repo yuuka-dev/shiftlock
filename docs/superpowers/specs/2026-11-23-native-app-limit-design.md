@@ -298,7 +298,7 @@ pc/shiftlock/              宣言（throttle／suspend），shl app limit，hook
    - 開けるなら: 起動時に `limit.json` の `capped` のジョブを開いて，上限を外す．
    - 開けないなら（☆ 代わりの案）: 起動時に `capped` に載っていたアプリがまだ動いていれば，「前回の上限が残っているかもしれないので，アプリを起動し直すと戻る」と 1 回知らせる．加えて，Agent の未処理の例外の受け口で上限を外すことを試みる．
    - **結果（2026-11-23 実機）: 開けない．** 名前つきジョブを作ってプロセスを入れ，上限をかけてから，ハンドルを持つ側（`probe`）を `Stop-Process -Force` で落とすと，`OpenJobObjectW` は `GetLastError=2`（`ERROR_FILE_NOT_FOUND`）で失敗する．`Global\`・`Local\` の接頭辞をつけても同じ．**上限は効いたまま残る**（落とした後も `burn` の使用率は上限のまま．`IsProcessInJob` は true）．つまり最後のハンドルが閉じると名前は消えるが，ジョブ自体はプロセスが入っている間は生きる．別のプロセスからジョブのハンドルを取り直す API は見つからなかった．新しいジョブに入れ直しても緩められない（項目 2）．
-   - **結果: 対象のプロセスにジョブのハンドルを複製しておくと，名前で開ける**（`DuplicateHandle` でジョブのハンドルを対象プロセスへ複製 → `probe` を落としても，別の `probe uncap` が `OpenJobObjectW`（`JOB_OBJECT_SET_ATTRIBUTES` だけの 0x2 でも）で開けて，`ControlFlags = 0` で外せた）．ハンドルを持つのが対象プロセス自身だと，その間は名前が消えないため．ただし代償がある: 対象プロセスに `PROCESS_DUP_HANDLE` で開く必要があり，対象がそのハンドルでジョブに触れうる（アンチチートつきのゲームでは開けない・反応が不明）．**採るかは本人の判断**（上の「代わりの案」のままにするか）．
+   - **結果: 対象のプロセスにジョブのハンドルを複製しておくと，名前で開ける**（`DuplicateHandle` でジョブのハンドルを対象プロセスへ複製 → `probe` を落としても，別の `probe uncap` が `OpenJobObjectW`（`JOB_OBJECT_SET_ATTRIBUTES` だけの 0x2 でも）で開けて，`ControlFlags = 0` で外せた）．ハンドルを持つのが対象プロセス自身だと，その間は名前が消えない（と見ている）ため．ただし代償がある: 対象プロセスに `PROCESS_DUP_HANDLE` で開く必要があり，対象がそのハンドルでジョブに触れうる（アンチチートつきのゲームでは開けない・反応が不明）．**採るかは本人の判断**（上の「代わりの案」のままにするか）．
    - **★ 決定（2026-11-23 本人）: 「代わりの案」にする．** ハンドルの複製はしない（対象のプロセスに外からハンドルを書き込まない）．Agent が強制終了・クラッシュした後に残るのは CPU の上限だけで，アプリを起動し直せば消える．次の起動時に，前回上限をかけたアプリがまだ動いていれば 1 回知らせる（`AGENT_LIMIT_STALE_CAP`）．`Uncap` は Agent が持っているハンドルでだけ行い，名前で開き直さない．
    - 試していないこと: `OBJ_PERMANENT` のジョブ（`SeCreatePermanentPrivilege` が要るはずで，Agent の権限では作れない見込み．推測）．ハンドルを持つだけの別の常駐プロセスを置く案（Agent が落ちても残る単位が増えるだけで，タスク マネージャーで一緒に落とされうる）．
 2. **既に別のジョブに入っているプロセス**（Steam が起動したゲームなど）を，入れ子のジョブに入れて上限をかけられるか．かけられないものは見送る．
@@ -308,12 +308,12 @@ pc/shiftlock/              宣言（throttle／suspend），shl app limit，hook
 4. **一時停止と再開**: 窓を持つアプリを止めて再開したとき，元どおり動くか．止めている間に起きること（音・「応答なし」の表示）．
    - **結果（2026-11-23 実機．自分で起動した `notepad.exe`）**: `NtSuspendProcess` は `STATUS_SUCCESS`（0）．止めた後，64 スレッドが全部 `Wait/Suspended`，`Process.Responding` は false．`NtResumeProcess` を 1 回で元の状態（`Responding` true）に戻る．**止めた回数だけ再開が要る**: suspend を 2 回 → resume 1 回では全部 `Suspended` のまま・`Responding` false，もう 1 回 resume で戻る．止めていないプロセスへの余分な resume は成功を返し，何も起きない（害は無い）．権限は `PROCESS_SUSPEND_RESUME`（0x800）だけで通る．Agent が終わったあとも止めた状態は残る（プロセスを止めた側が居なくてもスレッドの一時停止は続く）．**未確認（本人）**: 文字を打って止め→再開して文字が残るか，窓を触ったときの見え方（「応答なし」の表示），音の挙動．**設計への影響**: §4.5 の「止める前に記録」「起動時に必ず再開」「1 回しか止めない」は必要で，そのとおりでよい．
 5. 権限が上のプロセスを開こうとしたときの失敗のしかた．
-   - **結果（2026-11-23 実機）**: 管理者で起動したプロセスは**未確認**（飛ばした）．参考として，権限が上の保護されたプロセス（`System`，PID 4）を `PROCESS_SUSPEND_RESUME | PROCESS_SET_QUOTA`（0x900）で開くと `OpenProcess` は失敗し `GetLastError=5`（`ERROR_ACCESS_DENIED`），存在しない PID は `GetLastError=87`（`ERROR_INVALID_PARAMETER`）．開けなければ見送り（§4.3）の通りに扱える．管理者起動のプロセスも同じ `5` になる見込み（推測）．
+   - **結果（2026-11-23 実機）**: 管理者で起動したプロセスは**未確認**（飛ばした）．権限が上のプロセスは `System`（PID 4）で確認した: `PROCESS_SUSPEND_RESUME | PROCESS_SET_QUOTA`（0x900）で開くと `OpenProcess` は失敗し `GetLastError=5`（`ERROR_ACCESS_DENIED`），存在しない PID は `GetLastError=87`（`ERROR_INVALID_PARAMETER`）．開けなければ見送り（§4.3）の通りに扱える．管理者起動のプロセスも同じ `5` になる見込み（推測）．
 
 **追加で確かめたこと**（2026-11-23 実機）:
 
 - **ジョブに入れるのに要る最小の権限**: `OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE)`（0x101）で開いたハンドルで `AssignProcessToJobObject` が成功し，上限もかかる（使用率 10.8%，`CpuRate=1000`）．
-- **`CpuRate` の範囲**: `ENABLE | HARD_CAP` で 0 → `GetLastError=87`（`ERROR_INVALID_PARAMETER`），1・2・10000 → 成功，10001・20000 → 87．値は 1〜10000 だけ．範囲外を渡すと前の設定が残る．外すには `ControlFlags = 0`（`CpuRate` は何でもよい）が成功する．`HARD_CAP` だけ・`ENABLE` だけのフラグも API は通ったが，効き方は確かめていない（使わない．上限は `ENABLE | HARD_CAP` だけで使う）．
+- **`CpuRate` の範囲**: `ENABLE | HARD_CAP` で 0 → `GetLastError=87`（`ERROR_INVALID_PARAMETER`），1・2・10000 → 成功，10001・20000 → 87．値は 1〜10000 だけ．範囲外を渡すと前の設定が残る．実装（`WindowsLimitControl`）は 1 未満は 1 に切り上げ，10000 を超えたら 10000 にして渡す．外すには `ControlFlags = 0`（`CpuRate` は何でもよい）が成功する．`HARD_CAP` だけ・`ENABLE` だけのフラグも API は通ったが，効き方は確かめていない（使わない．上限は `ENABLE | HARD_CAP` だけで使う）．
 
 1 で「開けない」と分かったら，本人に伝えてから進める（Agent が落ちたときの戻し方が変わるため）．
 
