@@ -317,17 +317,42 @@ public sealed class LimitPolicyTests
     }
 
     [Fact]
-    public void New_day_clears_baseline_and_restores_old_effects()
+    public void New_day_clears_baseline()
     {
-        var old = State(baseline: 99.0, day: "2026-12-06", capped: [("eldenring.exe", 9.9)], announced: ["1", "suspended"], skipped: ["x.exe"]);
+        // 効いているものが無い前の日の記録: 基準・予告・見送りを捨てて，今の乗務の判断を続ける
+        var old = State(baseline: 99.0, day: "2026-12-06", skipped: ["x.exe"]);
         var d = Decide(In("13:30", state: old, lines: [Line("13:25", "eldenring.exe", 300, 40.0)]));
-        Assert.Single(Of<UncapOp>(d));
         Assert.Equal(30.0, Assert.Single(Of<CapOp>(d)).Percent);
         Assert.Equal(40.0, d.StateAfterOps.Baseline["eldenring.exe"]);
         Assert.Equal(Day, d.StateAfterOps.Day);
         Assert.Empty(d.StateAfterOps.Announced);
         Assert.Empty(d.StateAfterOps.Skipped);
-        Assert.Empty(Of<NoticeOp>(d));   // 前の日の残りを戻すだけなので報告は出さない
+        Assert.Empty(Of<NoticeOp>(d));
+    }
+
+    [Fact]
+    public void Past_start_latest_with_next_plan_releases_as_timeout_of_previous_day()
+    {
+        // 出庫の時刻を過ぎて TargetPlan が次の乗務（12/07）を返す回．効いているのは前の乗務（12/06）のもの
+        var old = State(baseline: 99.0, day: "2026-12-06", capped: [("eldenring.exe", 9.9)], suspended: [Susp(100)], announced: ["1", "suspended"]);
+        var d = Decide(In("13:30", state: old, lines: [Line("13:25", "eldenring.exe", 300, 40.0)]));
+        Assert.Single(Of<UncapOp>(d));
+        Assert.Single(Of<ResumeOp>(d));
+        Assert.Equal(new ReleaseEventOp("2026-12-06", "timeout"), Assert.Single(Of<ReleaseEventOp>(d)));
+        var report = Assert.Single(Of<NoticeOp>(d));
+        Assert.Equal("元に戻した", report.Text);
+        Assert.Empty(Of<CapOp>(d));   // 次の乗務のかけ始めは次の回
+        Assert.Empty(d.StateAfterOps.Capped);
+        Assert.Empty(d.StateAfterOps.Suspended);
+    }
+
+    [Fact]
+    public void Past_start_latest_with_no_plan_releases_as_timeout()
+    {
+        var d = Decide(In("22:30", noPlan: true, state: WithEffects()));
+        Assert.Equal(new ReleaseEventOp(Day, "timeout"), Assert.Single(Of<ReleaseEventOp>(d)));
+        Assert.Single(Of<UncapOp>(d));
+        Assert.Single(Of<NoticeOp>(d));
     }
 
     // ---- 解除 ----
@@ -373,10 +398,11 @@ public sealed class LimitPolicyTests
     }
 
     [Fact]
-    public void Plan_missing_restores_as_off()
+    public void Plan_missing_with_effects_restores_as_timeout_of_recorded_day()
     {
+        // 効いているものがある記録の日に乗務が無くなった（出庫の時刻を過ぎた）→ 前の乗務の timeout
         var d = Decide(In("13:30", noPlan: true, state: WithEffects()));
-        Assert.Equal(new ReleaseEventOp(Day, "off"), Assert.Single(Of<ReleaseEventOp>(d)));
+        Assert.Equal(new ReleaseEventOp(Day, "timeout"), Assert.Single(Of<ReleaseEventOp>(d)));
         Assert.Single(Of<UncapOp>(d));
     }
 

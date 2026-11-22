@@ -9,7 +9,8 @@ public sealed record ReleaseResult(string Text, bool Complete);
 /// トレイの「緊急解除」（pc/guard.ps1 -Release と同じ）．一番急ぐ「予約済みのシャットダウンの中止」を先に行い，
 /// 続けて STOP.txt・宣言の released_at・events.log（理由は tray）．各手順は独立で，どれかが失敗しても次へ進む．
 /// 解除するだけで，宣言・再開・設定の変更はしない．
-/// afterRelease は記録（STOP.txt・released_at）を書いた後に 1 回呼ぶ（アプリの減速・一時停止をその場で戻す．10 秒の仕事を待たない）．
+/// afterRelease は記録（STOP.txt・released_at）を書き，2 回目のシャットダウンの中止をした後に 1 回呼ぶ
+/// （アプリの減速・一時停止をその場で戻す．10 秒の仕事を待たない．排他を待ちうるので最後）．
 /// 例外は握ってログに書く（解除の結果は変わらない）．
 /// </summary>
 public sealed class ReleaseFlow(IPowerControl power, Store store, Func<DateTime> clock, AgentLog log, Action? afterRelease = null)
@@ -25,9 +26,10 @@ public sealed class ReleaseFlow(IPowerControl power, Store store, Func<DateTime>
     {
         AbortShutdown();
         var result = Record(m);
-        AfterRelease();
         // STOP.txt を置く直前に，見張りの側がシャットダウンを予約したかもしれない．置いた後にもう一度止める
         AbortShutdown();
+        // 減速・一時停止の解除は最後（排他を最大 10 秒待ちうるので，シャットダウンの中止を遅らせない）
+        AfterRelease();
         return result;
     }
 

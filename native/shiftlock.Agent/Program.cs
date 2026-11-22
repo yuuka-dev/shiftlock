@@ -77,6 +77,9 @@ public static class Program
 
         RegisterToastName(log);
         Application.SetHighDpiMode(HighDpiMode.SystemAware);
+        // 画面のスレッドの未処理の例外も AppDomain.UnhandledException に流す（既定だと画面の既定のダイアログで止まり，
+        // 戻す受け口を通らない）．コントロールを作る前に 1 回だけ呼ぶ
+        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
         var clock = () => DateTime.Now;
         var notifier = new WindowsNotifier(log);
         var power = new WindowsPower();
@@ -96,6 +99,11 @@ public static class Program
                 var (volume, seconds) = SoundNumbers(dir);
                 runner.Run(new TickResult(actions, [], volume, seconds), quit.Token);   // 通知音は付けない（TickAction の Sound は空）
             }, clock, once);
+        // 未処理の例外で落ちるときも，止めたまま・上限をかけたままにしない（終了時の戻しは finally に届かない落ち方がある）．
+        // 排他は短い待ちで呼び，落ちる処理を長く引き止めない．解除は finally
+        UnhandledExceptionEventHandler onFatal = (_, e) =>
+            CrashRestore.Run(() => limiter.RestoreAll(null, CrashRestore.Wait), message => log.Write(message), e.ExceptionObject);
+        AppDomain.CurrentDomain.UnhandledException += onFatal;
         using var tray = new Tray(dir, watcher, clock, notifier,
             new ReleaseFlow(power, store, clock, log, afterRelease: () => limiter.RestoreAll("kaijo")), log, Quit);
         Volatile.Write(ref ui, SynchronizationContext.Current);
@@ -140,6 +148,7 @@ public static class Program
         finally
         {
             quit.Cancel();
+            AppDomain.CurrentDomain.UnhandledException -= onFatal;
             SystemEvents.PowerModeChanged -= OnPower;
             // タイマーを止めてから，たまっている計測を書く（Dispose は 2 回呼んでも害は無い）
             scheduler.Dispose();

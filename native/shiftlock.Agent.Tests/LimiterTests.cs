@@ -422,17 +422,112 @@ public sealed class LimiterTests : IDisposable
 
     // ---- 判断できないとき ----
 
+    /// <summary>10 秒ごとに seconds 秒ぶん RunOnce を回す（最初の回は今の時刻．最後の回は seconds 秒後）．</summary>
+    private void RunFor(Limiter limiter, int seconds)
+    {
+        for (var t = 0; t <= seconds; t += 10)
+        {
+            limiter.RunOnce();
+            if (t < seconds)
+            {
+                _now = _now.AddSeconds(10);
+            }
+        }
+    }
+
     [Fact]
-    public void RunOnce_stale_sample_restores()
+    public void RunOnce_stale_sample_is_skipped_within_grace()
+    {
+        PutState(State(baseline: [Elden], capped: [Elden]));
+        var before = File.ReadAllBytes(_dir.P("limit.json"));
+        _sampleAt = _now.AddSeconds(-35);
+
+        RunFor(NewLimiter(), 50);   // 未判断が 50 秒続いても，60 秒までは何もしない
+
+        Assert.Empty(_control.Calls);
+        Assert.Equal(before, File.ReadAllBytes(_dir.P("limit.json")));
+        Assert.Empty(_notices);
+        Assert.False(File.Exists(_dir.P("events.log")));
+    }
+
+    [Fact]
+    public void RunOnce_stale_sample_restores_after_grace()
     {
         PutState(State(baseline: [Elden], capped: [Elden]));
         _sampleAt = _now.AddSeconds(-35);
 
-        NewLimiter().RunOnce();
+        RunFor(NewLimiter(), 70);
 
         Assert.Equal(1, _control.Count("uncap"));
         Assert.Equal(0, _control.Count("cap"));
         Assert.Empty(ReadState().Capped);
+        Assert.DoesNotContain(_control.Calls, c => c.StartsWith("suspend", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void RunOnce_unknown_then_known_resets_grace()
+    {
+        PutState(State(baseline: [Elden], capped: [Elden]));
+        var limiter = NewLimiter();
+        var fresh = _now;
+        _sampleAt = _now.AddSeconds(-35);
+        RunFor(limiter, 10);          // 未判断 2 回
+        _now = _now.AddSeconds(10);
+        _sampleAt = null;             // 判断できる回（時刻を消す）
+        limiter.RunOnce();
+        Assert.Empty(_control.Calls); // かかっている上限と同じなので何もしない
+        _now = _now.AddSeconds(10);
+        _sampleAt = _now.AddSeconds(-35);
+        RunFor(limiter, 50);          // 数え直しなので，最初の未判断から 70 秒以上たっていても戻さない
+
+        Assert.True(_now - fresh > TimeSpan.FromSeconds(70));
+        Assert.Equal(0, _control.Count("uncap"));
+        Assert.Contains(Elden, ReadState().Capped.Keys);
+    }
+
+    [Fact]
+    public void RunOnce_state_json_locked_is_skipped()
+    {
+        PutState(State(baseline: [Elden], capped: [Elden]));
+        var limiter = NewLimiter();
+        using var hold = new FileStream(_dir.P("state.json"), FileMode.Open, FileAccess.Read, FileShare.None);
+
+        RunFor(limiter, 30);
+
+        Assert.Empty(_control.Calls);
+        Assert.Contains(Elden, ReadState().Capped.Keys);
+        Assert.False(File.Exists(_dir.P("events.log")));   // 読めないのを「宣言が無い」と取って limit_release off を残さない
+        Assert.Empty(_notices);
+    }
+
+    [Fact]
+    public void RunOnce_state_json_locked_restores_after_grace_without_event()
+    {
+        PutState(State(baseline: [Elden], capped: [Elden]));
+        var limiter = NewLimiter();
+        using var hold = new FileStream(_dir.P("state.json"), FileMode.Open, FileAccess.Read, FileShare.None);
+
+        RunFor(limiter, 70);
+
+        Assert.Equal(1, _control.Count("uncap"));
+        Assert.False(File.Exists(_dir.P("events.log")));
+    }
+
+    [Fact]
+    public void RunOnce_after_long_gap_does_not_restore_immediately()
+    {
+        PutState(State(baseline: [Elden], capped: [Elden]));
+        var limiter = NewLimiter();
+        _sampleAt = _now.AddSeconds(-35);
+        limiter.RunOnce();            // 未判断の始まり
+        _now = _now.AddMinutes(10);   // スリープ復帰（時計が飛ぶ）
+        _sampleAt = _now.AddSeconds(-35);
+
+        limiter.RunOnce();            // 復帰後の最初の回．10 分前の未判断を見て戻さない
+
+        Assert.Empty(_control.Calls);
+        RunFor(limiter, 60);          // 数え直した未判断が 60 秒続けば戻す
+        Assert.Equal(1, _control.Count("uncap"));
     }
 
     [Fact]
@@ -441,7 +536,10 @@ public sealed class LimiterTests : IDisposable
         PutState(State(baseline: [Elden], capped: [Elden]));
         _noSnapshot = true;
 
-        NewLimiter().RunOnce();
+        var limiter = NewLimiter();
+        RunFor(limiter, 10);
+        Assert.Empty(_control.Calls);
+        RunFor(limiter, 60);
 
         Assert.Equal(1, _control.Count("uncap"));
     }
@@ -452,7 +550,7 @@ public sealed class LimiterTests : IDisposable
         PutState(State(baseline: [Elden], capped: [Elden]));
         _parents = false;
 
-        NewLimiter().RunOnce();
+        RunFor(NewLimiter(), 70);
 
         Assert.Equal(1, _control.Count("uncap"));
         Assert.Equal(0, _control.Count("cap"));
@@ -480,6 +578,26 @@ public sealed class LimiterTests : IDisposable
 
         Assert.Empty(_control.Calls);
         Assert.Empty(_notices);
+    }
+
+    [Fact]
+    public async Task RestoreAll_with_short_wait_gives_up_when_busy()
+    {
+        PutState(State(baseline: [Elden]));
+        _control.CapEntered = new ManualResetEventSlim();
+        _control.CapHold = new ManualResetEventSlim();
+        var limiter = NewLimiter();
+        var running = Task.Run(limiter.RunOnce);
+        Assert.True(_control.CapEntered.Wait(TimeSpan.FromSeconds(10)));
+
+        var sw = System.Diagnostics.Stopwatch.StartNew();
+        limiter.RestoreAll(null, TimeSpan.FromMilliseconds(100));   // 未処理の例外の受け口からの呼び方．10 秒は待たない
+        sw.Stop();
+        _control.CapHold.Set();
+        await running;
+
+        Assert.True(sw.Elapsed < TimeSpan.FromSeconds(5));
+        Assert.Contains(AgentLogLines, l => l.Contains("restore skipped: busy", StringComparison.Ordinal));
     }
 
     // ---- ゲームの判定 ----

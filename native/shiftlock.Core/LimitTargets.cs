@@ -30,9 +30,12 @@ public static class LimitTargets
     /// 動いているアプリ（登録アプリ・ゲーム）ごとに判定を返す（名前の順）．登録にもゲームにも無い exe は入れない．
     /// games は「exe 名 → target｜anticheat｜unknown」（Agent がフォルダを見て決めた結果．無い名前は unknown）．
     /// declaredApps は宣言に固定した limit_apps．登録に当たる exe はゲームの判定を見ない（区切り 3 と同じ）．
+    /// declaredExclude は宣言に固定した limit_exclude（無い古い宣言・null は空）．ゲームは「宣言の limit_exclude ∪ 今の limit.exclude」
+    /// にあれば外す（外す側は今の設定がすぐ効き，宣言の後に include で広げた分は次の宣言から効く）．
     /// </summary>
     public static IReadOnlyList<LimitApp> Resolve(MeterSample sample, IReadOnlyDictionary<string, string> registered,
-        LimitSettings settings, IReadOnlySet<string> declaredApps, IReadOnlyDictionary<string, string> games)
+        LimitSettings settings, IReadOnlySet<string> declaredApps, IReadOnlyDictionary<string, string> games,
+        IReadOnlySet<string>? declaredExclude = null)
     {
         var names = new SortedSet<string>(StringComparer.Ordinal);
         foreach (var p in sample.Procs)
@@ -50,17 +53,17 @@ public static class LimitTargets
             var tree = sample.HasParents
                 ? ProcTree.OfName(sample.Procs, exe)
                 : [.. sample.Procs.Where(p => p.Name == exe)];
-            result.Add(new LimitApp(exe, isGame, tree, Judge(exe, isGame, tree, settings, declaredApps, games)));
+            result.Add(new LimitApp(exe, isGame, tree, Judge(exe, isGame, tree, settings, declaredApps, games, declaredExclude)));
         }
         return result;
     }
 
     private static LimitVerdict Judge(string exe, bool isGame, IReadOnlyList<ProcSample> tree, LimitSettings settings,
-        IReadOnlySet<string> declaredApps, IReadOnlyDictionary<string, string> games)
+        IReadOnlySet<string> declaredApps, IReadOnlyDictionary<string, string> games, IReadOnlySet<string>? declaredExclude)
     {
         if (isGame)
         {
-            if (settings.Exclude.Contains(exe))
+            if (settings.Exclude.Contains(exe) || declaredExclude?.Contains(exe) == true)
             {
                 return LimitVerdict.Excluded;
             }

@@ -117,7 +117,7 @@ public sealed class ReleaseFlowTests : IDisposable
     }
 
     [Fact]
-    public void AfterRelease_IsCalledOnceAfterRecord_BeforeTheSecondAbort()
+    public void AfterRelease_IsCalledOnceAfterRecord_AfterTheSecondAbort()
     {
         _dir.Put("state.json", Declared);
         var order = new List<string>();
@@ -128,7 +128,7 @@ public sealed class ReleaseFlowTests : IDisposable
         var result = flow.RunDetailed(_m);
 
         Assert.True(result.Complete);
-        Assert.Equal(["abort", "after(STOP.txt あり)", "abort"], order);
+        Assert.Equal(["abort", "abort", "after(STOP.txt あり)"], order);
     }
 
     [Fact]

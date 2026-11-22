@@ -95,6 +95,12 @@ public static class LimitPolicy
         {
             return Restore(null);   // 判断できない → 新しくかけず，かけたものを戻す
         }
+        // 出庫の時刻を過ぎると TargetPlan は次の乗務（か null）を返すので，記録の日が今の乗務の日と違い，効いているものがあれば
+        // 前の乗務の timeout として戻す（理由と日を前の乗務のものにする．次の乗務の判断は次の回でよい）
+        if (state.Day is { } recorded && (plan is null || plan.Day != recorded) && state.HasEffects)
+        {
+            return RestoreAll(state, recorded, ReasonTimeout, m, hard);
+        }
         if (plan is null || decl.Count == 0 || !JsonX.Truthy(decl["consented_at"]))
         {
             return Restore(ReasonOff);

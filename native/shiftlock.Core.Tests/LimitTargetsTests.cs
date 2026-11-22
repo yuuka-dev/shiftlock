@@ -24,11 +24,13 @@ public sealed class LimitTargetsTests
         v.ToDictionary(x => x.Item1, x => x.Item2);
 
     private static IReadOnlyList<LimitApp> Resolve(ProcSample[] procs, string[] gameExes, IReadOnlySet<string>? declared = null,
-        IReadOnlyDictionary<string, string>? games = null, LimitSettings? settings = null, bool hasParents = true)
+        IReadOnlyDictionary<string, string>? games = null, LimitSettings? settings = null, bool hasParents = true,
+        IReadOnlySet<string>? declaredExclude = null)
     {
         var gameKeys = procs.Where(p => gameExes.Contains(p.Name)).Select(p => p.Key).ToHashSet();
         var sample = new MeterSample(T.AddHours(2), TimeSpan.Zero, procs, null, 0, gameKeys, 8, hasParents);
-        return LimitTargets.Resolve(sample, Registered, settings ?? Settings, declared ?? Declared(), games ?? Verdicts());
+        return LimitTargets.Resolve(sample, Registered, settings ?? Settings, declared ?? Declared(), games ?? Verdicts(),
+            declaredExclude);
     }
 
     private static LimitVerdict VerdictOf(IReadOnlyList<LimitApp> apps, string exe) => apps.Single(a => a.Exe == exe).Verdict;
@@ -57,6 +59,27 @@ public sealed class LimitTargetsTests
     public void Game_InExclude_IsExcluded_EvenIfAntiCheat() =>
         Assert.Equal(LimitVerdict.Excluded, VerdictOf(
             Resolve([P(1, 0, "excluded.exe")], ["excluded.exe"], games: Verdicts(("excluded.exe", "anticheat"))), "excluded.exe"));
+
+    [Fact]
+    public void Excluded_at_declaration_stays_excluded_after_include() =>
+        // 宣言の後に include して今の設定から外れても，その乗務では対象にならない（同意の表示に載っていたため）
+        Assert.Equal(LimitVerdict.Excluded, VerdictOf(
+            Resolve([P(1, 0, "apex.exe")], ["apex.exe"], games: Verdicts(("apex.exe", "target")), declaredExclude: Declared("apex.exe")), "apex.exe"));
+
+    [Fact]
+    public void Excluded_after_declaration_takes_effect() =>
+        // 宣言に無く今の設定にある（宣言の後に外した）→ すぐ効く
+        Assert.Equal(LimitVerdict.Excluded, VerdictOf(
+            Resolve([P(1, 0, "excluded.exe")], ["excluded.exe"], games: Verdicts(("excluded.exe", "target")), declaredExclude: Declared()), "excluded.exe"));
+
+    [Fact]
+    public void Old_declaration_without_limit_exclude_uses_current()
+    {
+        var games = Verdicts(("excluded.exe", "target"), ("apex.exe", "target"));
+        var apps = Resolve([P(1, 0, "excluded.exe"), P(2, 0, "apex.exe")], ["excluded.exe", "apex.exe"], games: games, declaredExclude: null);
+        Assert.Equal(LimitVerdict.Excluded, VerdictOf(apps, "excluded.exe"));
+        Assert.Equal(LimitVerdict.Target, VerdictOf(apps, "apex.exe"));
+    }
 
     [Fact]
     public void Registered_InAppsAndDeclared_IsTarget()

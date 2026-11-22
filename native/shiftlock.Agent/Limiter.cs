@@ -23,6 +23,13 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     /// <summary>これより古いサンプルは「計測が止まっている」とみなして，新しくかけず戻す．</summary>
     public static readonly TimeSpan StaleSample = TimeSpan.FromSeconds(30);
 
+    /// <summary>
+    /// 一時的に判断できない状態（計測のサンプルが無い・古い・親の PID が取れない，state.json・shifts.json が掴まれている）が
+    /// これだけ続くまでは，何もせず飛ばす（スリープ復帰などで一瞬止まっただけの回に，戻してかけ直さない）．
+    /// 続いたら新しくかけず，戻す側に倒す．設定が壊れている・宣言が無いなどの確かな判断にはかけない（すぐ判断する）．
+    /// </summary>
+    public static readonly TimeSpan UnknownGrace = TimeSpan.FromSeconds(60);
+
     private static readonly TimeSpan GateWait = TimeSpan.FromSeconds(10);
     private const string Title = "shiftlock";
 
@@ -35,11 +42,17 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     // （戻した後に遅れた回がかけ直すと，戻す仕事が無いまま Agent が終わる）．排他の外から立てる
     private volatile bool _closed;
 
+    // 判断できない状態が始まった時刻と，前の回の時刻（排他の中だけで触る）．前の回から Interval の 3 倍より空いた
+    // （スリープ・時計の飛び）ときは数え直す．連続した回だけで数えるため
+    private DateTime? _unknownSince;
+    private DateTime? _lastRun;
+
     /// <summary>ゲームの根のフォルダの探索結果（Agent が生きている間，根ごとに 1 回だけ探す）．Names が null は読めなかった．</summary>
     private sealed record ScanResult(IReadOnlyList<string>? Names);
 
     /// <summary>1 回ぶんの入力のうち，設定から決まるもの．Cfg が null は判断できない（設定が無い・読めない・乗務の逆算に失敗）．</summary>
-    private sealed record Env(ShiftConfig? Cfg, Plan? Plan, Messages M, string Phase, string Hard, bool Speak);
+    // ConfigBusy は設定（shifts.json）が掴まれていて開けない（一時的．壊れている・無いとは分ける）
+    private sealed record Env(ShiftConfig? Cfg, Plan? Plan, Messages M, string Phase, string Hard, bool Speak, bool ConfigBusy = false);
 
     // ---- 入口 ----
 
@@ -101,14 +114,15 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     /// 全部を元に戻す（上限を外す → 再開する → 記録を空にする）．終了時は reason を null（events.log に書かない），
     /// トレイの緊急解除は "kaijo"．通知は出さない（トレイが結果を知らせる．終了時は出す相手がいない）．
     /// 記録が読めない・排他が取れないときは何もしない（記録が壊れていれば次の起動の Startup が知らせる）．
+    /// wait は排他を待つ最大（既定 10 秒．未処理の例外の受け口からは短くする）．
     /// </summary>
-    public void RestoreAll(string? reason)
+    public void RestoreAll(string? reason, TimeSpan? wait = null)
     {
         if (reason is null)
         {
             _closed = true;   // 排他を待つ前に立てる（取れずに諦める道でも，進行中の回を止める）
         }
-        if (!_gate.Wait(GateWait))
+        if (!_gate.Wait(wait ?? GateWait))
         {
             once.Write("limit-restore", "limit restore skipped: busy", Today());
             return;
@@ -201,6 +215,13 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     private void RunLocked(List<TickAction> notices)
     {
         var now = clock();
+        // 前の回から大きく空いた（スリープ復帰・時計の飛び）なら，未判断の時間を数え直す
+        if (_lastRun is not { } last || now < last || now - last > Interval * 3)
+        {
+            _unknownSince = null;
+        }
+        _lastRun = now;
+
         var store = new Store(dir);
         var env = LoadEnv(now);
         LimitState state;
@@ -216,27 +237,59 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
         catch (IOException)
         {
             once.Write("limit-state", "limit: cannot read the record", Today());
-            return;   // 記録が読めない回は何もしない（記録なしで止める・かけることはしない）
+            return;   // 記録が読めない回は何もしない（記録なしで止める・かけることはしない．戻す記録も読めない）
         }
         _known = state;
 
-        var decision = Decide(env, latest(), now, state, store, persist: true);
+        // state.json は「読めない（掴まれている）」と「読めて空」を分ける（ShiftStatus は両方を空にしてしまう）
+        JsonObject? shifts;
+        try
+        {
+            shifts = store.ReadJson("state.json")["shifts"] as JsonObject ?? new JsonObject();
+        }
+        catch (StateBusyException)
+        {
+            shifts = null;
+        }
+        var snap = latest();
+
+        // 一時的に判断できない原因: 設定・state.json が掴まれている，計測が無い・古い・親の PID が取れない．
+        // 設定が無い・壊れている（Cfg が null で，掴まれてはいない）は確かな判断なので，待たずに戻す側へ進む
+        var unknown = env.ConfigBusy || (env.Cfg is not null && (shifts is null || !Usable(snap, now)));
+        if (unknown)
+        {
+            _unknownSince ??= now;
+            if (now - _unknownSince.Value < UnknownGrace)
+            {
+                return;   // 猶予の間は何もしない（判断も記録も通知もしない．かけたものは残る．緊急解除は state.json が読めた回に効く）
+            }
+        }
+        else
+        {
+            _unknownSince = null;
+        }
+
+        var decision = Decide(env, snap, now, state, store, shifts ?? new JsonObject(), forceUnknown: unknown, persist: true);
         Execute(store, env, decision, state, now, notices, collectNotices: true);
     }
 
+    /// <summary>計測のサンプルが判断に使えるか（在る・親の PID が取れている・30 秒以内）．</summary>
+    private static bool Usable(MeterSnapshot? snap, DateTime now) =>
+        snap is not null && snap.Sample.HasParents && Math.Abs((now - snap.Sample.Now).TotalSeconds) <= StaleSample.TotalSeconds;
+
     /// <summary>判断に要る入力を集めて LimitPolicy.Decide を呼ぶ．persist が偽なら何も書かない（--limit-once）．</summary>
-    private LimitDecision Decide(Env env, MeterSnapshot? snap, DateTime now, LimitState state, Store store, bool persist)
+    private LimitDecision Decide(Env env, MeterSnapshot? snap, DateTime now, LimitState state, Store store, JsonObject shifts,
+        bool forceUnknown, bool persist)
     {
         var plan = env.Plan;
-        var declaration = plan is null ? new JsonObject() : Enforce.State(store, plan.Day);
-        var status = plan is null ? null
-            : (store.ShiftStatus()[plan.Day] as JsonObject)?["status"] is JsonValue sv && sv.TryGetValue<string>(out var s) ? s : null;
+        var day = plan is null ? null : shifts[plan.Day] as JsonObject;
+        var declaration = day?["enforce"] is JsonObject decl ? (JsonObject)decl.DeepClone() : new JsonObject();
+        var status = day?["status"] is JsonValue sv && sv.TryGetValue<string>(out var s) ? s : null;
 
         IReadOnlyList<LimitApp>? apps = null;
         IReadOnlySet<ProcKey>? alive = null;
         var window = TimeSpan.FromMinutes(30);
-        if (env.Cfg is not null && snap is not null && snap.Sample.HasParents
-            && Math.Abs((now - snap.Sample.Now).TotalSeconds) <= StaleSample.TotalSeconds)
+        if (!forceUnknown && env.Cfg is not null && snap is not null && Usable(snap, now))
         {
             try
             {
@@ -247,7 +300,8 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
                 {
                     TryUpdateGames(store, verdicts, now);
                 }
-                apps = LimitTargets.Resolve(snap.Sample, snap.Settings.Registered, settings, DeclaredApps(declaration), verdicts);
+                apps = LimitTargets.Resolve(snap.Sample, snap.Settings.Registered, settings, DeclaredList(declaration, "limit_apps"),
+                    verdicts, DeclaredList(declaration, "limit_exclude"));
                 alive = snap.Sample.Procs.Select(p => p.Key).ToHashSet();
             }
             catch (ConfigException)
@@ -368,6 +422,7 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
     {
         ShiftConfig? cfg = null;
         Plan? plan = null;
+        var busy = false;
         try
         {
             cfg = Watcher.LoadConfig(dir).Config;
@@ -377,12 +432,14 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
         {
             cfg = null;   // 判断できない（読めない・乗務の逆算に失敗）．文は設定の値を含みうるので型だけ書く
             plan = null;
+            // 無い・壊れているは LoadConfig が値で返す．ここまで IO の例外が来るのは開けない（掴まれている・権限）＝一時的
+            busy = e is IOException or UnauthorizedAccessException;
             if (!quiet)
             {
                 once.Write("limit-config", "limit: cannot read the config: " + e.GetType().Name, DateOnly.FromDateTime(now));
             }
         }
-        return MakeEnv(cfg, Messages.Load(null), plan);
+        return MakeEnv(cfg, Messages.Load(null), plan) with { ConfigBusy = busy };
     }
 
     private static Env MakeEnv(ShiftConfig? cfg, Messages fallback, Plan? plan = null)
@@ -456,9 +513,12 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
         : a == LimitTargets.VerdictUnknown || b == LimitTargets.VerdictUnknown ? LimitTargets.VerdictUnknown
         : LimitTargets.VerdictTarget;
 
-    /// <summary>宣言に固定した limit_apps．配列でない・文字列でない要素は無いものとして扱う（足していないアプリは手を加えない側）．</summary>
-    private static HashSet<string> DeclaredApps(JsonObject declaration) =>
-        declaration["limit_apps"] is JsonArray a
+    /// <summary>
+    /// 宣言に固定した exe の一覧（limit_apps・limit_exclude）．配列でない・文字列でない要素は無いものとして扱う
+    /// （limit_apps なら足していないアプリは手を加えない側．limit_exclude が無い古い宣言は今の設定だけで外す）．
+    /// </summary>
+    private static HashSet<string> DeclaredList(JsonObject declaration, string key) =>
+        declaration[key] is JsonArray a
             ? [.. a.Select(x => x is JsonValue v && v.TryGetValue<string>(out var s) ? MeterSettings.NormalizeExe(s) : null).OfType<string>()]
             : [];
 
@@ -592,6 +652,6 @@ public sealed class Limiter(string dir, Func<MeterSnapshot?> latest, ILimitContr
         {
             state = LimitState.Empty;
         }
-        return (Decide(env, snap, now, state, store, persist: false), env.M);
+        return (Decide(env, snap, now, state, store, store.ShiftStatus(), forceUnknown: false, persist: false), env.M);
     }
 }
