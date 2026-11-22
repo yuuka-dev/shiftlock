@@ -182,7 +182,7 @@ issue #9．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](s
 - 宣言に `limit_exclude`（外したゲーム）を写し，ゲームは「宣言の `limit_exclude` ∪ 今の `limit.exclude`」にあれば対象にしない — 宣言の後の `shl app limit include` が，同意の表示に載っていなかったゲームを対象に戻してしまうため．`limit_exclude` が無い古い宣言は今の設定だけ — 違っていたら，宣言の後に include したゲームにその場でかかる
 - 出庫の時刻を過ぎて `TargetPlan` が次の乗務（か null）を返す回は，記録の日が今の乗務の日と違い効いているものがあれば，前の乗務の日・理由 `timeout` で戻して報告する．次の乗務のかけ始めは次の回 — 理由が `off`・日が次の乗務になるのを避けるため（効いているものが無い前の日の記録は，今までどおり日替わりの分岐で基準などを捨てるだけ）
 - 緊急解除の `afterRelease`（排他を最大 10 秒待ちうる）は 2 回目の `AbortShutdown` の後 — シャットダウンの中止を遅らせないため
-- 未処理の例外で落ちるときも `RestoreAll(null)` を呼ぶ（`AppDomain.UnhandledException`）．排他の待ちは 3 秒（`CrashRestore.Wait`）．画面のスレッドの例外も同じ受け口に流すため `Application.SetUnhandledExceptionMode(ThrowException)` にした（既定の画面のダイアログは出なくなる．`ThreadException` は使わない）— 設計書 §6.3 の「代わりの案」の要件 — 画面のスレッドの例外で，既定のダイアログで続けることはできなくなる
+- 未処理の例外で落ちるときも `RestoreAll(null)` を呼ぶ（`AppDomain.UnhandledException`）．排他の待ちは 3 秒（`CrashRestore.Wait`）．画面のスレッドの例外は今までどおり WinForms 既定の扱い（`SetUnhandledExceptionMode`・`ThreadException` は触らない．Agent 全体の落ち方を変えないため）— 設計書 §6.3 の「代わりの案」の要件 — 画面のスレッドの例外で「終了」を選んだときに `finally` の `RestoreAll(null)` を通るかは未確認（下の先送りを参照）
 - 既定の動作（`enforce.action`）が `throttle`／`suspend` でも，設定メニュー（19）が落ちず，状態表示に「2h」を出さない
 
 ## 確かめたこと（2026-11-23）
@@ -203,6 +203,7 @@ issue #9．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](s
 - 止めた・上限をかけたアプリの体感（文字入力が残るか・窓の「応答なし」の見え方・音・応答のしやすさ）．
 - 実物の `WindowsLimitControl` を `Limiter` につないだ常駐の動き，`Scheduler` で計測の仕事と同時に走るときの挙動（テストは偽物の control）．
 - （最終レビューで直した）`state.json` が一瞬読めないと宣言が無いものとして全部戻る件: 読めない（掴まれている）と読めて空を分け，読めない回は 60 秒飛ばすようにした．
+- 画面スレッドの未処理の例外で WinForms 既定のダイアログの「終了」を選んだとき，`Application.Run` を抜けて `finally`（`RestoreAll(null)`）を通るか，プロセスを直接終わらせるか: 未確認（実装は確かめていない．直接終わるなら止めたままになりうるが，次の起動の `Startup` が再開する）．
 - `Limiter.cs` は 581 行（400 行超．分けていない．分けるなら「ゲームの判定」と「記録の部品」）．
 - 管理者の権限が要る `OBJ_PERMANENT` のジョブ，コントローラーをつないだままだと無操作秒数が 0 になる件（issue #8．基準は最大で取るので上限が低くなりすぎる方向には働かない）．
 

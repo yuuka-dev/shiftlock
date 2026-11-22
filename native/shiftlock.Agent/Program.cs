@@ -77,9 +77,6 @@ public static class Program
 
         RegisterToastName(log);
         Application.SetHighDpiMode(HighDpiMode.SystemAware);
-        // 画面のスレッドの未処理の例外も AppDomain.UnhandledException に流す（既定だと画面の既定のダイアログで止まり，
-        // 戻す受け口を通らない）．コントロールを作る前に 1 回だけ呼ぶ
-        Application.SetUnhandledExceptionMode(UnhandledExceptionMode.ThrowException);
         var clock = () => DateTime.Now;
         var notifier = new WindowsNotifier(log);
         var power = new WindowsPower();
