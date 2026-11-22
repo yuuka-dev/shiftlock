@@ -24,7 +24,7 @@ public static partial class NotifyLog
     };
 
     /// <summary>通知の出し方（notify.phase / hard / nag）．無ければ fallback．文字列でなければその表記（出す側が知らない出し方として扱う）．</summary>
-    internal static string Method(JsonObject notify, string key, string fallback) =>
+    public static string Method(JsonObject notify, string key, string fallback) =>
         notify.TryGetPropertyValue(key, out var v) ? JsonX.Str(v) ?? JsonX.Text(v) : fallback;
 
     /// <summary>

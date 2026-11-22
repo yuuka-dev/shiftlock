@@ -10,6 +10,9 @@ internal sealed class MeterSampler(IProcessSource source, IMeterProbe meterProbe
 {
     private Dictionary<ProcKey, string?> _paths = [];
 
+    /// <summary>直近の Collect で今の一覧に居たプロセスの exe のパス（取れなければ null）．Collect のたびに作り直すので，読むだけなら別のスレッドからも安全．</summary>
+    public IReadOnlyDictionary<ProcKey, string?> Paths => _paths;
+
     /// <summary>Snapshot が例外なら，そのまま出す（呼ぶ側が握る）．</summary>
     public MeterSample Collect(DateTime now, TimeSpan mono, GameRules rules)
     {
@@ -39,6 +42,12 @@ internal sealed class MeterSampler(IProcessSource source, IMeterProbe meterProbe
 }
 
 /// <summary>
+/// 最後に取れた 1 回分（Limiter が読む）．同じ一覧を 2 回取らないために，計測の回のサンプルを使い回す．
+/// Paths は (pid, 開始時刻) ごとの exe のパス（アンチチートのフォルダの印を探す場所を決めるのに使う）．
+/// </summary>
+public sealed record MeterSnapshot(MeterSample Sample, MeterSettings Settings, GameRules Rules, IReadOnlyDictionary<ProcKey, string?> Paths);
+
+/// <summary>
 /// アプリの稼働計測の 1 回（10 秒おき）: プロセスの一覧と前面のプロセスを取り，AppMeter に渡して，5 分の区切りで
 /// log/app-YYYY-MM.jsonl に行を足す．Watcher（5 分の見張り）とは別で，Python 版のタスクの状態も見ない．
 /// 例外は外に出さない（Agent を落とさない）．同じ失敗は 1 日 1 回だけ agent.log に書く．
@@ -60,6 +69,13 @@ public sealed class Meter(string dir, IProcessSource source, IMeterProbe meterPr
     private MeterSettings? _settings;
     private GameRules? _rules;
     private DateTime? _failedBucket;
+    private MeterSnapshot? _latest;
+
+    /// <summary>
+    /// 最後に取れた 1 回分．設定が読めない・一覧が取れない・例外の回は null に戻す（古いものを新しく見せない．
+    /// 読む側は，時刻が古ければ計測が止まっているとみなす）．別のスレッドから読んでよい．
+    /// </summary>
+    public MeterSnapshot? Latest => Volatile.Read(ref _latest);
 
     /// <summary>1 回測る．前の回（か Flush）が動いていたら何もしない．</summary>
     public void RunOnce()
@@ -70,10 +86,11 @@ public sealed class Meter(string dir, IProcessSource source, IMeterProbe meterPr
         }
         try
         {
-            Run();
+            Volatile.Write(ref _latest, Run());
         }
         catch (Exception e)
         {
+            Volatile.Write(ref _latest, null);
             // 文は入れない（何が入るか分からない）．型だけ書く
             once.Write("meter-run", $"meter failed: {e.GetType().Name}", DateOnly.FromDateTime(clock()));
         }
@@ -107,7 +124,8 @@ public sealed class Meter(string dir, IProcessSource source, IMeterProbe meterPr
         }
     }
 
-    private void Run()
+    /// <summary>1 回測って，取れたサンプルを返す（取れなければ null）．</summary>
+    private MeterSnapshot? Run()
     {
         var now = clock();
         var today = DateOnly.FromDateTime(now);
@@ -115,11 +133,11 @@ public sealed class Meter(string dir, IProcessSource source, IMeterProbe meterPr
 
         if (_settings is null && _failedBucket == Floor(now))
         {
-            return;   // 読めなかった枠の間は読み直さない（10 秒ごとに読まない）
+            return null;   // 読めなかった枠の間は読み直さない（10 秒ごとに読まない）
         }
         if (_settings is null && !ReadSettings(now, today))
         {
-            return;
+            return null;
         }
 
         MeterSample sample;
@@ -130,15 +148,17 @@ public sealed class Meter(string dir, IProcessSource source, IMeterProbe meterPr
         catch (Exception e)
         {
             once.Write("meter-source", $"meter failed: {e.GetType().Name}: {e.Message}", today);
-            return;
+            return null;
         }
 
+        var snapshot = new MeterSnapshot(sample, _settings!, _rules!, _sampler.Paths);
         var line = _meter.Add(sample, _settings!);
         if (line is not null)
         {
             _settings = null;   // 区間の頭．次の回で設定を読み直す
             Write(line);
         }
+        return snapshot;
     }
 
     private bool ReadSettings(DateTime now, DateOnly today)

@@ -654,6 +654,16 @@ AGENT_SETUP_STARTED = "Agent を起動したよ"
 AGENT_SETUP_STOPPED = "動いていた Agent を終わらせたよ"
 AGENT_SETUP_FAILED = "失敗したよ: {err}"
 
+# アプリの減速・一時停止（native/shiftlock.Agent の Limiter。アプリの名前は入れない）
+AGENT_LIMIT_NOTICE = "{at} から、対象のアプリ {n} 件の CPU を直近の使用率の {percent}% に下げるよ（強制モード）。解除は shl kaijo かトレイの「緊急解除」。"
+AGENT_LIMIT_NOTICE_SUSPEND = "{at} に、対象のアプリ {n} 件を一時停止するよ（強制モード）。保存していない内容は先に保存してね。解除は shl kaijo かトレイの「緊急解除」。"
+AGENT_LIMIT_SUSPENDED = "対象のアプリ {n} 件を一時停止したよ。"
+AGENT_LIMIT_RELEASED = "アプリの減速・一時停止を元に戻したよ。"
+AGENT_LIMIT_SKIPPED = "手を加えてはいけないものが一緒に動いているアプリがあるので、そのアプリは見送ったよ。"
+AGENT_LIMIT_FAILED = "アプリの減速か一時停止が一部できなかったよ（agent.log を見てね）。"
+AGENT_LIMIT_BAD_RECORD = "減速・一時停止の記録（limit.json）が読めなかったので、limit.json.bad に名前を変えたよ。止まったままのアプリがあれば、終了して起動し直してね。"
+AGENT_LIMIT_STALE_CAP = "前回の上限が残っているかもしれないよ。対象のアプリを起動し直すと戻るよ。"
+
 # ---- shl app（計測するアプリの登録）----
 APPS_ADDED = "{name} を {cat} で登録したよ"
 APPS_CHANGED = "{name} を {old} から {cat} に付け替えたよ"

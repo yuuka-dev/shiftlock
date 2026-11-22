@@ -115,4 +115,33 @@ public sealed class ReleaseFlowTests : IDisposable
 
         Assert.Equal(kansai["ENFORCE_RELEASED"], Flow().Run(kansai));
     }
+
+    [Fact]
+    public void AfterRelease_IsCalledOnceAfterRecord_BeforeTheSecondAbort()
+    {
+        _dir.Put("state.json", Declared);
+        var order = new List<string>();
+        _power.OnAbort = () => order.Add("abort");
+        var flow = new ReleaseFlow(_power, new Store(_dir.Dir), () => Now, new AgentLog(_dir.P("agent.log")),
+            afterRelease: () => order.Add(File.Exists(_dir.P("STOP.txt")) ? "after(STOP.txt あり)" : "after(STOP.txt なし)"));
+
+        var result = flow.RunDetailed(_m);
+
+        Assert.True(result.Complete);
+        Assert.Equal(["abort", "after(STOP.txt あり)", "abort"], order);
+    }
+
+    [Fact]
+    public void AfterReleaseThrows_ResultIsStillReturned()
+    {
+        _dir.Put("state.json", Declared);
+        var flow = new ReleaseFlow(_power, new Store(_dir.Dir), () => Now, new AgentLog(_dir.P("agent.log")),
+            afterRelease: () => throw new InvalidOperationException("boom"));
+
+        var result = flow.RunDetailed(_m);
+
+        Assert.True(result.Complete);
+        Assert.Equal(_m["ENFORCE_RELEASED"], result.Text);
+        Assert.Contains(_dir.Lines("agent.log"), l => l.Contains("after-release failed", StringComparison.Ordinal));
+    }
 }

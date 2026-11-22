@@ -331,4 +331,54 @@ public sealed class MeterTests : IDisposable
         Assert.Equal("", output.ToString());
         Assert.NotEqual("", error.ToString());
     }
+
+    [Fact]
+    public void Latest_IsSetAfterAGoodRun_WithSampleSettingsRulesAndPaths()
+    {
+        PutConfig();
+        _meterProbe.Paths[100] = @"C:\Tools\code.exe";
+        var meter = NewMeter();
+        Assert.Null(meter.Latest);
+
+        RunFrom(meter, "21:00:00", "21:00:00");
+
+        var latest = meter.Latest!;
+        Assert.Equal(Time("21:00:00"), latest.Sample.Now);
+        Assert.Equal(2, latest.Sample.Procs.Count);
+        Assert.Contains("code.exe", latest.Settings.Registered.Keys);
+        Assert.Equal(@"C:\Tools\code.exe", latest.Paths[new ProcKey(100, Started)]);
+        Assert.NotNull(latest.Rules);
+    }
+
+    [Fact]
+    public void Latest_GoesBackToNull_WhenConfigIsUnreadable_ThenRecovers()
+    {
+        PutConfig();
+        var meter = NewMeter();
+        RunFrom(meter, "21:00:00", "21:00:00");
+        Assert.NotNull(meter.Latest);
+
+        // 5 分の区切りで設定を読み直す回に，読めなくなる
+        _dir.Put("shifts.json", "{");
+        RunFrom(meter, "21:05:00", "21:05:10");
+        Assert.Null(meter.Latest);
+
+        PutConfig();
+        RunFrom(meter, "21:10:00", "21:10:10");
+        Assert.NotNull(meter.Latest);
+    }
+
+    [Fact]
+    public void Latest_GoesBackToNull_WhenTheSourceThrows()
+    {
+        PutConfig();
+        var meter = NewMeter();
+        RunFrom(meter, "21:00:00", "21:00:00");
+        Assert.NotNull(meter.Latest);
+
+        _source.Throw = true;
+        RunFrom(meter, "21:00:10", "21:00:10");
+
+        Assert.Null(meter.Latest);
+    }
 }
