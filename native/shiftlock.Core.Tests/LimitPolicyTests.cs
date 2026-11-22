@@ -70,10 +70,11 @@ public sealed class LimitPolicyTests
     }
 
     private static LimitInput In(string hm, string action = "suspend", LimitState? state = null, IReadOnlyList<LimitApp>? apps = null,
-        bool appsNull = false, JsonObject? decl = null, string? status = null, bool stop = false, bool busy = false,
+        IReadOnlySet<ProcKey>? alive = null, bool appsNull = false, JsonObject? decl = null, string? status = null, bool stop = false, bool busy = false,
         IReadOnlyList<(DateTime, JsonObject)>? lines = null, Plan? plan = null, bool noPlan = false) =>
         new(At(hm), noPlan ? null : plan ?? MakePlan(), decl ?? Decl(action), status, stop, state ?? State(),
-            appsNull ? null : apps ?? [Game()], lines ?? [], TimeSpan.FromMinutes(30), busy, Phase, Hard);
+            appsNull ? null : apps ?? [Game()],
+            appsNull ? null : alive ?? (apps ?? [Game()]).SelectMany(a => a.Tree).Select(p => p.Key).ToHashSet(), lines ?? [], TimeSpan.FromMinutes(30), busy, Phase, Hard);
 
     private static LimitDecision Decide(LimitInput i) => LimitPolicy.Decide(i, M);
 
@@ -506,12 +507,33 @@ public sealed class LimitPolicyTests
     }
 
     [Fact]
-    public void Ended_app_is_dropped_from_records_without_ops()
+    public void Capped_app_no_longer_in_apps_is_uncapped()
     {
         var d = Decide(In("14:00", apps: [], state: State(capped: [("eldenring.exe", 30.0)])));
-        Assert.Empty(d.Ops);
+        Assert.Equal("eldenring.exe", Assert.Single(Of<UncapOp>(d)).Exe);
+        Assert.Single(d.Ops);   // 通知も ReleaseEventOp も出さない
         Assert.Empty(d.StateAfterOps.Capped);
-        Assert.Empty(d.StateBeforeOps.Capped);
+        Assert.Single(d.StateBeforeOps.Capped);   // 戻せるまで記録に残す
+    }
+
+    [Fact]
+    public void Suspended_alive_but_no_longer_an_app_is_resumed()
+    {
+        var alive = new HashSet<ProcKey> { Susp(100).Key };
+        var d = Decide(In("17:30", apps: [], alive: alive, state: State(suspended: [Susp(100)])));
+        Assert.Equal(100, Assert.Single(Of<ResumeOp>(d)).Proc.Pid);
+        Assert.Single(d.Ops);
+        Assert.Empty(d.StateAfterOps.Suspended);
+        Assert.Single(d.StateBeforeOps.Suspended);
+    }
+
+    [Fact]
+    public void Suspended_dead_is_dropped_without_resume()
+    {
+        var d = Decide(In("17:30", apps: [], alive: new HashSet<ProcKey>(), state: State(suspended: [Susp(100)])));
+        Assert.Empty(d.Ops);
+        Assert.Empty(d.StateAfterOps.Suspended);
+        Assert.Empty(d.StateBeforeOps.Suspended);
     }
 
     [Fact]

@@ -6,6 +6,7 @@ namespace Shiftlock.Core;
 /// <summary>
 /// 1 回ぶんの判断の入力（設計書 §4.5〜4.9）．Plan は見張りと同じ決め方で選んだ乗務（Planner.TargetPlan）で，無ければ null．
 /// Apps が null は「判断できない」（設定・計測が読めない，親の PID が取れない経路）．
+/// Alive は今のサンプルに居る全プロセスの (pid, 開始時刻)（null なら Apps のツリーだけを生きているとみなす）．
 /// RecentLines は log/app の直近の行（基準の計算用）．PhaseMethod は notify.phase，HardMethod は notify.hard．
 /// </summary>
 public sealed record LimitInput(
@@ -16,6 +17,7 @@ public sealed record LimitInput(
     bool StopActive,
     LimitState State,
     IReadOnlyList<LimitApp>? Apps,
+    IReadOnlySet<ProcKey>? Alive,
     IReadOnlyList<(DateTime T, JsonObject Rec)> RecentLines,
     TimeSpan BaselineWindow,
     bool ClaudeBusy,
@@ -176,14 +178,26 @@ public static class LimitPolicy
         var restoreOps = new List<LimitOp>();
         var actOps = new List<LimitOp>();
 
-        // 記録の掃除: 同じ (PID, 開始時刻) が今のツリーに無い止めた記録は，終わった・PID が使い回されたものとして消す（再開しない）．
-        // 上限は，その exe がもう動いていなければ消す（ジョブのハンドルを閉じるのは Agent）
+        // 記録の掃除．止めた記録: ツリーに有れば残す（Verdict は後で見る）．ツリーに無くて生きている（対象のアプリでなくなった）なら
+        // 再開して消す．生きていない（終わった・PID が使い回されて開始時刻が違う）なら再開せず消す．
+        // 上限: その exe が Apps に無ければ外す（終わっていれば空のジョブへの無害な呼び出し．ジョブのハンドルを閉じるのは Agent）
         var live = apps.SelectMany(a => a.Tree).Select(p => p.Key).ToHashSet();
-        suspended.RemoveAll(p => !live.Contains(p.Key));
+        var alive = input.Alive ?? live;
+        foreach (var p in suspended.Where(p => !live.Contains(p.Key)).ToList())
+        {
+            suspended.Remove(p);
+            if (alive.Contains(p.Key))
+            {
+                restoreOps.Add(new ResumeOp(p));
+                resumed.Add(p);
+            }
+        }
         var runningExes = apps.Select(a => a.Exe).ToHashSet(StringComparer.Ordinal);
-        foreach (var exe in capped.Keys.Where(e => !runningExes.Contains(e)).ToList())
+        foreach (var (exe, c) in capped.Where(kv => !runningExes.Contains(kv.Key)).ToList())
         {
             capped.Remove(exe);
+            restoreOps.Add(new UncapOp(exe, c.Job));
+            removedCapped[exe] = c;
         }
 
         // 乗務日が変わった → 前の日のものを戻し，基準・予告・見送りを捨てる
