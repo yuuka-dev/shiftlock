@@ -115,3 +115,20 @@ def test_broken_lines_are_skipped(tmp_path):
     r = _report(tmp_path, app="\n".join(lines) + "\n")["rows"][0]
     assert r["dev"][21] == 5
     assert sum(r["game"]) == 0 and sum(r["adobe"]) == 0
+
+
+def test_unhashable_and_non_finite_values_do_not_crash(tmp_path):
+    # cat が list／dict，span が Infinity・1e30・NaN，act が Infinity・NaN の行（json.loads は Infinity・NaN を通す）
+    t = "2026-12-07T21:05:00"
+    raw = [
+        '{"t": "%s", "span": 300, "apps": {"a.exe": {"cat": ["dev"], "act": 1}}}' % t,
+        '{"t": "%s", "span": 300, "apps": {"a.exe": {"cat": {"x": 1}, "act": 1}}}' % t,
+        '{"t": "%s", "span": Infinity, "apps": {"a.exe": {"cat": "dev", "act": 300}}}' % t,
+        '{"t": "%s", "span": 1e30, "apps": {"a.exe": {"cat": "dev", "act": 300}}}' % t,
+        '{"t": "%s", "span": NaN, "apps": {"a.exe": {"cat": "dev", "act": 300}}}' % t,
+        '{"t": "%s", "span": 300, "apps": {"a.exe": {"cat": "dev", "act": Infinity}}}' % t,
+        '{"t": "%s", "span": 300, "apps": {"a.exe": {"cat": "dev", "act": NaN}}}' % t,
+        _line(t, {"code.exe": _app("dev", 300)}),
+    ]
+    r = _report(tmp_path, app="\n".join(raw) + "\n")["rows"][0]
+    assert r["dev"][21] == 5 and sum(r["game"]) == 0 and sum(r["adobe"]) == 0

@@ -1,6 +1,7 @@
 """訪看さん向けレポートの集計（本人が記録した睡眠・外出除外・締め期間）と reports/ の管理。"""
 from __future__ import annotations
 
+import math
 import re
 from datetime import datetime, timedelta, date as Date
 from pathlib import Path
@@ -61,8 +62,8 @@ def closing_period(day: Date, closing) -> tuple[Date, Date]:
 
 
 def _num(v) -> bool:
-    """0 以上の数か（bool は数と見ない）。"""
-    return isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0
+    """0 以上の有限の数か（bool は数と見ない。json.loads が通す Infinity・NaN も弾く）。"""
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v) and v >= 0
 
 
 def _app_seconds(lines: list[dict], away) -> dict:
@@ -72,7 +73,7 @@ def _app_seconds(lines: list[dict], away) -> dict:
     out: dict = {}
     for r in lines:
         span = r.get("span")
-        if not _num(span):
+        if not _num(span) or span > 86400:   # 1 行は 5 分ぶん。1 日を超える行は壊れている
             continue
         mid = r["_t"] - timedelta(seconds=span / 2)
         cell = out.setdefault((mid.date(), mid.hour), {"game": 0.0, "dev": 0.0, "adobe": 0.0})
@@ -80,7 +81,7 @@ def _app_seconds(lines: list[dict], away) -> dict:
         if _in_any(mid, away) or not isinstance(apps, dict):
             continue
         for a in apps.values():
-            if isinstance(a, dict) and a.get("cat") in cell and _num(a.get("act")):
+            if isinstance(a, dict) and isinstance(a.get("cat"), str) and a["cat"] in cell and _num(a.get("act")):
                 cell[a["cat"]] += a["act"]
     return out
 
