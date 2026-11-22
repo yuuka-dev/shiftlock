@@ -126,12 +126,12 @@ public sealed class AppMeter(DateTime? lastWritten = null)
             }
         }
 
-        var children = s.HasParents ? ChildrenOf(s.Procs) : null;
+        var children = s.HasParents ? ProcTree.ChildrenOf(s.Procs) : null;
         var trees = new Dictionary<string, List<ProcSample>>(StringComparer.Ordinal);
         foreach (var (name, list) in roots)
         {
             var acc = AppAcc(name, settings);
-            var tree = Tree(list, children);
+            var tree = ProcTree.Descend(list, children);
             trees[name] = tree;
             acc.Cpu += Sum(tree, delta);   // 起点の取り直しのときは delta が空なので 0
         }
@@ -157,7 +157,7 @@ public sealed class AppMeter(DateTime? lastWritten = null)
         else
         {
             key = OtherKey;
-            frontTree = Tree([front], children);
+            frontTree = ProcTree.Descend([front], children);
         }
 
         var busy = Sum(frontTree, delta).TotalSeconds / (step.TotalSeconds * _cores) * 100 >= settings.ActiveCpuPercent;
@@ -192,54 +192,6 @@ public sealed class AppMeter(DateTime? lastWritten = null)
             total += delta.GetValueOrDefault(p.Key);
         }
         return total;
-    }
-
-    /// <summary>親の pid → 子（親が一覧にあり，親の Start ≤ 子の Start のものだけ）．</summary>
-    private static Dictionary<int, List<ProcSample>> ChildrenOf(IReadOnlyList<ProcSample> procs)
-    {
-        var byPid = new Dictionary<int, ProcSample>();
-        foreach (var p in procs)
-        {
-            byPid.TryAdd(p.Pid, p);
-        }
-        var map = new Dictionary<int, List<ProcSample>>();
-        foreach (var c in procs)
-        {
-            if (byPid.TryGetValue(c.ParentPid, out var parent) && parent.Start <= c.Start && parent.Pid != c.Pid)
-            {
-                if (!map.TryGetValue(parent.Pid, out var list))
-                {
-                    map[parent.Pid] = list = [];
-                }
-                list.Add(c);
-            }
-        }
-        return map;
-    }
-
-    /// <summary>根と子孫．同じプロセスは 1 回だけ．children が null なら根だけ．</summary>
-    private static List<ProcSample> Tree(List<ProcSample> roots, Dictionary<int, List<ProcSample>>? children)
-    {
-        var seen = new HashSet<ProcKey>();
-        var result = new List<ProcSample>();
-        var stack = new Stack<ProcSample>(roots);
-        while (stack.Count > 0)
-        {
-            var p = stack.Pop();
-            if (!seen.Add(p.Key))
-            {
-                continue;
-            }
-            result.Add(p);
-            if (children is not null && children.TryGetValue(p.Pid, out var kids))
-            {
-                foreach (var k in kids)
-                {
-                    stack.Push(k);
-                }
-            }
-        }
-        return result;
     }
 
     // ---- 区切りと行 ----
