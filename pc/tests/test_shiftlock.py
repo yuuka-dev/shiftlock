@@ -1315,3 +1315,77 @@ def test_report_home_is_first_kitaku_after_departure():
     data = sl.build_report(cfg, store2, dt("2026-11-05 13:00"), days=4)
     r = {x["date"]: x for x in data["rows"]}
     assert r["2026-11-05"]["away"][9] and not r["2026-11-05"]["away"][10] and not r["2026-11-05"]["away"][11]
+
+
+# --- claude-busy.json（Claude Code が処理中の印） ---
+def _ups(prompt="x", sid="s1"): return json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": prompt, "session_id": sid})
+def _stop(sid="s1"): return json.dumps({"hook_event_name": "Stop", "session_id": sid})
+def _busy(cp):
+    p = cp.parent / "claude-busy.json"
+    return json.loads(p.read_text()) if p.exists() else None
+BUSY_NOW = dt("2026-12-07 10:00")
+
+def test_busy_mark_set_on_prompt_and_cleared_on_stop():
+    cp, _ = env()
+    assert sl.run_hook(cp, _ups(), BUSY_NOW)[0] == 0
+    assert _busy(cp) == {"s1": "2026-12-07T10:00:00"}
+    assert sl.run_hook(cp, _stop(), BUSY_NOW + timedelta(minutes=1)) == (0, "", "")
+    assert _busy(cp) == {}
+
+def test_busy_mark_two_sessions():
+    cp, _ = env()
+    sl.run_hook(cp, _ups(sid="s1"), BUSY_NOW)
+    sl.run_hook(cp, _ups(sid="s2"), BUSY_NOW + timedelta(minutes=1))
+    sl.run_hook(cp, _stop("s1"), BUSY_NOW + timedelta(minutes=2))
+    assert _busy(cp) == {"s2": "2026-12-07T10:01:00"}
+
+def test_busy_mark_not_set_on_keyword():
+    cp, _ = env()
+    assert sl.run_hook(cp, _ups("ねる"), BUSY_NOW)[0] == 2
+    assert not _busy(cp)
+
+def test_busy_mark_not_set_on_hard_block():
+    cp, _ = env()
+    assert sl.run_hook(cp, _ups("x"), dt("2026-11-02 17:10"))[0] == 2
+    assert not _busy(cp)
+
+def test_busy_mark_not_set_on_config_error():
+    cp, _ = env()
+    cp.write_text("{")
+    assert sl.run_hook(cp, _ups(), BUSY_NOW)[0] == 1
+    assert not _busy(cp)
+
+def test_busy_mark_without_or_bad_session_id():
+    cp, _ = env()
+    base = sl.run_hook(cp, UPS("x"), BUSY_NOW)
+    assert base[0] == 0 and not _busy(cp)
+    for sid in (None, 5, ["a"], ""):
+        txt = json.dumps({"hook_event_name": "UserPromptSubmit", "prompt": "x", "session_id": sid})
+        assert sl.run_hook(cp, txt, BUSY_NOW) == base
+    assert not _busy(cp)
+
+def test_busy_mark_write_failure_does_not_change_exit(monkeypatch):
+    import importlib
+    hk = importlib.import_module("shiftlock.hook")
+    def boom(*a, **k): raise OSError("locked")
+    cp, _ = env()
+    want = sl.run_hook(cp, _ups(), BUSY_NOW)
+    monkeypatch.setattr(hk, "_save_busy", boom)
+    assert sl.run_hook(cp, _ups(), BUSY_NOW) == want
+    assert sl.run_hook(cp, _stop(), BUSY_NOW) == (0, "", "")
+
+def test_busy_mark_broken_file_is_replaced():
+    cp, _ = env()
+    (cp.parent / "claude-busy.json").write_text("[")
+    assert sl.run_hook(cp, _ups(), BUSY_NOW)[0] == 0
+    assert _busy(cp) == {"s1": "2026-12-07T10:00:00"}
+    (cp.parent / "claude-busy.json").write_text('["a"]')   # 形が違うだけでも置き換わる
+    assert sl.run_hook(cp, _ups(), BUSY_NOW)[0] == 0
+    assert _busy(cp) == {"s1": "2026-12-07T10:00:00"}
+
+def test_busy_mark_drops_entries_older_than_a_day():
+    cp, _ = env()
+    (cp.parent / "claude-busy.json").write_text(json.dumps(
+        {"old": "2026-12-06T09:59:59", "keep": "2026-12-06T10:00:00", "bad": "x", "num": 3}))
+    sl.run_hook(cp, _ups(), BUSY_NOW)
+    assert _busy(cp) == {"keep": "2026-12-06T10:00:00", "s1": "2026-12-07T10:00:00"}
