@@ -132,3 +132,100 @@ def test_unhashable_and_non_finite_values_do_not_crash(tmp_path):
     ]
     r = _report(tmp_path, app="\n".join(raw) + "\n")["rows"][0]
     assert r["dev"][21] == 5 and sum(r["game"]) == 0 and sum(r["adobe"]) == 0
+
+
+# --- レポートの表示（render_report） ---
+
+import re
+
+from shiftlock.report_html import render_report
+
+
+def _html(tmp_path, app=None, mutate=None):
+    data = _report(tmp_path, app=app)
+    if mutate:
+        mutate(data)
+    return render_report(data)
+
+
+def _row(html, label):
+    """その日の <tr>…</tr> を取り出す"""
+    for m in re.finditer(r"<tr[^>]*>.*?</tr>", html, re.S):
+        if f">{label}</th>" in m.group(0):
+            return m.group(0)
+    raise AssertionError(label)
+
+
+def _over15_app():
+    # 21 時台: game 20 分・dev 16 分・adobe 14 分
+    apps = {"eldenring.exe": _app("game", 1200), "code.exe": _app("dev", 960),
+            "photoshop.exe": _app("adobe", 840)}
+    return _line("2026-12-07T21:30:00", apps, span=1800) + "\n"
+
+
+def _row_label(tmp_path):
+    (tmp_path / "x").mkdir(exist_ok=True)
+    return _report(tmp_path / "x")["rows"][0]["label"]
+
+
+def test_bands_for_categories_over_15_min(tmp_path):
+    (tmp_path / "a").mkdir()
+    html = _html(tmp_path / "a", app=_over15_app())
+    row = _row(html, _row_label(tmp_path))
+    assert '<i class="bd"><i class="g"></i><i class="dv"></i></i>' in row
+    assert 'class="ad"' not in row
+
+
+def test_no_band_container_when_nothing_over_15(tmp_path):
+    html = _html(tmp_path, app=VECTOR.read_text(encoding="utf-8"))
+    row = _row(html, _row_label(tmp_path))
+    assert 'class="bd"' not in row
+
+
+def test_tip_has_category_minutes(tmp_path):
+    # 21 時台に pc の記録（cov あり）が要る．無いと tip は「記録なし」になる
+    pc = _pc("2026-12-07T21:05:00", "2026-12-07T21:10:00", game=0)
+    data = _report(tmp_path, app=_over15_app(), pc=pc)
+    row = _row(render_report(data), data["rows"][0]["label"])
+    assert " / 開発 16分" in row and " / Adobe 14分" in row and " / ゲーム 20分" in row
+    # 0 分のカテゴリは出ない（開発だけのログ）
+    (tmp_path / "b").mkdir()
+    only_dev = _line("2026-12-07T21:30:00", {"code.exe": _app("dev", 960)}, span=1800) + "\n"
+    data = _report(tmp_path / "b", app=only_dev, pc=pc)
+    row2 = _row(render_report(data), data["rows"][0]["label"])
+    assert " / 開発 16分" in row2 and "Adobe" not in row2 and "ゲーム" not in row2
+
+
+def test_day_columns(tmp_path):
+    html = _html(tmp_path, app=_over15_app())
+    head = re.search(r"<thead>.*?</thead>", html, re.S).group(0)
+    i_game, i_dev, i_adobe = (head.index(s) for s in ("ゲーム(h)", "開発(h)", "Adobe(h)"))
+    assert i_game < i_dev < i_adobe
+    row = _row(html, _row_label(tmp_path))
+    assert row.count("<td") == len(re.findall(r"<th[ >]", head)) - 1
+
+
+def test_legend_has_two_more(tmp_path):
+    html = _html(tmp_path)
+    assert "開発15分以上" in html and "Adobe15分以上" in html
+    assert '<i class="bd"><i class="dv"></i></i>' in html and '<i class="bd"><i class="ad"></i></i>' in html
+
+
+def test_app_names_never_appear(tmp_path):
+    html = _html(tmp_path, app=VECTOR.read_text(encoding="utf-8") + _over15_app())
+    for name in ("code.exe", "eldenring", "photoshop"):
+        assert name not in html
+
+
+def test_old_rows_without_dev_render(tmp_path):
+    def strip(data):
+        for r in data["rows"]:
+            for k in ("dev", "adobe", "dev_total", "adobe_total"):
+                del r[k]
+    html = _html(tmp_path, mutate=strip)
+    assert "開発(h)" in html
+
+
+def test_css_has_both_themes(tmp_path):
+    html = _html(tmp_path)
+    assert html.count("--dev:") == 2 and html.count("--adobe:") == 2
