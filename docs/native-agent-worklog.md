@@ -123,10 +123,17 @@ issue #6．設計は [superpowers/specs/2026-11-22-native-app-meter-design.md](s
 
 ## まだ確かめていないこと
 
-- 本番の PC で 10 分動かした結果（本人が `native\deploy.ps1` で置いた後に，`shl app add …` で登録して 10 分後に `log\app-*.jsonl` に行が出ること，`shl report` で帯が出ること）．
-- `NtQuerySystemInformation` が代替（`System.Diagnostics.Process`）に落ちていないか（`agent.log` に `fell back` が無いこと．合成フォルダでの `--meter-once` では `parents` が `true` だった）．
+- レポートの「開発(h)」の列と帯を本番のデータで見た確認（下の「本番で確かめたこと」の時点では，行が出ることまで）．
 - 合成データでの Agent の 11 分の通し（5 分の区切りの行が 2 本出ること）: この PC では本番の Agent が動いていて，試験の Agent が同じ Mutex 名（`Local\shiftlock-agent`）でぶつかり起動できないので動かしていない．本番の Agent を止めない・触らないため．本人が本番に反映した後の確認に回す．
 - 終了時の行（`Flush`）: Agent を終わらせるときにたまった分が書かれること．実機では未確認（テストでは確認済み）．
 - 32 ビットでの `NtProcessSource`（構造体の大きさ・並びが違う）．x64 でしか確かめていない．
 - `STATUS_INFO_LENGTH_MISMATCH` の再試行の経路（バッファが足りなかったときに取り直す部分）．テストは無い．実機で通ったかは不明．
 - レポートの帯（15 分以上のカテゴリの並び・開発の緑と Adobe の紫が明るい・暗いテーマで見分けられるか）をブラウザで見た確認．
+
+## 本番で確かめたこと（2026-11-22．本人が反映）
+
+- `native\deploy.ps1` と `pc\deploy.ps1` で反映し，Agent を起動し直して `shl app add` で 1 件登録した．
+- `logpp-*.jsonl` に 5 分の区切りごとの行が出る．登録した exe は `dev` で載り，登録していない名前は載らない．
+- 10 分放置すると，最後の入力から 5 分でアクティブが止まり，次の区間は 0 秒になる（決まりどおり）．
+- `agent.log` に `meter failed`・`fell back`・`not measuring` は無い（`NtQuerySystemInformation` は代替に落ちていない）．
+- 確認の途中で分かったこと（計測の不具合ではない）: ゲームのコントローラーをつないだままにすると，Windows の無操作秒数（`GetLastInputInfo`）が 0 のまま増えない．見張りのログの `idle` も同じ間ずっと 0 だった．抜くと正しく増える．Steam がスティックをマウス操作に変換しているためと見ている（推測）．つないだまま正しく測るには別の手当てが要る（未着手．issue も未発行）．
