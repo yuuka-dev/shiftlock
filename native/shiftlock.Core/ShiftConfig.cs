@@ -68,7 +68,8 @@ public sealed partial class ShiftConfig
          "confirm": {"mode": "ask", "lookback_days": 7, "home_activity_minutes": 60, "okita_means_worked": true},
          "absence": {"window_shifts": 24, "warn_at": 5},
          "enforce": {"action": "lock", "duration_hours": 2, "grace_minutes": 15, "relock_minutes": 5,
-                     "max_runs": 6, "boot_grace_minutes": 15, "skip_if_remote": true}
+                     "max_runs": 6, "boot_grace_minutes": 15, "skip_if_remote": true},
+         "apps": {"registered": {}, "active_input_minutes": 5, "active_cpu_percent": 5}
         }
         """;
 
@@ -300,7 +301,7 @@ public sealed partial class ShiftConfig
     [GeneratedRegex(@"^(2[0-3]|[01][0-9]|[0-9]):([0-5][0-9]|[0-9])$", RegexOptions.CultureInvariant)]
     private static partial Regex StrictTimeRegex();
 
-    private ConfigException BadValue(string key, JsonNode? value) =>
+    internal ConfigException BadValue(string key, JsonNode? value) =>
         new(Msg.Format("APP_CONFIG_BAD_VALUE", ("key", key), ("value", JsonX.Text(value))));
 
     /// <summary>Python の datetime.strptime(v, "%H:%M") が通る形だけ受ける（"8:00" は通る．前後の空白は通らない）．</summary>

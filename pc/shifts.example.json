@@ -83,5 +83,11 @@
     "max_runs": 6,
     "boot_grace_minutes": 15,
     "skip_if_remote": true
+  },
+  "apps": {
+    "registered": {
+      "code.exe": "dev",
+      "photoshop.exe": "adobe"
+    }
   }
 }

@@ -52,6 +52,8 @@ DEFAULTS: dict = {
     # 強制モード（寝る前に PC を止める）の既定値。宣言は本人が shl enforce on を対話的に実行して y で同意したときだけ
     "enforce": {"action": "lock", "duration_hours": 2, "grace_minutes": 15, "relock_minutes": 5,
                 "max_runs": 6, "boot_grace_minutes": 15, "skip_if_remote": True},
+    # アプリの稼働計測（ネイティブ版の Agent）。registered は exe 名（小文字・.exe つき）→ "dev"｜"adobe"。書くのは shl app
+    "apps": {"registered": {}, "active_input_minutes": 5, "active_cpu_percent": 5},
 }
 
 
