@@ -117,7 +117,7 @@
 | 場所 | 使い方 |
 |---|---|
 | Claude Code（**WSL 版・Windows 版どっちも**） | プロンプトに `ねる` `おきた` `今日休む` `11/5 休み` など。hook はユーザー設定（`~/.claude/settings.json`）に入るので **起動ディレクトリはどこでも効く**。Windows 版は `wsl.exe` 経由で同じ本体を呼ぶ |
-| pwsh / Windows PowerShell（どのディレクトリでも） | `shl`（日本語のコマンド一覧）`shl status`（状態）`shl itte`（行ってきます）`shl kakunin`（未確認の乗務）`shl yasumi 11/2` / `shl deru 11/2`（事後報告）`shl neru 23:30` / `shl okita 11/7 7:00`（寝た・起きた時刻を後から足す。下の「睡眠の記録」）`shl settings` `shl day off 11/5 通院` `shl report 14` `shl sync` / `neru` `okita` `yasumi` `deru` `yotei` / `scan-games` `show-games`（`install-profile.ps1` で登録） |
+| pwsh / Windows PowerShell（どのディレクトリでも） | `shl`（日本語のコマンド一覧）`shl status`（状態）`shl itte`（行ってきます）`shl kakunin`（未確認の乗務）`shl yasumi 11/2` / `shl deru 11/2`（事後報告）`shl neru 23:30` / `shl okita 11/7 7:00`（寝た・起きた時刻を後から足す。下の「睡眠の記録」）`shl settings` `shl day off 11/5 通院` `shl report 14` `shl app add <exe> <dev|adobe>` / `remove <exe>` / `list`（時間を測るアプリの登録。開発・Adobe。ゲームは自動） `shl sync` / `neru` `okita` `yasumi` `deru` `yotei` / `scan-games` `show-games`（`install-profile.ps1` で登録） |
 | iPhone | ショートカットで `ねる` `おきた` `ただいま` と気分（下の「気分の記録」） |
 | ダブルクリック | `neru.cmd` `okita.cmd` `yasumi.cmd` `deru.cmd` `status.cmd` `settings.cmd` `report.cmd` `scan-games.cmd` `kaijo.cmd`（強制の緊急解除） |
 

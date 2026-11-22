@@ -91,8 +91,15 @@ def render_report(data: dict) -> str:
             elif r["away"][h] and r["pc"][h] == 0:
                 tip = M.REPORT_TIP_AWAY
             else:
-                tip = M.REPORT_TIP_PC.format(pc=r["pc"][h]) + (M.REPORT_TIP_GAME.format(game=r["game"][h]) if r["game"][h] else "") +                       (M.REPORT_TIP_DEV.format(dev=dev) if dev else "") +                       (M.REPORT_TIP_ADOBE.format(adobe=adobe) if adobe else "") + \
-                      (M.REPORT_TIP_CLAUDE.format(n=r["claude"][h]) if r["claude"][h] else "")
+                tip = M.REPORT_TIP_PC.format(pc=r["pc"][h])
+                if r["game"][h]:
+                    tip += M.REPORT_TIP_GAME.format(game=r["game"][h])
+                if dev:
+                    tip += M.REPORT_TIP_DEV.format(dev=dev)
+                if adobe:
+                    tip += M.REPORT_TIP_ADOBE.format(adobe=adobe)
+                if r["claude"][h]:
+                    tip += M.REPORT_TIP_CLAUDE.format(n=r["claude"][h])
             if r["visit"][h]:
                 tip += M.REPORT_TIP_VISIT
             cells.append(f'<td class="{" ".join(cls)}" data-tip="{E(M.REPORT_TIP_CELL.format(label=r["label"], h=h, tip=tip))}">{inner}</td>')

@@ -151,8 +151,11 @@ public sealed class Meter(string dir, IProcessSource source, IMeterProbe meterPr
                 Fail(now, today, error);
                 return false;
             }
-            _settings = MeterSettings.Read(cfg);
-            _rules = Games.Rules(cfg, probe.SteamCommonDirs());
+            // 両方作れてから代入する（片方だけ入ると次の回で読み直されず _rules が null のまま落ちる）
+            var settings = MeterSettings.Read(cfg);
+            var rules = Games.Rules(cfg, probe.SteamCommonDirs());
+            _settings = settings;
+            _rules = rules;
             _failedBucket = null;
             return true;
         }

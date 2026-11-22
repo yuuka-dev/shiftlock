@@ -4,7 +4,7 @@ namespace Shiftlock.Agent;
 public sealed record Job(string Name, TimeSpan FirstDelay, TimeSpan Interval, Action Run);
 
 /// <summary>
-/// 仕事の一覧（名前・間隔・処理）をタイマーで回す．周期の違う仕事を後から足せるようにしてある（今は 5 分の見張りだけ）．
+/// 仕事の一覧（名前・間隔・処理）をタイマーで回す．周期の違う仕事を後から足せるようにしてある（今は 5 分の見張りと，10 秒の稼働計測 meter）．
 /// 仕事の例外はログに書いて握る（次の回は普通に呼ぶ）．前の回が終わっていないときにどうするかは仕事の側が決める
 /// （見張りは Watcher が Busy で飛ばす）．
 /// </summary>

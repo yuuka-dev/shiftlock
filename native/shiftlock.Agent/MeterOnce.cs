@@ -7,6 +7,7 @@ namespace Shiftlock.Agent;
 /// <summary>
 /// 稼働計測を 10 秒あけて 2 回測り，書くはずの行を 1 行の JSON で出す（--meter-once．動作確認用）．
 /// ファイルは書かない（読むのは shifts.json だけ）ので，本番のフォルダでも断らない．
+/// ただしプロセスの一覧が代替（System.Diagnostics.Process）に落ちたときだけ，agent.log に 1 行書く．
 /// 出力: {"parents": true|false, "procs": 数, "line": {"t", "span", "apps", "other"} | null}
 /// </summary>
 public static class MeterOnce

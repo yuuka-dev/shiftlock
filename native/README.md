@@ -83,7 +83,7 @@ dotnet build native
 .\native\shiftlock.Agent\bin\Debug\net10.0-windows10.0.26100.0\shiftlock-agent.exe --stop         # 動いている Agent を終わらせる
 ```
 
-- `--meter-once`: 稼働計測を 10 秒あけて 2 回測り，書くはずの行を JSON 1 行（`parents`・`procs`・`line`）で出す．ファイルは書かない（読むのは `shifts.json` だけ）ので，上のように `SHIFTLOCK_DIR` を合成データのフォルダ（`pc\shifts.example.json` を `shifts.json` として置いたもの）に向けて使う．`NtQuerySystemInformation` が実機で動くか（`parents` が `true` か）を見られる．**`dotnet run` 経由ではコンソールに出力が出ない**ので，ビルドした `shiftlock-agent.exe` を直接動かす（出力を取るなら `Start-Process -RedirectStandardOutput`）．
+- `--meter-once`: 稼働計測を 10 秒あけて 2 回測り，書くはずの行を JSON 1 行（`parents`・`procs`・`line`）で出す．ファイルは書かない（読むのは `shifts.json` だけ．ただしプロセスの一覧が代替（System.Diagnostics.Process）に落ちたときだけ，`agent.log` に 1 行書く）ので，上のように `SHIFTLOCK_DIR` を合成データのフォルダ（`pc\shifts.example.json` を `shifts.json` として置いたもの）に向けて使う．`NtQuerySystemInformation` が実機で動くか（`parents` が `true` か）を見られる．**`dotnet run` 経由ではコンソールに出力が出ない**ので，ビルドした `shiftlock-agent.exe` を直接動かす（出力を取るなら `Start-Process -RedirectStandardOutput`）．
 - テストのうち実際に通知やタスクを出すものは，頼んだときだけ動く: `SHIFTLOCK_TEST_TOAST=1`（無音のトーストを 1 件出して履歴に入るのを見る），`SHIFTLOCK_TEST_TASK=1`（試験用のタスク `shiftlock-guard-test` を作って消す）．
 
 ## 前提
