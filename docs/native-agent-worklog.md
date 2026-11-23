@@ -198,6 +198,17 @@ issue #9．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](s
 - 合成のフォルダ（`SHIFTLOCK_DIR` を一時フォルダ，`SHIFTLOCK_GUARD_TASK=shiftlock-guard-test`）で `shiftlock-agent.exe --limit-once` を 1 回動かした（自分で起動した `burn` を `game_processes` で対象にした．宣言は `state.json` に手で書いた）．「すること」の JSON が出て，フォルダの中身は何も変わらなかった．就寝目安が 3 分後なら段階 1 の予告 1 件だけ，就寝目安を過ぎて基準の行があれば `cap`（段階 1 の 75% の上限）・`run`・次の段階（50%）の予告の順に出る．
 - 下調べ（実機）の結果は上の「区切り 4：下調べ」．
 
+## 常駐の通し確認（2026-11-23．本人が本番の Agent を止めている間に実施）
+
+合成のフォルダ（`SHIFTLOCK_DIR` を一時フォルダ，`SHIFTLOCK_GUARD_TASK=shiftlock-guard-test`．宣言は `state.json` に手で書いた）で，実物の `WindowsLimitControl` をつないだ Agent を常駐で動かした．対象は自分で起動した `burn`（4 スレッド．16 論理 CPU の PC で全体の約 25%．`game_processes` で対象にした）．就寝目安〜最低ラインは 8 分．
+
+- 段階 1〜4: `limit.json` の `capped` が 18.75 → 12.5 → 6.25 → 2.5% と 2 分ごとに変わり，`burn` の使用率（10 秒の平均）は約 19.0 → 12.6 → 6.3 → 2.5% になった（かける前は約 24.7%）．
+- 最低ライン: `burn` の全スレッドが止まり（`suspended` は 2 件．`burn` と子の `conhost`），使用率は 0%．
+- `STOP.txt` を置くと，次の 10 秒の回で再開され上限も外れた（約 24.5% に戻った）．`events.log` は `enforce_run suspend 1`〜`5` と `limit_release kaijo`．
+- `STOP.txt` を消して宣言を書き直すと，また止まった．その状態で Agent を強制終了（`Stop-Process -Force`）すると `burn` は止まったまま．`STOP.txt` を置いて Agent を起動し直すと，起動から 8 秒の時点ではまだ止まっていて，18 秒の時点では再開されていた（`limit.json` は基準だけになった）．
+- `burn.exe` のフォルダに `EasyAntiCheat` という空のフォルダを作って Agent を起動し直すと，`limit-games.json` が `anticheat` になり，宣言があっても上限も一時停止もかからなかった．
+- 確かめていないこと: トレイの「緊急解除」と「終了」（画面の操作），`shl kaijo`（手で置いた `STOP.txt` だけ），上限が残ったまま Agent が落ちたときの起動時の知らせ（止めた状態で落とした），通知の文面の見え方（トーストが出たことは本人が見た）．
+
 ## まだ確かめていないこと・先送り
 
 - 上限をかけた後に，同じ名前でもう 1 つ起動したプロセスには上限がかからない（別の根で起動した同名のプロセスはジョブに入らない．安全側．次の回で入る可能性はあるが未確認）．
@@ -206,7 +217,7 @@ issue #9．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](s
 - 管理者で起動したプロセスの開き方（`OpenProcess` が拒否される見込み．開けなければ見送り）．
 - Steam が起動したゲームそのもの（入れ子のジョブは「ジョブに入っているプロセス」で確かめただけ）．
 - 止めた・上限をかけたアプリの体感（文字入力が残るか・窓の「応答なし」の見え方・音・応答のしやすさ）．
-- 実物の `WindowsLimitControl` を `Limiter` につないだ常駐の動き，`Scheduler` で計測の仕事と同時に走るときの挙動（テストは偽物の control）．
+- （通し確認で確かめた）実物の `WindowsLimitControl` を `Limiter` につないだ常駐の動き，`Scheduler` で計測の仕事と同時に走るときの挙動: 上の「常駐の通し確認」．
 - （最終レビューで直した）`state.json` が一瞬読めないと宣言が無いものとして全部戻る件: 読めない（掴まれている）と読めて空を分け，読めない回は 60 秒飛ばすようにした．
 - 画面スレッドの未処理の例外で WinForms 既定のダイアログの「終了」を選んだとき，`Application.Run` を抜けて `finally`（`RestoreAll(null)`）を通るか，プロセスを直接終わらせるか: 未確認（実装は確かめていない．直接終わるなら止めたままになりうるが，次の起動の `Startup` が再開する）．
 - `Limiter.cs` は 581 行（400 行超．分けていない．分けるなら「ゲームの判定」と「記録の部品」）．
@@ -216,7 +227,7 @@ issue #9．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](s
 
 - 本番への反映（`native\deploy.ps1`・`pc\deploy.ps1`）と Agent の切り替え．
 - 本番での宣言（`shl enforce on throttle`／`shl enforce on suspend`）と，足すアプリの登録（`shl app limit add`）．
-- 合成の対象での常駐の通し確認: 本番の Agent が固定名の Mutex（`Local\shiftlock-agent`）を持っていて試験の Agent を起動できないので，ここでは動かしていない．Agent を起動して，`limit.json` の `capped` が段階ごとに変わること・`hard_close` で止まること・`STOP.txt` を置くと 10 秒以内に戻ること・`events.log` に `limit_release	kaijo` が出ること・Agent を強制終了した後に止まったままのアプリが，起動し直すと再開されること・ゲームのフォルダに `EasyAntiCheat` という空のフォルダを作ると `limit-games.json` が `anticheat` になって対象から外れること．
+- （済み）合成の対象での常駐の通し確認: 上の「常駐の通し確認」．残りはトレイの「緊急解除」「終了」と `shl kaijo` での解除．
 - Steam のゲームでの入れ子のジョブ，管理者で起動したアプリ，体感（上の「まだ確かめていないこと」）．
 - レポートの「強制モード」の欄に新しい 2 つの動作の名前が出ること．
 - issue #9 のチェックリストの更新（対応したコミット・本人に残ること）．クローズは本番での確認の後．
