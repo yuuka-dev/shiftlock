@@ -33,7 +33,7 @@ Python／PS1 版（`pc/`）にあって C# 版（`native/`）に無い機能を�
 
 ## 1. native/ の現状
 
-- `shl.exe`（`native/shl/Program.cs`）は `return 0;` だけのスタブ【確認】．`shl.csproj` は NativeAOT（`PublishAot`，`InvariantGlobalization`），参照は `shiftlock.Core` だけ【確認】．
+- `shl.exe`（`native/shl/Program.cs`）は `return 0;` だけのスタブ【確認】（計画を書いた時点．S1 で骨組みと `help` を入れた．§5.4）．`shl.csproj` は NativeAOT（`PublishAot`，`InvariantGlobalization`），参照は `shiftlock.Core` だけ【確認】．
 - Core は参照されているだけで何も呼ばれていない．**Core が NativeAOT で警告なく発行できるか，起動が数十 ms かは【未確認】．**
 - 入口は 3 つ【確認】:
   - 画面 `shiftlock.exe`: 状態の表示，「ねる」「おきた」「出発」「帰宅」のボタン，取り消し．
@@ -294,11 +294,27 @@ D1（設計）は実装と並べて早めに始めてよい．hook（H1〜H3）�
 
 ### 5.3 先に確かめておくこと（S1 の中で）
 
-- Core が NativeAOT で発行できるか【未確認】．`JsonNode` と生成の正規表現は AOT 向きだが【推測】，警告が出たらそこから直す．
-- 起動時間【未確認】．文面の JSON を起動のたびに全部読む作り（`Messages.Load`）なので，キーが約 4 倍になったときの時間も測る．
+- Core が NativeAOT で発行できるか（S1 で届く範囲は確認．§5.4．残りは【未確認】）．`JsonNode` と生成の正規表現は AOT 向きだが【推測】，警告が出たらそこから直す．
+- 起動時間（S1 で確認．§5.4）．文面の JSON を起動のたびに全部読む作り（`Messages.Load`）なので，キーが約 4 倍になったときの時間も測る．
 - `InvariantGlobalization` の影響【未確認】．`intents.norm_text`・`to_hira` が文字の正規化（全角・半角，かな）をどうしているかを読んでいない．C# で同じ結果にできるかは H2 の前に確かめる．
 - Python の `re` と .NET の正規表現の違い【未確認】．`keywords.py`・`intents.py` の式を 1 本ずつベクタで確かめる．
-- WSL から `/mnt/c/.../shl.exe` を hook として呼んだときの起動時間【未確認】（`docs/native-app-plan.md` §4 は「数十 ms」としている）．
+- WSL から `/mnt/c/.../shl.exe` を hook として呼んだときの起動時間（S1 で確認．§5.4）（`docs/native-app-plan.md` §4 は「数十 ms」としている）．
+
+### 5.4 進み具合と，確かめた結果
+
+| # | 状態 | 確かめたこと |
+|---|---|---|
+| S1 | 済み（2026-11-25） | 下の「S1 の結果」 |
+
+**S1 の結果**（合成の設定のフォルダで．本番のフォルダには向けていない）
+
+- 入口は `native/shl/Program.cs`（文字コードと終了コードの受け皿），引数の解釈と振り分けは Core の `ShlCli`．`help`（引数なし・`-h`・`--help`・`?`・`/?` も）と，空の `hook`（何も読まず何も出さず 0）だけが動く．ほかの Python 版のコマンドは「まだ無い」（`SHL_NOT_YET`）を標準エラーに出して 1，知らないコマンド・オプションは `SHL_UNKNOWN` で 1【確認】．
+- NativeAOT の発行は警告なしで通った【確認】．ただし発行で調べられるのは `shl.exe` から届くコードだけ．Core の残り（見張り・記録など）は，コマンドを足した PR で初めて調べられる【未確認】．
+- 起動時間（Windows の PowerShell から 30 回）: 空の `hook` は中央値 25 ms，`help`（文面の JSON を読む．186 キー）は 27 ms．同じ測り方の `cmd /c exit` は 19 ms【確認】．文面を読む分は 2 ms ほどなので，キーが約 530 になっても数 ms の見込み【推測】．
+- WSL から `/mnt/c/.../shl.exe hook` を 20 回続けて呼ぶと 1 回あたり約 65 ms，Git Bash からは約 80 ms（どちらも `echo` とパイプの分を含む）【確認】．
+- 出力は UTF-8（BOM なし）・行末 LF．ファイルに受けた `help` の出力は，WSL から呼んで書き出した文面（`CLI_HELP`＋改行）とバイト数が一致．Git Bash のパイプでも先頭と末尾のバイトが UTF-8・LF【確認】．
+- 端末に直接出すときは，コードページを UTF-8 にして書き，終わったら戻す作りにした．本物の端末（Windows Terminal・conhost）で文字化けしないこと・戻ることは見ていない【未確認】．
+- Python 版との違い（`ShlCli` の頭のコメントにも書いた）: 知らないコマンドは 1（Python 版は argparse が 2）／`--config` は省ける／設定が無いときの言葉づかいは標準語／行末は LF．
 
 ## 6. 一本化しても Python に残るもの
 
