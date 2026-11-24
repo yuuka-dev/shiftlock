@@ -5,7 +5,8 @@ namespace Shiftlock.Core;
 
 /// <summary>
 /// コマンドの返事の文（pc/shiftlock/commands.py と days.py の schedule_text）．
-/// shl.exe の見るだけのコマンド（status・yotei・day list）が使う．Python 版と同じ文になることをテストベクタ（commands.json）で確かめる．
+/// shl.exe の見るだけのコマンド（status・yotei・day list）と，記録のコマンド（okita・neru・itte・yasumi・deru・day off|work|rm．
+/// cli.py の record_cmd・day_cmd）が使う．Python 版と同じ文・同じファイルになることをテストベクタ（commands.json）で確かめる．
 /// </summary>
 public static class Commands
 {
@@ -151,6 +152,131 @@ public static class Commands
         }
         return m.Format("STATUS_ENFORCE", ("stop", store.StopActive ? m["STATUS_ENFORCE_STOP"] : ""),
             ("items", string.Join(m["STATUS_ENFORCE_SEP"], parts)));
+    }
+
+    // ---- 記録のコマンド（shl okita / neru / itte / yasumi / deru，shl day off|work|rm）----
+
+    /// <summary>events.log のメモに書く出所（yasumi・deru）．okita・neru は Python 版と同じく "claude" になる（Records の Cli*）．</summary>
+    public const string Via = "shl";
+
+    // メモ・引数の「有給」「有給なし」（keywords.PAID_ON／PAID_OFF．入力の語彙）
+    private static readonly string[] PaidOn = ["有給", "有休"];
+    private static readonly string[] PaidOff = ["有給なし", "有休なし", "有給無し", "有休無し"];
+
+    /// <summary>
+    /// shl okita / neru / itte（語なし）と shl yasumi [12/3] [有給|有給なし] / shl deru [12/3] の返事（cli.record_cmd）．
+    /// yasumi・deru は日付があれば事後報告，無ければ「今日休む」「やっぱ出る」．「有給」は休みに有給の印（deru には関係ない）．
+    /// 記録のファイルが読み書きできなければ StateBusyException．
+    /// </summary>
+    public static string Record(string cmd, IReadOnlyList<string> words, ShiftConfig cfg, Store store, Messages m, DateTime now)
+    {
+        switch (cmd)
+        {
+            case "okita":
+                return Records.CliOkita(cfg, store, m, now).Message;
+            case "neru":
+                return Records.CliNeru(cfg, store, m, now).Message;
+            case "itte":
+                return Records.CliShuppatsu(cfg, store, m, now).Message;
+            case "yasumi" or "deru":
+                break;
+            default:
+                throw new ArgumentException(cmd, nameof(cmd));
+        }
+        bool? paid = null;
+        string? date = null;
+        foreach (var w in words)
+        {
+            if (string.IsNullOrEmpty(w))
+            {
+                continue;
+            }
+            if (PaidFlag(w) is { } flag)
+            {
+                paid ??= flag;
+            }
+            else
+            {
+                date ??= w;
+            }
+        }
+        var yasumi = cmd == "yasumi";
+        if (date is not null)
+        {
+            return LateReport.Report(cfg, store, m, now, yasumi ? "yasumi" : "worked", date, via: Via, paid: yasumi ? paid : null).Text;
+        }
+        return yasumi ? YasumiNext(cfg, store, m, now, paid == true) : UndoNext(cfg, store, m, now);
+    }
+
+    /// <summary>
+    /// shl day off|work|rm &lt;日付&gt; [メモ]（cli.day_cmd）: 例外日を days.json に書き，書いたあとの 2 週間の表を返す．
+    /// 返り値は (終了コード, 表示文)．日付が無ければ 1．日付が読めなければ FormatException．
+    /// </summary>
+    public static (int Code, string Text) Day(string action, string? date, IReadOnlyList<string> note, string configPath,
+        Store store, Messages m, DateTime now)
+    {
+        if (string.IsNullOrEmpty(date))
+        {
+            return (1, m["CLI_DAY_NEED_DATE"]);
+        }
+        var kind = action switch
+        {
+            "off" => "off",
+            "work" => "work",
+            "rm" => null,
+            _ => throw new ArgumentException(action, nameof(action)),
+        };
+        var today = DateOnly.FromDateTime(now);
+        LateReport.DaysSet(store, LateReport.ParseDay(date, today, past: false), kind, string.Join(" ", note));
+        var cfg = ShiftConfig.Load(configPath);   // 書いた例外日を読み直す
+        return (0, ScheduleText(cfg, cfg.Msg, today));
+    }
+
+    /// <summary>「有給」「有休」→ true，「有給なし」など → false，どちらでもなければ null（records.paid_flag）．</summary>
+    public static bool? PaidFlag(string? text)
+    {
+        var t = (text ?? "").Replace(" ", "", StringComparison.Ordinal).Replace("　", "", StringComparison.Ordinal).Trim();
+        return Array.IndexOf(PaidOn, t) >= 0 ? true : Array.IndexOf(PaidOff, t) >= 0 ? false : null;
+    }
+
+    /// <summary>
+    /// 「今日休む」（cmd_keyword）: 次の乗務（24 時間以内）を休みにする．
+    /// 今日の乗務の出庫の最終を過ぎていたら，翌日ではなく今日の乗務の事後報告にする．
+    /// </summary>
+    private static string YasumiNext(ShiftConfig cfg, Store store, Messages m, DateTime now, bool paid)
+    {
+        var today = DateOnly.FromDateTime(now);
+        if (Planner.IsWorkday(cfg, today) && Planner.MakePlan(cfg, today).StartLatest <= now)
+        {
+            return LateReport.Report(cfg, store, m, now, "yasumi", "今日", via: Via, paid: paid ? true : null).Text;
+        }
+        if (Planner.TargetPlan(cfg, now) is not { } p)
+        {
+            return m.Format("CMD_NO_PLAN");
+        }
+        store.SetShiftStatus(p.Day, "yasumi", now);
+        if (paid)
+        {
+            store.SetPaid(p.Day, true, now, Via);
+        }
+        var n = LateReport.MonthYasumiCount(store, now);
+        var upto = DateOnly.ParseExact(p.Day, "yyyy'-'MM'-'dd", CultureInfo.InvariantCulture);
+        return m.Format("CMD_YASUMI", ("day", TimeUtil.FmtMd(p.StartLatest)), ("n", n))
+            + (paid ? m.Format("CMD_YASUMI_PAID") : "")
+            + LateReport.AbsenceNote(cfg, store, m, now, upto);
+    }
+
+    /// <summary>「やっぱ出る」（cmd_keyword）: 次の乗務（24 時間以内）の休み・出発済みを取り消す．</summary>
+    private static string UndoNext(ShiftConfig cfg, Store store, Messages m, DateTime now)
+    {
+        if (Planner.TargetPlan(cfg, now) is not { } p)
+        {
+            return m.Format("CMD_NO_PLAN");
+        }
+        var prev = JsonX.Str((store.ShiftStatus()[p.Day] as JsonObject)?["status"]);
+        store.SetShiftStatus(p.Day, null, now);
+        return m.Format("CMD_UNDO", ("day", TimeUtil.FmtMd(p.StartLatest)),
+            ("what", m[prev == "worked" ? "CMD_UNDO_WORKED" : "CMD_UNDO_YASUMI"]));
     }
 
     /// <summary>実行の回数（len(e.get("runs", []))）．</summary>

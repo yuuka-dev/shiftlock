@@ -13,11 +13,23 @@ public sealed record RecordResult(string Message, bool Recorded, UndoToken? Undo
 /// 判断と返事は pc/shiftlock/records.py の do_neru / do_okita / do_shuppatsu / do_kitaku / undo_fuzzy と同じ．
 /// Python 版との違い: 出所は "app"．4 つとも，記録すると決まったときだけ取り消し用の undo を残す（形は apply_intents と同じ）．
 /// state.json は 1 回の操作で 1 回だけ書き，そのあと events.log に足す．state.json が読めない・書けないときは何も書かずに断る．
+///
+/// shl.exe のコマンド（okita・neru・itte）は Cli* を呼ぶ．こちらは commands.cmd_keyword と同じ形にする:
+/// 出所は "claude"（cmd_keyword は do_neru に出所を渡さない），undo を残すのは「行ってきます」だけ，
+/// 文の先頭の "[shiftlock] " は付けたまま，読み書きできないときは StateBusyException を外に出す．
 /// </summary>
 public static class Records
 {
     /// <summary>events.log のメモに書く出所．</summary>
     public const string Via = "app";
+
+    /// <summary>呼び出し元ごとの違い．Via は events.log のメモの出所，Undo は寝る・起きた・帰ってきたでも undo を残すか．</summary>
+    private sealed record Mode(string Via, bool Undo);
+
+    private static readonly Mode App = new(Via, true);
+
+    /// <summary>shl.exe（commands.cmd_keyword と同じ）．</summary>
+    private static readonly Mode Cli = new("claude", false);
 
     /// <summary>乗務の無い日の記録の乗務日．</summary>
     private const string NoDay = "-";
@@ -28,19 +40,34 @@ public static class Records
     private static readonly TimeSpan ShuppatsuLead = TimeSpan.FromHours(2);
 
     /// <summary>「寝る」（records.do_neru）．</summary>
-    public static RecordResult Neru(ShiftConfig cfg, Store store, Messages m, DateTime now) => Guard(m, () =>
+    public static RecordResult Neru(ShiftConfig cfg, Store store, Messages m, DateTime now) =>
+        Guard(m, () => Neru(App, cfg, store, m, now));
+
+    /// <summary>shl neru（引数なし）．</summary>
+    public static RecordResult CliNeru(ShiftConfig cfg, Store store, Messages m, DateTime now) =>
+        Raw(() => Neru(Cli, cfg, store, m, now));
+
+    /// <summary>shl okita（引数なし）．</summary>
+    public static RecordResult CliOkita(ShiftConfig cfg, Store store, Messages m, DateTime now) =>
+        Raw(() => Okita(Cli, cfg, store, m, now));
+
+    /// <summary>shl itte．</summary>
+    public static RecordResult CliShuppatsu(ShiftConfig cfg, Store store, Messages m, DateTime now) =>
+        Raw(() => ShuppatsuCore(cfg, store, m, now));
+
+    private static RecordResult Neru(Mode mode, ShiftConfig cfg, Store store, Messages m, DateTime now)
     {
         var p = Planner.TargetPlan(cfg, now);
         var state = store.ReadStateForWrite();
         if (p is null)
         {
-            return Commit(store, state, now, NoDay, "neru", Text(m, "RECORDS_NERU_FREE"), null, NoDay, "neru", "free-day");
+            return Commit(mode.Undo, store, state, now, NoDay, "neru", Text(m, "RECORDS_NERU_FREE"), null, NoDay, "neru", "free-day");
         }
         var msg = Text(m, "RECORDS_NERU", ("when", TimeUtil.Fmt(now)), ("hours", cfg.AutoWakeHoursText),
             ("depart", TimeUtil.Fmt(p.DepartTarget)), ("latest", TimeUtil.Fmt(p.DepartLatest)));
-        return Commit(store, state, now, p.Day, "neru", msg, shift => shift["sleep_at"] = TimeUtil.Iso(now),
-            p.Day, "sleep_at", $"{Via} {TimeUtil.Iso(now)}");
-    });
+        return Commit(mode.Undo, store, state, now, p.Day, "neru", msg, shift => shift["sleep_at"] = TimeUtil.Iso(now),
+            p.Day, "sleep_at", $"{mode.Via} {TimeUtil.Iso(now)}");
+    }
 
     /// <summary>「帰ってきた」（records.do_kitaku）．</summary>
     public static RecordResult Kitaku(ShiftConfig cfg, Store store, Messages m, DateTime now) => Guard(m, () =>
@@ -49,20 +76,23 @@ public static class Records
         var state = store.ReadStateForWrite();
         if (p is null)
         {
-            return Commit(store, state, now, NoDay, "kitaku", Text(m, "RECORDS_KITAKU_FREE"), null, NoDay, "kitaku", "free-day");
+            return Commit(true, store, state, now, NoDay, "kitaku", Text(m, "RECORDS_KITAKU_FREE"), null, NoDay, "kitaku", "free-day");
         }
-        return Commit(store, state, now, p.Day, "kitaku", Text(m, "RECORDS_KITAKU", ("when", TimeUtil.Fmt(now))),
+        return Commit(true, store, state, now, p.Day, "kitaku", Text(m, "RECORDS_KITAKU", ("when", TimeUtil.Fmt(now))),
             shift => shift["kitaku"] = TimeUtil.Iso(now), p.Day, "kitaku", $"{Via} {TimeUtil.Iso(now)}");
     });
 
     /// <summary>「起きた」（records.do_okita）．強制中で寝た記録が無ければ記録しない．休み・出発済みの乗務は状態を変えずに行だけ残す．</summary>
-    public static RecordResult Okita(ShiftConfig cfg, Store store, Messages m, DateTime now) => Guard(m, () =>
+    public static RecordResult Okita(ShiftConfig cfg, Store store, Messages m, DateTime now) =>
+        Guard(m, () => Okita(App, cfg, store, m, now));
+
+    private static RecordResult Okita(Mode mode, ShiftConfig cfg, Store store, Messages m, DateTime now)
     {
         var p = Planner.TargetPlan(cfg, now);
         var state = store.ReadStateForWrite();
         if (p is null)
         {
-            return Commit(store, state, now, NoDay, "okita", Text(m, "RECORDS_OKITA_FREE"), null, NoDay, "okita", "free-day");
+            return Commit(mode.Undo, store, state, now, NoDay, "okita", Text(m, "RECORDS_OKITA_FREE"), null, NoDay, "okita", "free-day");
         }
         var me = ShiftOf(state, p.Day) ?? new JsonObject();
         var enforce = me["enforce"] as JsonObject;
@@ -85,7 +115,7 @@ public static class Records
                 ? Text(m, "RECORDS_OKITA_KEEP_SLEPT", ("sleep_at", TimeUtil.Fmt(sa1)), ("when", TimeUtil.Fmt(now)),
                     ("dur", TimeUtil.FmtDur(now - sa1, m)), ("day", day), ("what", what))
                 : Text(m, "RECORDS_OKITA_KEEP", ("day", day), ("what", what));
-            return Commit(store, state, now, p.Day, "okita", keep, null, p.Day, "okita", sleepNote);
+            return Commit(mode.Undo, store, state, now, p.Day, "okita", keep, null, p.Day, "okita", sleepNote);
         }
 
         string msg;
@@ -110,11 +140,15 @@ public static class Records
             }
             note = slept == false ? "no-gap" : "";
         }
-        return Commit(store, state, now, p.Day, "okita", msg, shift => SetStatus(shift, "okita", now), p.Day, "okita", note);
-    });
+        return Commit(mode.Undo, store, state, now, p.Day, "okita", msg, shift => SetStatus(shift, "okita", now), p.Day, "okita", note);
+    }
 
     /// <summary>「行ってきます」（records.do_shuppatsu）．乗務が無い・出発目安の 2 時間より前なら断る．</summary>
-    public static RecordResult Shuppatsu(ShiftConfig cfg, Store store, Messages m, DateTime now) => Guard(m, () =>
+    public static RecordResult Shuppatsu(ShiftConfig cfg, Store store, Messages m, DateTime now) =>
+        Guard(m, () => ShuppatsuCore(cfg, store, m, now));
+
+    /// <summary>「行ってきます」の中身．undo はどの呼び出し元でも残す（do_shuppatsu 自身が残す）．</summary>
+    private static RecordResult ShuppatsuCore(ShiftConfig cfg, Store store, Messages m, DateTime now)
     {
         var p = Planner.TargetPlan(cfg, now);
         if (p is null)
@@ -128,9 +162,9 @@ public static class Records
                 Text(m, "RECORDS_SHUPPATSU_EARLY", ("day", day), ("depart", TimeUtil.Fmt(p.DepartTarget))), false, null);
         }
         var state = store.ReadStateForWrite();
-        return Commit(store, state, now, p.Day, "worked", Text(m, "RECORDS_SHUPPATSU", ("day", day)),
+        return Commit(true, store, state, now, p.Day, "worked", Text(m, "RECORDS_SHUPPATSU", ("day", day)),
             shift => SetStatus(shift, "worked", now), p.Day, "worked", "shuppatsu");
-    });
+    }
 
     /// <summary>
     /// 「取り消す」を出してよいか: state.json の undo が token のもの（このアプリが最後に書いた記録）のままで，60 分以内．
@@ -228,18 +262,22 @@ public static class Records
 
     /// <summary>
     /// 記録する: 取り消し用に直前の状態を undo に残し，乗務の記録を変え，state.json を書いてから events.log に 1 行足す．
+    /// undo が false なら undo には触らない．そのとき乗務の記録も変えないなら state.json は書かない（events.log の行だけ）．
     /// </summary>
-    private static RecordResult Commit(Store store, JsonObject state, DateTime now, string day, string what, string message,
+    private static RecordResult Commit(bool undo, Store store, JsonObject state, DateTime now, string day, string what, string message,
         Action<JsonObject>? mutateShift, string eventDay, string eventKind, string eventNote)
     {
         var at = TimeUtil.Iso(now);
-        state["undo"] = new JsonObject
+        if (undo)
         {
-            ["day"] = day,
-            ["prev"] = ShiftOf(state, day)?.DeepClone() ?? new JsonObject(),
-            ["at"] = at,
-            ["what"] = new JsonArray(what),
-        };
+            state["undo"] = new JsonObject
+            {
+                ["day"] = day,
+                ["prev"] = ShiftOf(state, day)?.DeepClone() ?? new JsonObject(),
+                ["at"] = at,
+                ["what"] = new JsonArray(what),
+            };
+        }
         if (mutateShift is not null)
         {
             var shifts = Shifts(state, create: true)!;
@@ -250,8 +288,11 @@ public static class Records
             }
             mutateShift(cur as JsonObject ?? throw new StateBusyException($"state.json の shifts.{day} が辞書ではない"));
         }
-        store.WriteState(state);
-        var done = new RecordResult(message, true, new UndoToken(at, what));
+        if (undo || mutateShift is not null)
+        {
+            store.WriteState(state);
+        }
+        var done = new RecordResult(message, true, undo ? new UndoToken(at, what) : null);
         AppendAfterState(store, done, now, eventDay, eventKind, eventNote);
         return done;
     }
@@ -281,12 +322,15 @@ public static class Records
     private static string Label(Messages m, string kind) =>
         m.Map("INTENT_LABEL").TryGetValue(kind, out var label) ? label : kind;
 
-    /// <summary>文を引いて埋め，先頭の "[shiftlock] " を外す（画面には付けない）．</summary>
-    private static string Text(Messages m, string key, params (string Name, object? Value)[] args) =>
-        m.Format(key, args).Replace(m["PREFIX"], "", StringComparison.Ordinal);
+    /// <summary>文を引いて埋める．先頭の "[shiftlock] " は付いたまま（画面に出すぶんは Guard が外す）．</summary>
+    private static string Text(Messages m, string key, params (string Name, object? Value)[] args) => m.Format(key, args);
 
-    /// <summary>記録のファイルが読み書きできない・設定がおかしいときは，例外を外に出さずにその旨の文を返す．</summary>
-    private static RecordResult Guard(Messages m, Func<RecordResult> body)
+    /// <summary>先頭の "[shiftlock] " を外す（画面には付けない）．</summary>
+    private static RecordResult Strip(Messages m, RecordResult r) =>
+        r with { Message = r.Message.Replace(m["PREFIX"], "", StringComparison.Ordinal) };
+
+    /// <summary>shl.exe 用: 文はそのまま．events.log に足せなかったときも，読み書きできなかったこととして外に出す．</summary>
+    private static RecordResult Raw(Func<RecordResult> body)
     {
         try
         {
@@ -294,7 +338,24 @@ public static class Records
         }
         catch (LogBusyException e)
         {
-            return e.Done with { Message = e.Done.Message + m["APP_LOG_BUSY"] };
+            throw new StateBusyException(e.Message, e);
+        }
+    }
+
+    /// <summary>
+    /// 画面用: 先頭の "[shiftlock] " を外す．記録のファイルが読み書きできない・設定がおかしいときは，
+    /// 例外を外に出さずにその旨の文を返す．
+    /// </summary>
+    private static RecordResult Guard(Messages m, Func<RecordResult> body)
+    {
+        try
+        {
+            return Strip(m, body());
+        }
+        catch (LogBusyException e)
+        {
+            var done = Strip(m, e.Done);
+            return done with { Message = done.Message + m["APP_LOG_BUSY"] };
         }
         catch (StateBusyException)
         {
