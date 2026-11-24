@@ -29,8 +29,9 @@ def test_messages_have_app_keys_in_both_langs():
     assert set(ja["APP_PHASE"]) == {"free", "lastcall", "soft", "hard", "go", "go_last"}
     assert ja["RECORDS_KITAKU"].startswith("[shiftlock] ")
     assert list(ja) == sorted(ja)
-    # 画面に要らない文（設定メニューや CLI の説明）は書き出さない
-    assert not any(k.startswith(("CLI_", "SETTINGS_")) for k in ja)
+    # 要らない文（設定メニュー）は書き出さない。CLI_ は shl.exe が使う
+    assert not any(k.startswith(("MENU_", "SETTINGS_")) for k in ja)
+    assert ja["CLI_HELP"].startswith("shiftlock の使い方") and "{cmd}" in ja["SHL_UNKNOWN"] and "{cmd}" in ja["SHL_NOT_YET"]
     assert "INTENT_LABEL_SEP" in ja and "INTENT_LABEL" in ja
     assert all(k in ("INTENT_LABEL", "INTENT_LABEL_SEP") for k in ja if k.startswith("INTENT_"))
 

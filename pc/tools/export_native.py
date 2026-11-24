@@ -38,7 +38,7 @@ LANGS = ("ja", "ja_kansai")   # 書き出す言語（リポジトリで配る言
 SHARED = REPO / "native" / "shared"
 VECTORS = REPO / "docs" / "test-vectors"
 
-# 書き出すキー。ネイティブ版が使う文だけに絞る（設定メニューや CLI の説明は持っていかない）
+# 書き出すキー。ネイティブ版が使う文だけに絞る（設定メニューは持っていかない。CLI_・SHL_ は shl.exe が使う）
 EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPTION_MARK",
          # 見張り（shiftlock.Agent）が使う文
          "PHONE_LATE_PREFIX", "PHONE_OKITA", "RECORDS_YASUMI_PAID", "CONFIRM_HOME_HINT", "CONFIRM_MORE", "CONFIRM_USER",
@@ -46,7 +46,7 @@ EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPT
          "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_SUFFIX_LIMIT", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
          "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY")
 PREFIXES = ("TIME_DUR_", "RECORDS_KITAKU", "RECORDS_NERU", "RECORDS_OKITA", "RECORDS_SHUPPATSU", "RECORDS_UNDO_",
-            "CONFIG_", "APP_", "AGENT_",
+            "CONFIG_", "APP_", "AGENT_", "CLI_", "SHL_",
             "PHASE_", "AUTOWAKE_", "RECORDS_LATE_", "RECORDS_PAID_", "ABSENCE_", "NOTIFY_", "TICK_", "CAL_")
 SKIP_SUFFIX = "_CTX"   # Claude 向けの文（hook が使う）。ネイティブ版は使わない
 

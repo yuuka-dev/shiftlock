@@ -591,6 +591,9 @@ CLI_LEARNED_SHORT = "短すぎるで（2文字以上）"
 CLI_INSTALL_DONE = "hook 本体: {dest}\nsettings : {settings}（最初の状態は .bak-shiftlock に退避）"
 CLI_INSTALL_WIN = "Windows  : {win}（Git Bash から wsl.exe 経由で同じ本体を呼ぶ）"
 CLI_INSTALL_RESTART = "Claude Code を再起動して /hooks で UserPromptSubmit と Stop に入ってるか確認してな"
+# ネイティブ版の shl.exe だけが使う文（Python 版は argparse が断る。Python 側では使わず書き出すだけ）
+SHL_UNKNOWN = "知らんコマンドやで: {cmd}（shl help で一覧）"
+SHL_NOT_YET = "{cmd} はネイティブ版（shl.exe）にまだ無いで。Python 版の shl を使ってな"
 
 # ---- ネイティブ版（native/）の画面 ----
 # Python 側では使わへん。pc/tools/export_native.py が native/shared/messages.<lang>.json に書き出して、C# が読む
