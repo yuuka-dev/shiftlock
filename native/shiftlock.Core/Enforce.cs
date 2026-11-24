@@ -44,6 +44,10 @@ public static class Enforce
         {
             return [];
         }
+        if (LimitStages.IsLimitAction(JsonX.Str(e["action"])))
+        {
+            return [];   // 減速・一時停止は Agent の段階の処理が持つ．ここは何も返さず，seen_at・warned_at も書かない
+        }
         var ec = cfg.Section("enforce");
         if (remote && (!ec.TryGetPropertyValue("skip_if_remote", out var skip) || JsonX.Truthy(skip)))
         {
@@ -161,6 +165,10 @@ public static class Enforce
         }
         var action = ShiftConfig.PyText(e["action"]);
         var label = m.Map("ENFORCE_LABEL").TryGetValue(action, out var known) ? known : action;
+        if (LimitStages.IsLimitAction(action))
+        {
+            return m.Format("ENFORCE_SUFFIX_LIMIT", ("label", label), ("stop", store.StopActive ? m["ENFORCE_SUFFIX_STOP"] : ""));
+        }
         var hours = !e.ContainsKey("duration_hours") ? "2"
             : Py.Float(e["duration_hours"]) is { } h ? G(h)
             : ShiftConfig.PyText(e["duration_hours"]);   // 読めない値はそのまま見せる（通知を止めない）
@@ -219,6 +227,33 @@ public static class Enforce
             throw new StateBusyException("緊急解除の一部を記録できなかった", failure);
         }
         return m[already && released == 0 ? "ENFORCE_RELEASE_ALREADY" : "ENFORCE_RELEASED"];
+    }
+
+    /// <summary>
+    /// 減速・一時停止の段階の実行を記録する（設計書 §5.2・§5.4）．runs に {at, action, step} を足し，first_run_at が無ければ入れ，
+    /// events.log に enforce_run（メモは "throttle 1" の形．アプリの名前は書かない）．
+    /// 宣言が無い・同意が無い・released_at がある → 何も書かない．duration_hours などロック用の値は足さない．
+    /// 既にある runs が配列でなければ InvalidDataException（壊れた値を上書きしない）．
+    /// </summary>
+    public static void AppendLimitRun(Store store, string day, string action, int step, DateTime now)
+    {
+        var e = State(store, day);
+        if (e.Count == 0 || !JsonX.Truthy(e["consented_at"]) || JsonX.Truthy(e["released_at"]))
+        {
+            return;
+        }
+        if (e["runs"] is null)
+        {
+            e["runs"] = new JsonArray();
+        }
+        var runs = e["runs"] as JsonArray ?? throw Unreadable("runs");
+        var at = Store.IsoSeconds(now);
+        runs.Add(new JsonObject { ["at"] = at, ["action"] = action, ["step"] = step });
+        if (!JsonX.Truthy(e["first_run_at"]))
+        {
+            e["first_run_at"] = at;
+        }
+        SetEnforce(store, day, e, now, "enforce_run", $"{action} {step}");
     }
 
     /// <summary>

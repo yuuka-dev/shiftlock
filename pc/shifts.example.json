@@ -89,5 +89,16 @@
       "code.exe": "dev",
       "photoshop.exe": "adobe"
     }
+  },
+  "limit": {
+    "steps": [
+      75,
+      50,
+      25,
+      10
+    ],
+    "baseline_minutes": 30,
+    "apps": [],
+    "exclude": []
   }
 }

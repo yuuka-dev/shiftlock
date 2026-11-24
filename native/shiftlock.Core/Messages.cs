@@ -64,6 +64,17 @@ public sealed class Messages
         return m;
     }
 
+    /// <summary>文だけの Messages を作る（テストで文のキーを合成するため．配る文面は Load が読む）．</summary>
+    public static Messages FromTexts(string lang, IReadOnlyDictionary<string, string> texts)
+    {
+        var m = new Messages(ResolveLang(lang));
+        foreach (var (key, text) in texts)
+        {
+            m._texts[key] = text;
+        }
+        return m;
+    }
+
     /// <summary>文を引く．無いキー（表のキーを含む）は KeyNotFoundException．</summary>
     public string this[string key] =>
         _texts.TryGetValue(key, out var text) ? text : throw new KeyNotFoundException($"文面 {key} が無い");

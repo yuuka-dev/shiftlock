@@ -25,3 +25,14 @@ def test_plan_vectors_cover_every_phase():
     assert seen == {"free", "lastcall", "soft", "hard", "go", "go_last"}
     assert any(m["target"] is None for sc in doc["scenarios"] for m in sc["moments"])
     assert any(p["plan"] is None for sc in doc["scenarios"] for p in sc["plans"])
+
+
+def test_limit_stage_vectors_match_limit_stages():
+    from datetime import datetime
+    from shiftlock.limit import limit_stages
+    doc = json.loads((V.OUT / "limit-stages.json").read_text(encoding="utf-8"))
+    assert len(doc["stages"]) >= 8
+    for c in doc["stages"]:
+        i = c["input"]
+        got = limit_stages(datetime.fromisoformat(i["soft"]), datetime.fromisoformat(i["hard"]), i["steps"], i["action"])
+        assert [{"step": x["step"], "at": x["at"].isoformat(timespec="seconds"), "percent": x["percent"]} for x in got] == c["expect"], c["name"]

@@ -165,7 +165,7 @@ Python 版は v12 が安定するまで残す（同じデータ形式なので�
 | 1 | 状態と記録の画面（`shiftlock.exe`） | 実装済み |
 | 2 | トレイ常駐と見張り（`shiftlock-agent.exe`．`tick` の判断を全部 C# に移し，`guard.ps1` とタスク `shiftlock-guard` を置き換える） | 実装済み．設計は [superpowers/specs/2026-11-17-native-agent-design.md](superpowers/specs/2026-11-17-native-agent-design.md)．本番への切り替えは本人が行う（[native/README.md](../native/README.md)） |
 | 2 の続き ② | アプリごとの稼働計測（同じ Agent に載せる．`log/app-*.jsonl`・`shl app`・レポートのカテゴリの帯と列） | 実装済み（issue #6）．設計は [superpowers/specs/2026-11-22-native-app-meter-design.md](superpowers/specs/2026-11-22-native-app-meter-design.md)，作業記録は [native-agent-worklog.md](native-agent-worklog.md) の区切り 3 の節．本番への反映は本人が行う |
-| 2 の続き ③ | 減速・一時停止（同じ Agent に載せる．設計書 §9） | 未着手 |
+| 2 の続き ③ | 減速・一時停止（同じ Agent に載せる．強制モードの動作 `throttle`／`suspend`） | 実装済み（issue #9．合成の対象での通し確認と本番での確認は本人に残る）．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](superpowers/specs/2026-11-23-native-app-limit-design.md)，作業記録は [native-agent-worklog.md](native-agent-worklog.md) の区切り 4 の節 |
 | 3 | 設定画面と初回ウィザード | 未着手 |
 | 4 | レポート | 未着手 |
 | 5 | 配布 | 未着手 |

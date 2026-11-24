@@ -7,6 +7,7 @@ namespace Shiftlock.Agent.Tests;
 /// 突き合わせ用の入口（shiftlock-agent.exe --tick-once）．Python 版の pc/tools/tick_once.py と同じ引数・同じ形の出力．
 /// 通知は出さず，強制も実行しない．本番の実行フォルダは断る．
 /// </summary>
+[Collection("UserProfileEnv")]
 public sealed class TickOnceTests : IDisposable
 {
     private readonly TempDir _dir = new();

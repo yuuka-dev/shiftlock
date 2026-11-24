@@ -8,7 +8,7 @@
 | フォルダ | 中身 | 状態 |
 |---|---|---|
 | [`pc/`](pc/) | Windows ＋ WSL 版（Claude Code hook、5 分おきの見張り、訪看さん向けレポート、iPhone ショートカット連携） | 運用中 |
-| [`native/`](native/) | Windows のネイティブ版（C# / .NET 10、WinUI 3）。Python も WSL も要らない。いまは状態と記録の画面と、トレイ常駐の見張り（5 分おきの見張り・通知・緊急解除。切り替えは [native/README.md](native/README.md)）と、アプリごとの稼働計測（開発・Adobe・ゲームの時間をレポートの帯と列に出す。登録は `shl app`）まで。設定・レポート・Claude Code hook は `pc/` のまま | 開発中 |
+| [`native/`](native/) | Windows のネイティブ版（C# / .NET 10、WinUI 3）。Python も WSL も要らない。いまは状態と記録の画面と、トレイ常駐の見張り（5 分おきの見張り・通知・緊急解除。切り替えは [native/README.md](native/README.md)）と、アプリごとの稼働計測（開発・Adobe・ゲームの時間をレポートの帯と列に出す。登録は `shl app`）と、本人が宣言した乗務だけでの対象アプリの減速・一時停止（`shl enforce on throttle|suspend`。アプリは終了させない）まで。設定・レポート・Claude Code hook は `pc/` のまま | 開発中 |
 | [`app/`](app/) | Android 版（KMP ＋ Compose Multiplatform）。iOS は Mac が来てから | 計画中 |
 | [`docs/`](docs/) | [PC 版の仕様とロジック](docs/pc-spec.md)、[v11 の設計書](docs/pc-v11-design.md)、[v11 の作業記録](docs/pc-v11-worklog.md)、[ネイティブ化の計画](docs/native-app-plan.md)、[データ形式の決まり](docs/data-format.md)、[Android 版の計画](docs/android-plan.md) | |
 

@@ -175,6 +175,13 @@ public sealed class ConfigTests
         AssertJson("""{"window_shifts":24,"warn_at":5}""", cfg.Section("absence"));
         AssertJson("""{"action":"lock","duration_hours":2,"grace_minutes":15,"relock_minutes":5,"max_runs":6,"boot_grace_minutes":15,"skip_if_remote":true}""",
             cfg.Section("enforce"));
+        AssertJson("""{"steps":[75,50,25,10],"baseline_minutes":30,"apps":[],"exclude":[]}""",
+            new JsonObject { ["steps"] = cfg.Section("limit")["steps"]!.DeepClone(), ["baseline_minutes"] = cfg.Section("limit")["baseline_minutes"]!.DeepClone(),
+                             ["apps"] = cfg.Section("limit")["apps"]!.DeepClone(), ["exclude"] = cfg.Section("limit")["exclude"]!.DeepClone() });
+        Assert.Contains("EasyAntiCheat*", cfg.Section("limit")["anticheat_markers"]!.AsArray().Select(x => x!.GetValue<string>()));
+        Assert.Equal(19, cfg.Section("limit")["anticheat_markers"]!.AsArray().Count);
+        Assert.Equal(36, cfg.Section("limit")["never"]!.AsArray().Count);
+        Assert.Equal(8, cfg.Section("limit")["protect"]!.AsArray().Count);
         AssertJson("""{"ics_url":"","sources":[],"off_keywords":["休み","公休","有給"],"work_keywords":["出勤"],"sync_minutes":60}""",
             cfg.Section("calendar"));
         AssertJson("\"\"", cfg.Raw["mood_file"]);

@@ -12727,6 +12727,308 @@
    }
   },
   {
+   "name": "action が suspend なら見張りは何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "suspend",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（アプリの一時停止）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（アプリの一時停止）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "suspend",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "steps": [
+          75,
+          50,
+          25,
+          10
+         ]
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:50:00"
+     }
+    }
+   }
+  },
+  {
+   "name": "action が throttle なら見張りは何もしない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "mode": "off"
+     }
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-07": {
+       "enforce": {
+        "action": "throttle",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "steps": [
+     {
+      "now": "2026-12-07T10:30",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:35",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     },
+     {
+      "now": "2026-12-07T10:50",
+      "idle": 30,
+      "game": 0,
+      "uptime": 7200
+     }
+    ],
+    "watch": [
+     "state.json",
+     "events.log",
+     "notified.json"
+    ]
+   },
+   "expect": {
+    "results": [
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（アプリの減速）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     },
+     {
+      "actions": [
+       {
+        "method": "popup",
+        "kind": "hard",
+        "title": "shiftlock",
+        "text": "最低ライン（6h）も切ったよ。ロック中（〜17:30）。寝るか、休むなら会社に連絡して『今日休む』。寝ていたなら『起きた』。 今日は強制モード（アプリの減速）だよ。解除は kaijo.cmd。",
+        "speak": false,
+        "sound": ""
+       }
+      ],
+      "warnings": [],
+      "sound": {
+       "volume": 0.8,
+       "max_seconds": 20
+      }
+     }
+    ],
+    "files": {
+     "state.json": {
+      "shifts": {
+       "2026-12-07": {
+        "enforce": {
+         "action": "throttle",
+         "duration_hours": 2,
+         "declared_at": "2026-12-07T06:00",
+         "consented_at": "2026-12-07T06:00",
+         "via": "shl",
+         "runs": [],
+         "grace_minutes": 15,
+         "relock_minutes": 5,
+         "max_runs": 6,
+         "boot_grace_minutes": 15,
+         "steps": [
+          75,
+          50,
+          25,
+          10
+         ]
+        }
+       }
+      }
+     },
+     "events.log": null,
+     "notified.json": {
+      "2026-12-07:hard": "2026-12-07T10:50:00"
+     }
+    }
+   }
+  },
+  {
    "name": "action が sleep・予告 2.5 分",
    "files": {
     "shifts.json": {

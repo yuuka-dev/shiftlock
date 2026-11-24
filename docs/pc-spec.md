@@ -48,7 +48,7 @@ flowchart LR
 2. **5 分おきの tick**（`tick` サブコマンド）: `guard.ps1` から呼ばれる．PC の稼働記録，通知，自動『起きた』，カレンダー同期，日次整理．
 3. **CLI**（`status` `neru` `okita` `yasumi` `deru` `yotei` `day` `report` `settings` `sync` `learn` …）: `.cmd` / `shl` / iPhone 以外の手動操作．
 
-やらないこと（設計上の約束）: アプリ・プロセスを止める処理は入れない．できるのは **通知** と **最低ライン以降の Claude Code 新規プロンプト拒否**，それに **本人が `shl enforce on` で同意した乗務だけ** のロック／スリープ／シャットダウン（§17.B）．
+やらないこと（設計上の約束）: アプリ・プロセスを終了させる処理は入れない．できるのは **通知** と **最低ライン以降の Claude Code 新規プロンプト拒否**，それに **本人が `shl enforce on` で同意した乗務だけ** のロック／スリープ／シャットダウンと，アプリの減速／一時停止（§17.B．減速・一時停止はネイティブ版の Agent だけが行う）．
 
 ---
 
@@ -207,6 +207,8 @@ fi
     - additionalContext: 記録に一言触れる指示 / 聞き返しの指示 / フェーズ文脈 / 休憩を勧める指示
     - どちらも空なら何も出さない（stdout 空，exit 0）
 ```
+
+**Claude Code の処理中の印**（issue #9）: 手順 13 まで進んで exit 0 で終わる `UserPromptSubmit` では，終わりに `claude-busy.json` へ `{session_id: 時刻}` を足す（手順 8・9・12 の exit 2 の道，設定エラーの exit 1 では足さない．Claude が動かないので `Stop` が来ないため）．`Stop`（手順 3）では，その `session_id` を消す．ネイティブ版の Agent が「処理中は声かけを待つ」ために読むだけで，Claude への文脈には何も足さない．`session_id` が無い入力では何もしない．印の読み書きに失敗しても（読めない・壊れている・書けない）hook は今までどおり動く（**exit 2 にならない**）．形は [data-format.md](data-format.md)．
 
 最低ライン後に **`おきた` を打つと解除される**のは，手順 4→9 でキーワード処理が先に走り，フェーズ判定（12）まで行かないため．話し言葉の `起きたわ` でも手順 10 で `okita` が記録されてから 12 を評価するので解除される．
 
@@ -437,8 +439,19 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 - **アプリの決まり**: 名前つきで記録するのは `shifts.json` の `apps.registered` に登録した exe（`dev`／`adobe`）と，自動判定のゲーム（`game`）だけ．ほかは「その他」として秒数だけを合算する（名前は残らない）．登録とゲームの判定が重なるときは登録を優先．プロセスは (PID, 開始時刻) で識別し，子プロセスを含めたツリーで CPU を合算する（親の開始時刻が子より後なら親子とみなさない）．代替の取り方（親の PID が取れない）のときは同じ名前のプロセスだけ．
 - **アクティブの決まり**: 前面のプロセス自身の exe 名がそのアプリ（登録かゲーム．どちらでもなければ「その他」）．そのアプリのツリーが，直近 `apps.active_input_minutes`（既定 5）分に入力があるか，使用率が `apps.active_cpu_percent`（既定 5）% 以上ならアクティブで，前回の計測からの経過秒数を `act` に足す．ただし入力が `usage.game_idle_minutes`（既定 180）分無ければ，CPU を使っていてもアクティブにしない．使用率は PC 全体を 100 とする．前面でない登録アプリ・ゲームも `cpu` は記録する（`act` は 0）．前回の計測から 30 秒以上空いたとき（スリープなど）は，その回の増分とアクティブの秒数を数えず起点だけ取り直す．
 - **書き方**: 区切りをまたいだ最初の計測で前の区間の行を書く．Agent を終了や合図で終わらせるときはたまった分を書く．同じ `t` の行は 2 回書かない．書けなかった行はやり直さない．`span` が 0 なら行を書かない．設定（`shifts.json`）は 5 分の区間の頭で読み直し，読めない間は計測しない．同じ失敗は `agent.log` に 1 日 1 回だけ，英語で書く（登録していないアプリの名前は書かない）．
-- **`shl app`**（§17.E のヘルプにも載る）: `shl app add <exe名> <dev|adobe>`（既にあればカテゴリを付け替え．名前は小文字・`.exe` つきにそろえる．`game` は断る）／`shl app remove <exe名>`／`shl app list`．`shifts.json` の `apps.registered` だけを書き換える．登録しただけでは何も止まらない．登録の変更は次の区間の頭から効く．
+- **`shl app`**（§17.E のヘルプにも載る）: `shl app add <exe名> <dev|adobe>`（既にあればカテゴリを付け替え．名前は小文字・`.exe` つきにそろえる．`game` は断る）／`shl app remove <exe名>`／`shl app list`．`shifts.json` の `apps.registered` だけを書き換える．登録しただけでは何も止まらない（減速の対象に足すのは `shl app limit add`，§7.6）．登録の変更は次の区間の頭から効く．
 - **確かめ用**: `shiftlock-agent.exe --meter-once`（10 秒あけて 2 回測り，書くはずの行を JSON で出す．ファイルは書かない．[native/README.md](../native/README.md)）．
+
+### 7.6 アプリの減速・一時停止（ネイティブ版の Agent のみ．issue #9）
+
+設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](superpowers/specs/2026-11-23-native-app-limit-design.md)，宣言と同意は §17.B．Python 版に実行は無い（宣言・同意の表示・`shl app limit`・hook の印だけ）．10 秒ごとの仕事として Agent の `Scheduler` に載っていて，タスク `shiftlock-guard` が有効でも動く（見張りとは独立．Agent が動いていなければ何も起きない）．判断は `shiftlock.Core`（`LimitPolicy`），Windows に触るのは `shiftlock.Agent`（`WindowsLimitControl`）．
+
+- **対象**: 自動判定のゲーム（`game`）のうちアンチチートの印が無いものと，`shl app limit add` で足した登録アプリだけ．アンチチートの判定はゲームの根のフォルダの 3 階層まで（ファイル・フォルダ名）とツリーのプロセス名を `limit.anticheat_markers` と照合する．exe のパスが取れないものは対象外（ゲームのフォルダの直下に置かれた exe は，隣のゲームの印を拾わないよう，そのフォルダの直下だけ見る）．`limit.never`（システム・shiftlock・Claude Code・Discord・ゲームの配信元など）は足せず，子孫に `limit.protect`（`claude.exe`・`node.exe` など）が 1 つでもあるアプリは丸ごと見送る（見送りは乗務ごとに 1 回知らせる）．Agent と同じ権限で開けないプロセスも見送る（セッション 0 の特別扱いはしない．できなかったことは通知で 1 回知らせ，`agent.log` に 1 日 1 回）．ゲームは「宣言の `limit_exclude` ∪ 今の `limit.exclude`」にあれば対象にしない（宣言の後に `include` しても，その乗務では広がらない）．
+- **減速**: アプリ（exe 名）ごとに 1 つのジョブオブジェクトに入れ，CPU のハード上限をかける．上限 = 基準 × 割合．基準はそのアプリの減速前の `log/app-*.jsonl`（直近 `limit.baseline_minutes` 分の `act` が 1 以上の行）の `cpu` の最大で，上限をかける前に決めて `limit.json` に残し乗務日が変わるまで変えない．下限は 0.5%．
+- **一時停止**: `suspend` の段階 5 で `NtSuspendProcess`．止める前に (PID, 開始時刻) を `limit.json` に書き（書けなければ止めない），起動時に今も同じ (PID, 開始時刻) のものを必ず再開する．
+- **戻す**: 出発（`worked`）・今日休む（`yasumi`）・`STOP.txt`／`released_at`・宣言の取り消し・出庫する時刻（`start_latest`）・動作が違う・宣言の `steps` が壊れている・設定や計測が読めない・対象でなくなった，のどれかで，上限を外し，再開し，`events.log` に `limit_release`．出庫の時刻を過ぎて次の乗務の記録に移った回（`TargetPlan` が次の乗務か null を返す）は，前の乗務の日と理由 `timeout` で 1 回戻して報告する（次の乗務のかけ始めは次の回）．**一時的に判断できないだけ**（計測のサンプルが無い・30 秒より古い・親の PID が取れない，`state.json`・`shifts.json` が掴まれて開けない）の回は，何もせず（判断・記録・通知なし）飛ばし，その状態が 60 秒（`Limiter.UnknownGrace`）続いたら戻す側に倒す．前の回から 30 秒を超えて空いたとき（スリープ復帰・時計の飛び）は数え直す．設定が壊れている・宣言が無い・解除済みなど確かな判断はすぐ戻す．Agent の終了時も戻す（Agent が持っているジョブのハンドルでだけ外す．落ちた後に残った上限は次の起動時に 1 回知らせるだけで，名前で開き直さない）．戻した後，同じ乗務でかけ直さない．
+- **予告と報告**: 各段階の始まりの 5 分前に 1 回，一時停止したとき 1 回，戻したとき 1 回．アプリの名前は入れず数だけ．Claude Code の処理中（`claude-busy.json`）は通知だけ最大 10 分待つ（段階の切り替えは時刻どおり）．
+- **確かめ用**: `shiftlock-agent.exe --limit-once`（今の設定とフォルダで判断を 1 回行い，「すること」を JSON で出す．プロセスにも書き込みにも手を加えない．本番のフォルダは断る．[native/README.md](../native/README.md)）．
 
 ---
 
@@ -531,9 +544,10 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 | 16 | `report.closing_day` / `keep_months` | 20 / 3 | レポートの締め日（0 で月単位）・保存期間 |
 | 17 | `notify.sound.<種類>` / `default`，`sound_volume`，`sound_max_seconds` | {} / 0.8 / 20 | 通知音（§17.C） |
 | 18 | `confirm.mode` / `lookback_days` / `okita_means_worked` / `home_activity_minutes` | ask / 7 / true / 60 | 終わった乗務の確認（§17.A） |
-| 19 | `enforce.action` / `duration_hours` / `grace_minutes` / `relock_minutes` / `max_runs` / `boot_grace_minutes` / `skip_if_remote` | lock / 2 / 15 / 5 / 6 / 15 / true | 強制モードの既定値（§17.B．ここでは宣言できない） |
+| 19 | `enforce.action`（`lock`／`sleep`／`shutdown`／`throttle`／`suspend`）/ `duration_hours` / `grace_minutes` / `relock_minutes` / `max_runs` / `boot_grace_minutes` / `skip_if_remote` | lock / 2 / 15 / 5 / 6 / 15 / true | 強制モードの既定値（§17.B．ここでは宣言できない） |
 | 20 | `lang` | ja_kansai | 文面の言葉づかい（§17.F）．`ja`（標準語）/ `ja_kansai`（関西弁）/ `inm`（淫夢語録．任意の言語で，`i18n/inm.py` を手元に置いた環境でだけ選べる）．知らない値・ファイルが無い任意の言語は既定に戻す |
 | 21 | `absence.window_shifts` / `warn_at` | 24 / 5 | 当日欠勤の目安（§17.G）．直近 N 乗務で有給以外の休みが K 回以上なら注意．`warn_at` 0 で注意なし．壊れた値（文字列・inf・nan）や範囲外（`window_shifts` 1〜365，`warn_at` 0〜100 の外）は既定に戻す（落とさない・黙って無効にしない） |
+| 22 | `limit.steps` / `baseline_minutes` / `apps` / `exclude` | [75,50,25,10] / 30 / [] / [] | アプリの減速・一時停止（§17.B）．`apps`・`exclude` は `shl app limit` が書く．`anticheat_markers`・`never`・`protect` は既定値を持つ（形と意味は [data-format.md](data-format.md)）．メニューには無い，JSON 直編集（`apps`・`exclude` は `shl app limit`） |
 | — | `notify.phase` / `hard` / `nag` / `speak` | toast / popup / toast / false | 通知方法（メニューには無い，JSON 直編集） |
 | — | `shift_end_earliest` | 07:00 | レポートの外出区間の終わり（JSON 直編集） |
 | — | `shifts` | — | 旧形式の日付リスト（互換のため読むだけ） |
@@ -553,6 +567,8 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 | `guard.log` | guard.ps1 / make-report.ps1 | tick 失敗・通知失敗・レポート結果・`wsl fallback` の警告（Windows の Python が無いとき，1 日 1 回） |
 | `game-scan.txt` | guard.ps1 -ScanGames | ゲーム判定の一覧 |
 | `report.html` | report | 最新のレポート（`--auto` なら今の期間と同じ） |
+| `limit.json` / `limit.json.bad` / `limit-games.json` | ネイティブ版の Agent | 減速・一時停止の記録（壊れて読めないときは `limit.json.bad` に名前を変える）と見たゲームの判定（個人データ．形は [data-format.md](data-format.md)．§7.6） |
+| `claude-busy.json` | hook | Claude Code の処理中の印（§5.3） |
 | `STOP.txt` | 本人 / `kaijo.cmd` | ある間は強制モードを一切発動しない（§17.B） |
 | `~/.claude/settings.json.bak-shiftlock` | install-hook | hook を入れる前の設定（初回のみ） |
 
@@ -622,7 +638,19 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 - **実行** は tick が `{"method": "enforce", "action": …}` を返し，`guard.ps1` の `Invoke-Enforce` が **実行直前に `STOP.txt` をもう一度見て** から `LockWorkStation` / `SetSuspendState` / `shutdown.exe /s /t 60` を呼ぶ．`-DryRun` は表示だけ．
 - **解除**: `kaijo.cmd` / `shl kaijo` → `guard.ps1 -Release`（`shutdown /a` を最初に → `STOP.txt` を置く → `shiftlock.py enforce release` で `released_at` と `events.log`）．`STOP.txt` を手で置くだけでも止まる．`shl enforce off` は最低ライン前なら取り消し，最低ライン後は解除扱い．`shl enforce resume` は `STOP.txt` を消し，未解除の宣言に `released_at` を付ける（宣言はやり直し）．`STOP.txt` がある間は『おきた』のゲートも外れる．『今のなし』は `enforce` に触らない．
 - **`おきた` のゲート**: 強制中（同意済み・未解除・`now >= hard_close`）で `sleep_at` も `recent_long_gap()` も無ければ `okita` にしない．
-- **記録**: `events.log` に `enforce_declare` `enforce_consent` `enforce_off` `enforce_run` `enforce_release` `enforce_resume`．レポートの summary に `enforce_declare` / `enforce_run` / `enforce_release`（あれば「強制モード」タイル）．
+- **動作 `throttle`／`suspend`**（issue #9．実行はネイティブ版の Agent，§7.6）: `shl enforce on throttle|suspend`（時間は付けられない．付けたら断る）．`soft_close` を S，`hard_close` を H，D = (H − S) / 4 として段階を決める（H ≤ S のときは段階 5 だけ）:
+
+  | 段階 | 始まり | 上限（そのアプリの減速前の使用率に対する割合．既定） |
+  |---|---|---|
+  | 1 | S | 75% |
+  | 2 | S + D | 50% |
+  | 3 | S + 2D | 25% |
+  | 4 | S + 3D | 10% |
+  | 5 | H | `throttle`: 10% のまま ／ `suspend`: 一時停止 |
+
+  割合は `limit.steps`（4 個・1 以上 100 未満・大きい順．そうでなければ宣言を断る）．同意の表示に段階の時刻・割合・対象になるゲームとアンチチートで外したゲーム（Agent が書く `limit-games.json`）・足したアプリ・解除の方法が出て，宣言に `steps`・`limit_apps`・`limit_exclude`（外したゲーム）を写して固定する（後から設定を変えても，その乗務には効かない．`shl app limit exclude`／`remove` で外すほうはすぐ効き，`include` で戻したゲームも，その乗務では「宣言の `limit_exclude` ∪ 今の `limit.exclude`」にあれば対象にならない）．`throttle`／`suspend` は注意を出して `y` をもらう動作．`enforce_due`（tick）はこの 2 つの動作では何も返さない．宣言には `duration_hours` などロック系の項目を持たず，`runs` は対象のアプリに初めて手を加えた段階ごとに Agent が足す（`runs` が空の間の `shl enforce off` は取り消し）．同じ乗務には 1 動作だけ（ロック系との併用はしない）．
+- **`shl app limit`**: `add <exe名>`（登録済みのアプリを対象に足す．`limit.never` は断る．アンチチートの警告を出す）／`remove <exe名>`／`exclude <exe名>`（ゲームを外す）／`include <exe名>`（外したゲームを戻す）／`list`（足したアプリ・外したゲーム・最近見たゲームの判定）．書くのは `limit.apps`・`limit.exclude` だけ．`add` と `include`（きつくする方向）は対話できる端末（`isatty`）からだけ，`remove`・`exclude`・`list` はどこからでも．
+- **記録**: `events.log` に `enforce_declare` `enforce_consent` `enforce_off` `enforce_run` `enforce_release` `enforce_resume`（`throttle`／`suspend` では段階ごとの `enforce_run` と，元に戻したときの `limit_release` も）．レポートの summary に `enforce_declare` / `enforce_run` / `enforce_release`（あれば「強制モード」タイル）．
 
 ### 17.C 通知音
 
@@ -639,7 +667,7 @@ hook と tick の両方から毎回呼ぶ．条件: `target_plan` があり，�
 
 ### 17.E `shl` ヘルプ
 
-- `shiftlock.py help`（`--config` 任意）が `M.CLI_HELP` を出す（`--config` があれば `apply_lang()` で言葉づかいだけ合わせる）．`shl`（引数なし）/ `shl help` / `-h` / `?` と，引数なしの `shiftlock.cmd` が呼ぶ．状態は `shl status`，計測するアプリの登録は `shl app`（§7.5）．
+- `shiftlock.py help`（`--config` 任意）が `M.CLI_HELP` を出す（`--config` があれば `apply_lang()` で言葉づかいだけ合わせる）．`shl`（引数なし）/ `shl help` / `-h` / `?` と，引数なしの `shiftlock.cmd` が呼ぶ．状態は `shl status`，計測するアプリの登録は `shl app`（§7.5），減速の対象は `shl app limit`（§17.B）．`shl help` の一覧にも載る．
 
 ### 17.F 言葉づかい（言語ファイル）
 

@@ -17,6 +17,8 @@ namespace Shiftlock.Agent;
 ///   --stop          動いている Agent を終わらせる（発行物を置き直すとき用）
 ///   --meter-once    稼働計測を 10 秒あけて 2 回測り，書くはずの行を JSON で出す（ファイルは書かない．MeterOnce）
 ///   --tick-once     時刻と値を指定して見張りを 1 回だけ行い，結果の JSON を出す（Python 版との突き合わせ用．TickOnce）
+///   --limit-once    アプリの減速・一時停止の判断を 1 回だけ行い，「すること」の並びを JSON で出す（何も実行せず，何も書かない．
+///                   本番のフォルダは断る．LimitOnce）
 /// 強制モードの宣言・解除・設定を行う引数は無い（解除はトレイのメニューだけ）．
 /// </summary>
 public static class Program
@@ -42,6 +44,7 @@ public static class Program
                 "--stop" => StopAgent(),
                 "--tick-once" => RunTickOnce(args),
                 "--meter-once" => RunMeterOnce(),
+                "--limit-once" => RunLimitOnce(),
                 _ => 2,
             };
         }
@@ -81,11 +84,25 @@ public static class Program
         var runner = new ActionRunner(notifier, power, store, log);
         var windowsProbe = new WindowsProbe();
         var once = new OncePerDay(log);
+        // 10 秒の仕事（Limiter）は計測（Meter）の回のサンプルを読む．別の仕事なので，どちらかの失敗・遅さがもう一方を巻き込まない
+        using var control = new WindowsLimitControl();
         var meter = new Meter(dir, new FallbackProcessSource(new NtProcessSource(), new DiagnosticsProcessSource(), once, clock),
             windowsProbe, windowsProbe, clock, () => Stopwatch.GetElapsedTime(0), once);
         var watcher = new Watcher(dir, windowsProbe, clock, new GuardTask(GuardTask.ConfiguredName).State,
             (result, _) => runner.Run(result, quit.Token), log);
-        using var tray = new Tray(dir, watcher, clock, notifier, new ReleaseFlow(power, store, clock, log), log, Quit);
+        var limiter = new Limiter(dir, () => meter.Latest, control, new WindowsFolderLister(),
+            actions =>
+            {
+                var (volume, seconds) = SoundNumbers(dir);
+                runner.Run(new TickResult(actions, [], volume, seconds), quit.Token);   // 通知音は付けない（TickAction の Sound は空）
+            }, clock, once);
+        // 未処理の例外で落ちるときも，止めたまま・上限をかけたままにしない（終了時の戻しは finally に届かない落ち方がある）．
+        // 排他は短い待ちで呼び，落ちる処理を長く引き止めない．解除は finally
+        UnhandledExceptionEventHandler onFatal = (_, e) =>
+            CrashRestore.Run(() => limiter.RestoreAll(null, CrashRestore.Wait), message => log.Write(message), e.ExceptionObject);
+        AppDomain.CurrentDomain.UnhandledException += onFatal;
+        using var tray = new Tray(dir, watcher, clock, notifier,
+            new ReleaseFlow(power, store, clock, log, afterRelease: () => limiter.RestoreAll("kaijo")), log, Quit);
         Volatile.Write(ref ui, SynchronizationContext.Current);
 
         // 周期の違う仕事を足すときはここに並べる（5 分の見張りと 10 秒の稼働計測）．計測はスリープ復帰で急かさない
@@ -96,6 +113,14 @@ public static class Program
                 tray.RequestRefresh();
             }),
             new Job("meter", Meter.Interval, Meter.Interval, meter.RunOnce),
+            // 終了の合図（quit）の後に始まってしまう回で，戻した後にもう一度かけない
+            new Job("limit", Limiter.Interval, Limiter.Interval, () =>
+            {
+                if (!quit.IsCancellationRequested)
+                {
+                    limiter.RunOnce();
+                }
+            }),
         ], log);
 
         void OnPower(object sender, PowerModeChangedEventArgs e)
@@ -111,6 +136,8 @@ public static class Program
         {
             if (!quit.IsCancellationRequested)
             {
+                // 見張りや計測を始める前に，前回止めたままのアプリを戻す（Agent が落ちた後の再開）．失敗しても起動は止めない
+                SafeStartup(limiter, log);
                 scheduler.Start();
                 Application.Run();
             }
@@ -118,9 +145,12 @@ public static class Program
         finally
         {
             quit.Cancel();
+            AppDomain.CurrentDomain.UnhandledException -= onFatal;
             SystemEvents.PowerModeChanged -= OnPower;
             // タイマーを止めてから，たまっている計測を書く（Dispose は 2 回呼んでも害は無い）
             scheduler.Dispose();
+            // 止めたまま Agent がいなくならないよう，全部戻す（計測の Flush より前．失敗しても終了は続ける）
+            SafeRestore(limiter, log);
             meter.Flush();
             log.Write("agent stopped");
         }
@@ -207,6 +237,61 @@ public static class Program
         return MeterOnce.Run(AgentPaths.DataDir, new FallbackProcessSource(new NtProcessSource(), new DiagnosticsProcessSource(),
             new OncePerDay(new AgentLog(AgentPaths.LogFile)), () => DateTime.Now), windowsProbe, windowsProbe,
             Console.Out, Console.Error, Thread.Sleep);
+    }
+
+    /// <summary>アプリの減速・一時停止の判断を 1 回だけ（--limit-once）．何も実行せず，何も書かない．</summary>
+    private static int RunLimitOnce()
+    {
+        OpenConsole();
+        var windowsProbe = new WindowsProbe();
+        return LimitOnce.Run(AgentPaths.DataDir, new FallbackProcessSource(new NtProcessSource(), new DiagnosticsProcessSource(),
+            new OncePerDay(new AgentLog(Path.Combine(AgentPaths.DataDir, "limit-once-no-log", "never.log"))), () => DateTime.Now),
+            windowsProbe, windowsProbe, new WindowsFolderLister(), new LimitOnce.Untouchable(), DateTime.Now, Console.Out, Console.Error);
+    }
+
+    private static void SafeStartup(Limiter limiter, AgentLog log)
+    {
+        try
+        {
+            limiter.Startup();
+        }
+        catch (Exception e)
+        {
+            log.Write($"limit startup failed: {e.GetType().Name}");
+        }
+    }
+
+    private static void SafeRestore(Limiter limiter, AgentLog log)
+    {
+        try
+        {
+            limiter.RestoreAll(null);
+        }
+        catch (Exception e)
+        {
+            log.Write($"limit restore failed: {e.GetType().Name}");
+        }
+    }
+
+    /// <summary>通知の音量と最長秒数（TestNotify と同じ読み方．通知音は付けないので値は使われないが，TickResult の形に合わせる）．</summary>
+    private static (double Volume, int Seconds) SoundNumbers(string dir)
+    {
+        var volume = 0.8;
+        var seconds = 20;
+        try
+        {
+            if (Watcher.LoadConfig(dir).Config is { } cfg)
+            {
+                var notify = cfg.Section("notify");
+                volume = notify["sound_volume"] is JsonValue v && v.TryGetValue<double>(out var d) ? d : volume;
+                seconds = notify["sound_max_seconds"] is JsonValue x && x.TryGetValue<int>(out var i) ? i : seconds;
+            }
+        }
+        catch (Exception)
+        {
+            // 読めなければ既定のまま
+        }
+        return (volume, seconds);
     }
 
     /// <summary>動いている Agent を終わらせる（--stop）．終わらせた・動いていなかった → 0，止められない → 1．</summary>

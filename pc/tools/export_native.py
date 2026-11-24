@@ -43,7 +43,7 @@ EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPT
          # 見張り（shiftlock.Agent）が使う文
          "PHONE_LATE_PREFIX", "PHONE_OKITA", "RECORDS_YASUMI_PAID", "CONFIRM_HOME_HINT", "CONFIRM_MORE", "CONFIRM_USER",
          # 強制モードは発動と解除で使う文だけ（宣言・状態表示の文は持っていかない。C# に宣言の入口を作らない）
-         "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
+         "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_SUFFIX_LIMIT", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
          "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY")
 PREFIXES = ("TIME_DUR_", "RECORDS_KITAKU", "RECORDS_NERU", "RECORDS_OKITA", "RECORDS_SHUPPATSU", "RECORDS_UNDO_",
             "CONFIG_", "APP_", "AGENT_",
@@ -191,6 +191,8 @@ def _config_error_cases() -> list:
         ("知らない曜日（関西弁）", _base(lang="ja_kansai", work_weekdays=["holiday"]), True),
         ("usage が文字列", _base(usage="120"), True),
         ("enforce が null", _base(enforce=None), True),
+        ("limit が配列", _base(limit=[75, 50, 25, 10]), True),
+        ("limit が null", _base(limit=None), True),
         ("calendar.sources が辞書", _base(calendar={"sources": {}}), True),
         ("start_target が 25:99", _base(start_target="25:99"), False),
         ("start_latest の後ろに空白", _base(start_latest="17:30 "), False),
@@ -890,6 +892,9 @@ def _tick_enforce_rows() -> list:
          run(("10:41", 30, {"dry_run": True}), ("10:42", 30, {"dry_run": True}), "10:43", "10:44")),
         ("宣言があれば lastcall・soft・hard の通知に添え字", {**b, **decl()}, run("07:20", "08:00", "10:30")),
         ("action が shutdown", {**b, **decl(action="shutdown")}, run("10:30", "10:35", "10:40", "10:45")),
+        # throttle／suspend は Agent の段階の処理が持つ。見張りは予告も実行もせず、state.json にも書かない
+        ("action が suspend なら見張りは何もしない", {**b, **decl(action="suspend", steps=[75, 50, 25, 10])}, run("10:30", "10:35", "10:50")),
+        ("action が throttle なら見張りは何もしない", {**b, **decl(action="throttle", steps=[75, 50, 25, 10])}, run("10:30", "10:35", "10:50")),
         ("action が sleep・予告 2.5 分", {**b, **decl(action="sleep", grace_minutes=2.5)}, run("10:30", "10:35")),
         ("離席中は何もしない", {**b, **decl()}, run(("10:30", 1500), ("10:45", 1500))),
         ("起きた記録のある乗務は発動しない", {**b, **decl(shift={"status": "okita", "at": f"{d}T10:00"})}, run("10:30", "10:45")),

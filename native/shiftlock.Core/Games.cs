@@ -111,7 +111,7 @@ public static partial class Games
     /// ワイルドカードの一致（PowerShell の -like のうち * と ?．全体が当たること．大文字小文字は区別しない）．
     /// [abc] の形は使わない（文字そのものとして比べる）．
     /// </summary>
-    private static bool Like(string text, string pattern)
+    internal static bool Like(string text, string pattern)
     {
         // * に当たったら位置を覚え，合わなくなったら * に 1 文字多く食わせてやり直す
         int t = 0, p = 0, star = -1, mark = 0;

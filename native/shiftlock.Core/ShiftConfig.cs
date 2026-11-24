@@ -30,7 +30,7 @@ public sealed partial class ShiftConfig
 
     /// <summary>load_config が「辞書であること」を確かめるキー（確かめる順）．</summary>
     private static readonly string[] DictKeys =
-        ["usage", "notify", "calendar", "retention", "report", "confirm", "enforce", "absence"];
+        ["usage", "notify", "calendar", "retention", "report", "confirm", "enforce", "absence", "limit"];
 
     /// <summary>時間として扱う数の上限（分でも時間でも）．これを超える値は日時の計算があふれるので設定のエラーにする．</summary>
     private const double MaxDuration = 1_000_000;
@@ -69,7 +69,19 @@ public sealed partial class ShiftConfig
          "absence": {"window_shifts": 24, "warn_at": 5},
          "enforce": {"action": "lock", "duration_hours": 2, "grace_minutes": 15, "relock_minutes": 5,
                      "max_runs": 6, "boot_grace_minutes": 15, "skip_if_remote": true},
-         "apps": {"registered": {}, "active_input_minutes": 5, "active_cpu_percent": 5}
+         "apps": {"registered": {}, "active_input_minutes": 5, "active_cpu_percent": 5},
+         "limit": {"steps": [75, 50, 25, 10], "baseline_minutes": 30, "apps": [], "exclude": [],
+                   "anticheat_markers": ["EasyAntiCheat*", "BattlEye*", "BEService*", "BEClient*", "GameGuard*", "*.des", "EAAntiCheat*",
+                                         "xigncode*", "*.xem", "mhyprot*", "ACE-*", "AntiCheatExpert*", "PunkBuster*", "pb*.dll", "vgc*",
+                                         "FACEIT*", "EQU8*", "nProtect*", "Denuvo*Anti*Cheat*"],
+                   "never": ["system", "csrss.exe", "wininit.exe", "winlogon.exe", "services.exe", "lsass.exe", "smss.exe", "svchost.exe",
+                             "dwm.exe", "explorer.exe", "fontdrvhost.exe", "sihost.exe", "taskmgr.exe",
+                             "shiftlock-agent.exe", "shiftlock.exe", "shl.exe", "python.exe", "pythonw.exe", "python3.exe",
+                             "claude.exe", "node.exe", "wsl.exe", "wslhost.exe", "vmmemwsl", "vmmem", "windowsterminal.exe", "conhost.exe",
+                             "openconsole.exe", "powershell.exe", "pwsh.exe", "cmd.exe", "bash.exe",
+                             "discord.exe", "steam.exe", "steamwebhelper.exe", "steamservice.exe"],
+                   "protect": ["claude.exe", "node.exe", "wsl.exe", "wslhost.exe", "discord.exe",
+                               "shiftlock-agent.exe", "shiftlock.exe", "shl.exe"]}
         }
         """;
 

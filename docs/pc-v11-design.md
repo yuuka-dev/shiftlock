@@ -155,7 +155,8 @@ CLI／ダブルクリック:
 - **Claude Code からは強制を一切操作できない**．hook に宣言・解除・設定変更のキーワードを置かない．`shl enforce on` の同意は対話入力（`y/N`）だけで，`--yes` のような非対話の入口を作らない（Claude Code の Bash は stdin が無いので同意できない）．
 - **強制が続く時間（`duration_hours`，例 2h／3h）は設定で変えられ，宣言のたびに表示して確認する**．時間を過ぎたら，まだハードでも何もしない．
 - 緊急解除の経路を複数持つ．解除は可能だが記録に残る（禁止ではなく摩擦）．
-- ゲーム・アプリを個別に止める処理は入れない（CLAUDE.md の改訂後も維持）．
+- アプリを個別に遅くする・一時停止するのは，本人が宣言した乗務で動作が `throttle`／`suspend` のときだけ（2026-11-23 に CLAUDE.md の「絶対」を改訂．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](superpowers/specs/2026-11-23-native-app-limit-design.md)）．アプリを終了させる処理は入れない．
+- 動作に `throttle`（アプリの CPU を段階的に下げる）と `suspend`（さらに最低ラインで一時停止する）を足した（2026-11-23．区切り 4，issue #9）．宣言・同意・解除の入口は他の動作と同じ（`shl enforce on throttle|suspend`）で，実行はネイティブ版の Agent だけが行う．仕様は [pc-spec.md](pc-spec.md) §17.B・§7.6．
 
 ### B.2 動作
 

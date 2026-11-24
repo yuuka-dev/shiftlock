@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 from . import i18n as M
-from .apps import app_add, app_list, app_remove
+from .apps import app_add, app_list, app_remove, limit_add, limit_exclude, limit_include, limit_list, limit_remove
 from .calendar_sync import sync_calendar
 from .commands import cmd_keyword, status_text
 from .config import apply_lang, load_config
@@ -30,6 +30,21 @@ from .tick import run_tick
 from .timeutil import parse_day
 
 
+def _app_limit(a, now: datetime) -> tuple[int, str]:
+    """shl app limit <add|remove|exclude|include|list> [名前]。広げる側（add・include）は対話の端末からだけ
+    （宣言と同じ判定。非対話で広げられる入口は作らない）。"""
+    op, name = a.name, a.cat
+    if op == "list":
+        return limit_list(a.config, Store(a.config), now)
+    if op in ("add", "include") and name:
+        return (limit_add if op == "add" else limit_include)(a.config, name, sys.stdin.isatty())
+    if op == "remove" and name:
+        return limit_remove(a.config, name)
+    if op == "exclude" and name:
+        return limit_exclude(a.config, name)
+    return 1, M.APPS_LIMIT_USAGE
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="shiftlock")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -41,9 +56,9 @@ def main(argv: list[str] | None = None) -> int:
             sp.add_argument("action", nargs="?", choices=["on", "off", "resume", "release", "status"])
             sp.add_argument("opts", nargs="*", help=M.CLI_ARG_ENFORCE_OPTS)
         if name == "app":
-            sp.add_argument("action", nargs="?", choices=["add", "remove", "list"])
-            sp.add_argument("name", nargs="?")
-            sp.add_argument("cat", nargs="?")
+            sp.add_argument("action", nargs="?", choices=["add", "remove", "list", "limit"])
+            sp.add_argument("name", nargs="?")   # limit のときは操作（add・remove・exclude・include・list）
+            sp.add_argument("cat", nargs="?")    # limit のときは名前
         if name in ("okita", "neru"):
             sp.add_argument("words", nargs="*", help=M.CLI_ARG_SLEEP_WHEN)
         if name in ("yasumi", "deru"):
@@ -103,6 +118,8 @@ def main(argv: list[str] | None = None) -> int:
             code, out = app_add(a.config, a.name, a.cat)
         elif a.action == "remove" and a.name:
             code, out = app_remove(a.config, a.name)
+        elif a.action == "limit":
+            code, out = _app_limit(a, now)
         else:
             code, out = 1, M.APPS_USAGE
         print(out)

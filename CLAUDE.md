@@ -1,13 +1,13 @@
 # CLAUDE.md（このリポジトリで作業する Claude Code 向け）
 
 ## 絶対
-- 個人データをコミットしない：`shifts.json`、`log/`、`state.json`、`days.json`、`calendar.json`、`learned.json`、`events.log`、`usage-*.json`、`reports/`、`report.html`、`mood.csv`。設定の例は `pc/shifts.example.json` だけ
+- 個人データをコミットしない：`shifts.json`、`log/`、`state.json`、`days.json`、`calendar.json`、`learned.json`、`events.log`、`usage-*.json`、`reports/`、`report.html`、`mood.csv`、`limit.json`、`limit.json.bad`、`limit-games.json`、`claude-busy.json`。設定の例は `pc/shifts.example.json` だけ
 - 実行フォルダ `%USERPROFILE%\shift-lock`（WSL からは `/mnt/c/Users/<ユーザー名>/shift-lock`）は本番。直接編集せず、`pc/` を直して `pc/deploy.ps1` で反映する
 - hook（UserPromptSubmit）で exit 2 を返すとユーザーのプロンプトが消える。**失敗時に exit 2 にならない**こと（本体が見つからない・設定が壊れてる → exit 0 か 1）。hook を変えたら Git Bash 経由（Windows 版 Claude Code）と WSL 経由の両方で確認する
-- PC を止める処理（ロック／スリープ／シャットダウン）は、**ユーザー本人が `shl enforce on` を対話的に実行し、表示された内容に `y` で同意した乗務にだけ**入れる。既定はオフ。設計は [docs/pc-v11-design.md](docs/pc-v11-design.md) の B
+- PC を止める処理（ロック／スリープ／シャットダウン）とアプリの減速／一時停止は、**ユーザー本人が `shl enforce on` を対話的に実行し、表示された内容に `y` で同意した乗務にだけ**入れる。既定はオフ。設計は [docs/pc-v11-design.md](docs/pc-v11-design.md) の B
   - 強制を促す通知・質問・Claude への文脈は入れない。出してよいのは「宣言済みの強制の予告」と「実行・解除の報告」だけ
   - Claude Code（hook・会話・Bash）からは強制の宣言・解除・設定変更をしない。`--yes` のような非対話で同意を省く入口も作らない（同意は対話入力のみ）
-  - ゲーム・アプリを個別に止める処理は入れない。それ以外は声かけだけ
+  - アプリを個別に遅くする・一時停止するのは、本人が宣言した乗務で動作が `throttle`／`suspend` のときだけ。アプリを終了させる処理は入れない。それ以外は声かけだけ
 
 ## ファイルの決まり
 - `*.ps1` は **UTF-8 BOM 付き・CRLF**（Windows PowerShell 5.1 が日本語を読めるように）
@@ -32,6 +32,7 @@
 ## ドキュメント
 - PC 版の仕様・ロジック（時刻の逆算、フェーズ、hook の入出力と処理順、tick、レポート）は [docs/pc-spec.md](docs/pc-spec.md)。動作を変えたらここも直す
 - v11 で足す機能（事後報告・強制モード・通知音・カレンダー複数・shl ヘルプ）の設計は [docs/pc-v11-design.md](docs/pc-v11-design.md)。上の「絶対」項目は 2026-11-03 に改訂済み
+- アプリの減速・一時停止（動作 `throttle`／`suspend`、issue #9）の設計は [docs/superpowers/specs/2026-11-23-native-app-limit-design.md](docs/superpowers/specs/2026-11-23-native-app-limit-design.md)。
 - ネイティブアプリ化の言語・構成は [docs/native-app-plan.md](docs/native-app-plan.md)。区切り 2（トレイ常駐の Agent）で決めたこと・レビューで送ったもの・まだ確かめていないことは [docs/native-agent-worklog.md](docs/native-agent-worklog.md)
 
 ## 公開

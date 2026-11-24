@@ -1,5 +1,13 @@
 {
  "ABSENCE_OVER": " ！ 直近 {shifts} 乗務で当日欠勤 {n} 回（有給は除く）。目安の {limit} 回に達してるで。",
+ "AGENT_LIMIT_BAD_RECORD": "減速・一時停止の記録（limit.json）が読めへんかったから、limit.json.bad に名前を変えたで。止まったままのアプリがあったら、終了して起動し直してな。",
+ "AGENT_LIMIT_FAILED": "アプリの減速か一時停止が一部できへんかったで（agent.log を見てな）。",
+ "AGENT_LIMIT_NOTICE": "{at} から、対象のアプリ {n} 件の CPU を直近の使用率の {percent}% に下げるで（強制モード）。解除は shl kaijo かトレイの「緊急解除」。",
+ "AGENT_LIMIT_NOTICE_SUSPEND": "{at} に、対象のアプリ {n} 件を一時停止するで（強制モード）。保存してへん内容は先に保存しときや。解除は shl kaijo かトレイの「緊急解除」。",
+ "AGENT_LIMIT_RELEASED": "アプリの減速・一時停止を元に戻したで。",
+ "AGENT_LIMIT_SKIPPED": "手を加えたらあかんもんが一緒に動いてるアプリがあるから、そのアプリは見送ったで。",
+ "AGENT_LIMIT_STALE_CAP": "前回の上限が残ってるかもしれんで。対象のアプリを起動し直すと戻るで。",
+ "AGENT_LIMIT_SUSPENDED": "対象のアプリ {n} 件を一時停止したで。",
  "AGENT_MENU_EXIT": "終了",
  "AGENT_MENU_OPEN": "状態を開く",
  "AGENT_MENU_RELEASE": "緊急解除",
@@ -84,13 +92,16 @@
  "ENFORCE_LABEL": {
   "lock": "ロック",
   "sleep": "スリープ",
-  "shutdown": "シャットダウン"
+  "shutdown": "シャットダウン",
+  "throttle": "アプリの減速",
+  "suspend": "アプリの一時停止"
  },
  "ENFORCE_RELEASED": "[shiftlock] 強制を解除したで（STOP.txt）。再開は shl enforce resume、次の乗務で使うなら shl enforce on からやり直し。",
  "ENFORCE_RELEASE_ALREADY": "[shiftlock] もう解除中やで（STOP.txt あり）。再開は shl enforce resume。",
  "ENFORCE_REWARN": "{relock}分後にまた{label}するで（強制モード）。やめるなら kaijo.cmd。",
  "ENFORCE_RUN": "{label}するで（強制モード）",
  "ENFORCE_SUFFIX": " 今日は強制モード（{label} {hours}h）やで{stop}。解除は kaijo.cmd。",
+ "ENFORCE_SUFFIX_LIMIT": " 今日は強制モード（{label}）やで{stop}。解除は kaijo.cmd。",
  "ENFORCE_SUFFIX_STOP": "（STOP.txt があるので今は効かへん）",
  "ENFORCE_WARN": "強制モード: {grace}分後に{label}するで。寝るか、やめるなら kaijo.cmd。",
  "ENFORCE_WARN_SOON": "あと{mins}分で{label}するで（強制モード）。やめるなら kaijo.cmd。",
