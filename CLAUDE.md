@@ -15,7 +15,7 @@
 - `*.py` は UTF-8・LF、標準ライブラリのみ（Python 3.8+）
 - `pc/shiftlock.py` はエントリだけ。本体は `pc/shiftlock/`（役割ごとのモジュール、依存は基盤 → 判断 → 記録 → 入口の一方向）。ユーザー向け・Claude 向けの文面は `pc/shiftlock/i18n/ja.py` の定数に置き、コードには書かない（入力の語彙・ファイルに書く値・設定の既定値・日付の表記は置かない）。決まりは [docs/superpowers/specs/2026-11-04-pc-refactor-modules-design.md](docs/superpowers/specs/2026-11-04-pc-refactor-modules-design.md)
 - PC 版とスマホ版のやりとりは [docs/data-format.md](docs/data-format.md) の形式だけ。形式を変えるならまずそこを直す
-- `native/`（C#）の文面は C# に直書きしない。`pc/shiftlock/i18n/` から書き出した JSON（`native/shared/messages.*.json`）で読む。`*.cs`・`*.xaml` は UTF-8・LF。判断は `shiftlock.Core` に置き、画面（`shiftlock.App`）と常駐（`shiftlock.Agent`）には書かない。画面とトレイに強制モードの宣言・再開・設定を置かない。解除（緊急解除）だけはトレイに置いてよい（2026-11-17 本人決定。[docs/superpowers/specs/2026-11-17-native-agent-design.md](docs/superpowers/specs/2026-11-17-native-agent-design.md) §4.2）。C# に宣言の入口（`enforce_declare` 相当）を作らない
+- `native/`（C#）の文面は C# に直書きしない。`pc/shiftlock/i18n/` から書き出した JSON（`native/shared/messages.*.json`）で読む。`*.cs`・`*.xaml` は UTF-8・LF。判断は `shiftlock.Core` に置き、画面（`shiftlock.App`）と常駐（`shiftlock.Agent`）には書かない。C# の宣言の入口（enforce on 相当）と範囲を広げる操作（app limit add／include）は shl.exe にだけ置く。同意は対話の入力のみ（標準入力がリダイレクトされていたら断る）。画面（shiftlock.App）とトレイには宣言・再開・設定を置かない。解除（緊急解除）だけはトレイに置いてよい。（トレイの解除は 2026-11-17 本人決定。[docs/superpowers/specs/2026-11-17-native-agent-design.md](docs/superpowers/specs/2026-11-17-native-agent-design.md) §4.2。shl.exe の宣言は 2026-11-25 本人決定。[docs/native-gap.md](docs/native-gap.md) §3・§4）
 
 ## テスト
 - WSL で `source .venv/bin/activate && cd pc && python3 -m pytest -q tests`（全部通してからコミット）。`.venv` はリポジトリ直下に WSL 側で作った仮想環境（`python3 -m venv .venv && .venv/bin/pip install pytest`）。システムの python3 には入れない
