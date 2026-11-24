@@ -33,6 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 from shiftlock.config import DEFAULTS, deep_merge  # noqa: E402
 from shiftlock import plan as P  # noqa: E402
+from shiftlock.limit import limit_stages  # noqa: E402
 
 OUT = ROOT.parent / "docs" / "test-vectors"
 STATUSES = ["", "okita", "yasumi", "worked"]
@@ -165,11 +166,38 @@ def _dump(doc: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-FILES = {"plan-scenarios.json": build_plan}
+def build_limit_stages() -> dict:
+    """減速・一時停止の段階の時刻（pc/shiftlock/limit.py の limit_stages と native/shiftlock.Core/LimitStages.cs）。"""
+    steps = [75, 50, 25, 10]
+    rows = [
+        ("throttle（幅 3 時間半）", "2026-12-07T13:30:00", "2026-12-07T17:00:00", "throttle"),
+        ("suspend（幅 3 時間半。段階 5 は一時停止）", "2026-12-07T13:30:00", "2026-12-07T17:00:00", "suspend"),
+        ("hard が soft と同じなら段階 5 だけ", "2026-12-07T17:00:00", "2026-12-07T17:00:00", "suspend"),
+        ("hard が soft より前なら段階 5 だけ（throttle）", "2026-12-07T17:00:00", "2026-12-07T16:30:00", "throttle"),
+        ("幅 10 分", "2026-12-07T16:50:00", "2026-12-07T17:00:00", "throttle"),
+        ("幅 7 分", "2026-12-07T16:50:00", "2026-12-07T16:57:00", "suspend"),
+        ("割り切れない幅（7 分 1 秒）は秒より下を切り捨てる", "2026-12-07T16:50:00", "2026-12-07T16:57:01", "throttle"),
+        ("日またぎ", "2026-12-07T23:30:00", "2026-12-08T01:30:00", "suspend"),
+    ]
+    out = []
+    for name, soft, hard, action in rows:
+        st = limit_stages(datetime.fromisoformat(soft), datetime.fromisoformat(hard), steps, action)
+        out.append({"name": name, "input": {"soft": soft, "hard": hard, "steps": steps, "action": action},
+                    "expect": [{"step": x["step"], "at": x["at"].isoformat(timespec="seconds"), "percent": x["percent"]} for x in st]})
+    return {"format": 1,
+            "about": "減速・一時停止の段階の時刻のテストベクタ。pc/tools/make_test_vectors.py が作る（手で直さない）",
+            "stages": out}
+
+
+def _dump_plain(doc: dict) -> str:
+    return json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+
+
+FILES = {"plan-scenarios.json": (build_plan, _dump), "limit-stages.json": (build_limit_stages, _dump_plain)}
 
 
 def render() -> dict[str, str]:
-    return {name: _dump(fn()) for name, fn in FILES.items()}
+    return {name: dump(fn()) for name, (fn, dump) in FILES.items()}
 
 
 def main(argv: list[str]) -> int:

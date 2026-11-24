@@ -144,12 +144,16 @@ CONFIRM_KAKUNIN_HEAD = "未確認の乗務（『出た』『休んだ』か、sh
 
 # ================================================================ enforce（強制モード）
 
-ENFORCE_LABEL = {"lock": "ロック", "sleep": "スリープ", "shutdown": "シャットダウン"}
-ENFORCE_CAUTION = {"sleep": "スリープは遠隔（Parsec）から戻せへん。",
+ENFORCE_LABEL = {"lock": "ロック", "sleep": "スリープ", "shutdown": "シャットダウン", "throttle": "アプリの減速", "suspend": "アプリの一時停止"}
+ENFORCE_CAUTION = {"throttle": "上限がかかったアプリは遅くなる。終了はせえへん。",
+                   "suspend": "止まったアプリは再開するまで操作できへん。終了はせえへん。",
+                   "sleep": "スリープは遠隔（Parsec）から戻せへん。",
                    "shutdown": "シャットダウンは未保存の作業が消える（60 秒の猶予のあと強制終了）。遠隔（Parsec）から戻せへん。"}
 ENFORCE_TERMS_WHAT = {"lock": "ロック（ログインし直せば続きはできる）",
                       "sleep": "スリープ（未保存の作業は残るけど、遠隔からは戻せへん）",
-                      "shutdown": "シャットダウン（60 秒の猶予のあと強制終了。未保存の作業は消える。遠隔からは戻せへん）"}
+                      "shutdown": "シャットダウン（60 秒の猶予のあと強制終了。未保存の作業は消える。遠隔からは戻せへん）",
+                      "throttle": "アプリの減速（対象のアプリの CPU 使用率の上限を、段階的に下げる。終了はせえへん。解除したら戻る）",
+                      "suspend": "アプリの一時停止（上限を下げたあと、最低ラインで対象のアプリを止める。終了はせえへん。解除したら続きから動く）"}
 ENFORCE_TERMS = ("強制モードの内容（{day} の乗務）\n"
                  "  何を    : {what}\n"
                  "  いつから: 最低ライン {hard} 以降に PC を触ったら、{grace} 分前に予告してから\n"
@@ -157,9 +161,35 @@ ENFORCE_TERMS = ("強制モードの内容（{day} の乗務）\n"
                  "  解除    : kaijo.cmd（shl kaijo）か、実行フォルダに STOP.txt を置く。解除は記録に残る\n"
                  "  注意    : 『おきた』は寝た記録（『ねる』か 2.5 時間以上の離席）があるときだけ効く。リモート（Parsec）の検出は未対応で、遠隔操作中でも発動する")
 ENFORCE_TERMS_CAUTION_LINE = "  ！      : {caution}"
+ENFORCE_TERMS_LIMIT = ("強制モードの内容（{day} の乗務）\n"
+                       "  何を    : {what}\n"
+                       "  段階    : 上限の割合は、そのアプリの直近の使用率（減速を始める前の最大値）に対するもの。最低ラインは {hard}\n"
+                       "{stages}\n"
+                       "  対象    : ゲーム（Agent が自動で判定）と、足したアプリだけ\n"
+                       "{games}\n"
+                       "{apps}\n"
+                       "  戻る    : 『行ってきます』か『今日休む』を記録したとき、または {back} になったら、全部元に戻るで\n"
+                       "  解除    : kaijo.cmd（shl kaijo）か、実行フォルダに STOP.txt を置く。すぐ元に戻り、解除は記録に残る")
+ENFORCE_TERMS_LIMIT_STAGE = "            段階 {step}: {at} から {what}"
+ENFORCE_TERMS_LIMIT_PERCENT = "上限 {percent}%"
+ENFORCE_TERMS_LIMIT_STOPPED = "一時停止"
+ENFORCE_TERMS_LIMIT_GAMES = "  ゲーム  : {names}"
+ENFORCE_TERMS_LIMIT_GAMES_NONE = "  ゲーム  : まだ見たゲームはないで（Agent が動いている間に見たものだけ載る）"
+ENFORCE_TERMS_LIMIT_EXCLUDED = "  外した  : {names}（アンチチートの印があるので手を加えへん）"
+ENFORCE_TERMS_LIMIT_UNKNOWN = "  外した  : {names}（アンチチートを調べられへんので手を加えへん）"
+ENFORCE_TERMS_LIMIT_APPS = "  アプリ  : {names}（足したもの）"
+ENFORCE_TERMS_LIMIT_APPS_NONE = "  アプリ  : 足したものはないで"
+ENFORCE_TERMS_LIMIT_ANTICHEAT_NOTE = "  注意    : アンチチートの判定は一覧との照合やから、見逃すことがある。見逃したゲームにも手を加えてしまうし、ゲーム側がどう反応するかは分からへん"
+ENFORCE_TERMS_LIMIT_SUSPEND_NOTE = "  注意    : 止まったアプリの窓は『応答なし』になる。内容は残るけど、保存してへん作業は先に保存しとき"
+ENFORCE_LIMIT_NO_AGENT = "  ！      : Agent が動いてへんみたいやから、このままでは効かへん（shiftlock-agent を起動しとき）"
+ENFORCE_LIMIT_NO_HOURS = PREFIX + "アプリの減速・一時停止に時間の指定はいらんで（最低ラインまでの時間で段階が決まる）。時間を付けんと指定してな。"
+ENFORCE_LIMIT_BAD_STEPS = PREFIX + "設定 limit.steps は、1 以上 100 未満の整数を大きい順に 4 個（例 [75, 50, 25, 10]）。直してからもう一回な。"
+ENFORCE_DIALOG_TEXT_LIMIT = "{day} の乗務を強制モード（{label}）にする。ええ？\n解除は kaijo.cmd か STOP.txt。"
+ENFORCE_DECLARED_LIMIT = PREFIX + "了解。{day} の乗務は強制モード（{label}）。解除は kaijo.cmd か STOP.txt。{extra}"
+ENFORCE_STATUS_LINE_LIMIT = "  {day}: {label} / {state} / 実行 {runs} 回{last}"
 ENFORCE_DIALOG_TITLE = "shiftlock 強制モードの同意"
 ENFORCE_DIALOG_TEXT = "{day} の乗務を強制モード（{label} {hours}h）にする。ええ？\n解除は kaijo.cmd か STOP.txt。"
-ENFORCE_BAD_ACTION = PREFIX + "action は lock / sleep / shutdown のどれかで。"
+ENFORCE_BAD_ACTION = PREFIX + "action は lock / sleep / shutdown / throttle / suspend のどれかで。"
 ENFORCE_BAD_HOURS = PREFIX + "時間は 2 や 3h みたいに書いてな。"
 ENFORCE_HOURS_RANGE = PREFIX + "時間は 0.5〜12 で。"
 ENFORCE_NO_PLAN = COMMON_NO_PLAN
@@ -178,9 +208,11 @@ ENFORCE_RELEASED = PREFIX + "強制を解除したで（STOP.txt）。再開は 
 ENFORCE_RESUME_NONE = PREFIX + "解除中やないで（STOP.txt は無い）。"
 ENFORCE_RESUMED = PREFIX + "再開したで（STOP.txt を消した）。解除した乗務の宣言はやり直し（shl enforce on）。"
 ENFORCE_SUFFIX_STOP = "（STOP.txt があるので今は効かへん）"
+ENFORCE_SUFFIX_LIMIT = " 今日は強制モード（{label}）やで{stop}。解除は kaijo.cmd。"
 ENFORCE_SUFFIX = " 今日は強制モード（{label} {hours}h）やで{stop}。解除は kaijo.cmd。"
 ENFORCE_STATUS_HEAD = PREFIX + "強制モード（宣言は shl enforce on、解除は kaijo.cmd か STOP.txt）"
 ENFORCE_STATUS_DEFAULT = "  既定: {label} / {hours}h / 予告 {grace}分（settings の 19）"
+ENFORCE_STATUS_DEFAULT_LIMIT = "  既定: {label}（settings の 19）"
 ENFORCE_STATUS_STOP = "  STOP.txt: {stop}"
 ENFORCE_STATUS_STOP_ON = "あり（解除中。shl enforce resume で再開）"
 ENFORCE_STATUS_STOP_OFF = "なし"
@@ -236,6 +268,7 @@ STATUS_UNCONFIRMED_SEP = ", "
 STATUS_ENFORCE_RELEASED = "解除済み"
 STATUS_ENFORCE_RUNS = "実行 {n} 回"
 STATUS_ENFORCE_ITEM = "{day} {label} {hours}h（{state}）"
+STATUS_ENFORCE_ITEM_LIMIT = "{day} {label}（{state}）"
 STATUS_ENFORCE_STOP = "STOP.txt で解除中 "
 STATUS_ENFORCE = "  強制モード: {stop}{items}"
 STATUS_ENFORCE_SEP = "、"
@@ -466,6 +499,8 @@ REPORT_TIP_NODATA = "記録なし"
 REPORT_TIP_AWAY = "乗務で外出中"
 REPORT_TIP_PC = "PC {pc}分"
 REPORT_TIP_GAME = " / ゲーム {game}分"
+REPORT_TIP_DEV = " / 開発 {dev}分"
+REPORT_TIP_ADOBE = " / Adobe {adobe}分"
 REPORT_TIP_CLAUDE = " / Claude {n}回"
 REPORT_TIP_VISIT = "（訪問の時間帯）"
 REPORT_TIP_CELL = "{label} {h}時台: {tip}"
@@ -483,6 +518,8 @@ REPORT_ABSENCE_NOTE = ("「当日欠勤」は『今日休む』『休んだ』�
 REPORT_LEGEND_PC = "PCを触ってた時間（1時間あたり）"
 REPORT_LEGEND_RAMP = "0 → 60分"
 REPORT_LEGEND_GAME = "ゲーム15分以上"
+REPORT_LEGEND_DEV = "開発15分以上"
+REPORT_LEGEND_ADOBE = "Adobe15分以上"
 REPORT_LEGEND_CLAUDE = "Claude Code 使用"
 REPORT_LEGEND_AWAY = "乗務で外出中"
 REPORT_LEGEND_NODATA = "記録なし"
@@ -494,6 +531,8 @@ REPORT_COL_OKITA = "起きた"
 REPORT_COL_SLEEP = "睡眠"
 REPORT_COL_PC = "PC(h)"
 REPORT_COL_GAME = "ゲーム(h)"
+REPORT_COL_DEV = "開発(h)"
+REPORT_COL_ADOBE = "Adobe(h)"
 REPORT_COL_CLAUDE = "Claude"
 REPORT_COL_MOOD = "気分"
 REPORT_COL_MEMO = "メモ"
@@ -531,9 +570,11 @@ CLI_HELP = """shiftlock の使い方（pwsh / Windows PowerShell のどのディ
   shl settings               設定メニュー
   shl learned                覚えた言い方 / shl learn neru ばたんきゅー / shl unlearn ばたんきゅー
   shl cleanup                古い記録の整理を今すぐ
+  shl app add <exe> <dev|adobe> / remove <exe> / list   時間を測るアプリの登録（開発・Adobe。ゲームは自動）
+  shl app limit add|remove|exclude|include <exe> / list   減速・一時停止の対象（add・include は自分の端末から）
   scan-games / show-games    ゲーム判定の確認
 Claude Code のプロンプトに打つ言葉（ねる / おきた / 今日休む / 11/5 休み / 状況 / 予定）は README の「解除ワード」を見てな"""
-CLI_ARG_ENFORCE_OPTS = "on のとき lock|sleep|shutdown と 2h のような時間"
+CLI_ARG_ENFORCE_OPTS = "on のとき lock|sleep|shutdown と 2h のような時間、または throttle|suspend（時間は付けへん）"
 CLI_ARG_SLEEP_WHEN = "時刻（と日付）を付けると後から足す睡眠の記録（例: 11/7 23:30。末尾に 取消 で消す）"
 CLI_ARG_PAST_DATE = "日付を付けると終わった乗務の事後報告（例: 11/3）"
 CLI_ARG_PAID = "有給 / 有給なし（休みに有給の印を付ける／外す。当日欠勤の目安に数えへん）"
@@ -583,3 +624,78 @@ APP_CONFIG_BAD_JSON = "JSON の書き方がおかしいで（{err}）"
 APP_CONFIG_BAD_VALUE = "{key} の書き方がおかしいで: {value}"
 APP_STATE_BUSY = "いま記録のファイルを読み書きできへんかったわ。もう一度押してな。"
 APP_LOG_BUSY = "（履歴の events.log には書けへんかったわ。記録そのものは残ってるから、押し直さんでええで。）"
+
+# ================================================================ agent（ネイティブ版の常駐。native/shiftlock.Agent）
+# Python 側では使わず、tools/export_native.py が JSON に書き出す。トレイのメニュー・確認・知らせ。
+AGENT_MENU_OPEN = "状態を開く"
+AGENT_MENU_RELEASE = "緊急解除"
+AGENT_MENU_EXIT = "終了"
+AGENT_RELEASE_TITLE = "shiftlock 緊急解除"
+AGENT_RELEASE_ASK = "強制モードを解除する？\n（予約済みのシャットダウンを止めて、STOP.txt を置くで。再開は shl enforce resume）"
+AGENT_RELEASE_PARTIAL = "強制は解除したで（STOP.txt あり）。ただ、記録の一部が書けへんかった。"
+AGENT_RELEASE_FAILED = "解除を記録できへんかった。{path} を手で作ってな（中身は空でええ）。"
+AGENT_TIP_GUARD_TASK = "見張りを止めてるで（タスク shiftlock-guard が有効）"
+AGENT_TIP_FAILED = "前の見張りに失敗したで（agent.log を見てな）"
+AGENT_OPEN_FAILED = "shiftlock.exe が見つからへん（{path}）"
+AGENT_TEST_TOAST = "トーストのテストやで"
+AGENT_TEST_POPUP = "ポップアップのテストやで"
+# 切り替え（shiftlock-agent.exe --install / --uninstall の結果。1 行ずつ出す）
+AGENT_SETUP_AUTOSTART_ON = "ログオン時の自動起動を登録したで"
+AGENT_SETUP_AUTOSTART_OFF = "自動起動の登録を外したで"
+AGENT_SETUP_TASK_DISABLED = "タスク {task} を無効にしたで（Python 版の見張りは止まる）"
+AGENT_SETUP_TASK_ENABLED = "タスク {task} を有効に戻したで（Python 版の見張りに戻る）"
+AGENT_SETUP_TASK_MISSING = "タスク {task} は無いから、そのままにするで"
+AGENT_SETUP_TASK_FAILED = "タスク {task} を切り替えられへんかった: {err}"
+AGENT_SETUP_ROLLED_BACK = "二重の見張りにならんよう、自動起動の登録は取り消したで"
+AGENT_SETUP_ROLLBACK_FAILED = "自動起動の登録を取り消されへんかった: {err}（このままやと次のログオンから二重の見張りになる。shiftlock-agent.exe --uninstall で外してな）"
+AGENT_SETUP_STARTED = "Agent を起動したで"
+AGENT_SETUP_STOPPED = "動いてた Agent を終わらせたで"
+AGENT_SETUP_FAILED = "失敗したわ: {err}"
+
+# アプリの減速・一時停止（native/shiftlock.Agent の Limiter。アプリの名前は入れない）
+AGENT_LIMIT_NOTICE = "{at} から、対象のアプリ {n} 件の CPU を直近の使用率の {percent}% に下げるで（強制モード）。解除は shl kaijo かトレイの「緊急解除」。"
+AGENT_LIMIT_NOTICE_SUSPEND = "{at} に、対象のアプリ {n} 件を一時停止するで（強制モード）。保存してへん内容は先に保存しときや。解除は shl kaijo かトレイの「緊急解除」。"
+AGENT_LIMIT_SUSPENDED = "対象のアプリ {n} 件を一時停止したで。"
+AGENT_LIMIT_RELEASED = "アプリの減速・一時停止を元に戻したで。"
+AGENT_LIMIT_SKIPPED = "手を加えたらあかんもんが一緒に動いてるアプリがあるから、そのアプリは見送ったで。"
+AGENT_LIMIT_FAILED = "アプリの減速か一時停止が一部できへんかったで（agent.log を見てな）。"
+AGENT_LIMIT_BAD_RECORD = "減速・一時停止の記録（limit.json）が読めへんかったから、limit.json.bad に名前を変えたで。止まったままのアプリがあったら、終了して起動し直してな。"
+AGENT_LIMIT_STALE_CAP = "前回の上限が残ってるかもしれんで。対象のアプリを起動し直すと戻るで。"
+
+# ---- shl app（計測するアプリの登録）----
+APPS_ADDED = "{name} を {cat} で登録したで"
+APPS_CHANGED = "{name} を {old} から {cat} に付け替えたで"
+APPS_REMOVED = "{name} の登録を外したで"
+APPS_NOT_FOUND = "{name} は登録されてへんで"
+APPS_NO_GAME = "ゲームは登録せんでええで（自動で判定する。ゲームのフォルダは shl settings で）"
+APPS_BAD_CAT = "カテゴリは dev か adobe やで（例: shl app add code.exe dev）"
+APPS_BAD_NAME = "exe の名前だけ書いてな（フォルダは書かへん。例: code.exe）"
+APPS_BAD_SECTION = "shifts.json の apps の形がおかしいから書き換えへんで"
+APPS_USAGE = "使い方: shl app add <exe名> <dev|adobe> / shl app remove <exe名> / shl app list"
+APPS_LIST_LINE = "{cat}: {names}"
+APPS_LIST_EMPTY = "登録は無いで（shl app add code.exe dev で足せる）"
+
+# ---- shl app limit（減速・一時停止の対象）----
+APPS_LIMIT_USAGE = "使い方: shl app limit add <exe名> / remove <exe名> / exclude <exe名> / include <exe名> / list"
+APPS_LIMIT_NEED_TTY = "対象を広げる操作（add・include）は，自分で端末を開いて打ってな（ここからは足せへんで）"
+APPS_LIMIT_NOT_REGISTERED = "{name} は登録されてへんから足せへんで（先に shl app add {name} dev か adobe で登録してな）"
+APPS_LIMIT_NEVER = "{name} は手を加えへん名前の一覧に入ってるから足せへんで（limit.never）"
+APPS_LIMIT_ADDED = "{name} を減速・一時停止の対象に足したで（次に宣言する乗務から効く）"
+APPS_LIMIT_ANTICHEAT_WARN = "注意: アンチチートのあるアプリに上限や一時停止をかけると，切断などが起きることがあるで"
+APPS_LIMIT_PROTECT_NOTE = "注意: 子プロセスに claude.exe・node.exe・wsl.exe などが居るアプリは，ターミナルで Claude Code が動いてるかもしれんから手を加えんと見送るで（エディタなど）"
+APPS_LIMIT_REMOVED = "{name} を対象から外したで"
+APPS_LIMIT_NOT_FOUND = "{name} は足されてへんで"
+APPS_LIMIT_EXCLUDED = "{name} を対象から外したで（ゲームは自動で対象になるから，外す印を付けた）"
+APPS_LIMIT_INCLUDED = "{name} を対象に戻したで（次に宣言する乗務から効く）"
+APPS_LIMIT_NOT_EXCLUDED = "{name} は外してへんで"
+APPS_LIMIT_LIST_APPS = "足したアプリ: {names}"
+APPS_LIMIT_LIST_APPS_NONE = "足したアプリ: なし"
+APPS_LIMIT_LIST_EXCLUDED = "外したゲーム: {names}"
+APPS_LIMIT_LIST_EXCLUDED_NONE = "外したゲーム: なし"
+APPS_LIMIT_LIST_GAMES = "最近見たゲーム:"
+APPS_LIMIT_LIST_GAMES_NONE = "最近見たゲーム: なし（Agent が動いてる間に見たものだけ載る）"
+APPS_LIMIT_LIST_GAME_LINE = "  {name}: {verdict}{excluded}"
+APPS_LIMIT_LIST_GAME_EXCLUDED = "（手で外してある）"
+APPS_LIMIT_VERDICT_TARGET = "対象"
+APPS_LIMIT_VERDICT_ANTICHEAT = "アンチチートの印があるから対象外"
+APPS_LIMIT_VERDICT_UNKNOWN = "調べられへんから対象外"

@@ -256,7 +256,7 @@ def enforce_menu(raw: dict, c: dict, io) -> None:
     io.print(M.MENU_ENFORCE_INTRO1)
     io.print(M.MENU_ENFORCE_INTRO2)
     ec = raw.setdefault("enforce", {})
-    a = _ask(io, M.MENU_ENFORCE_ACTION, {"lock": "1", "sleep": "2", "shutdown": "3"}[c["enforce"]["action"]],
+    a = _ask(io, M.MENU_ENFORCE_ACTION, {"lock": "1", "sleep": "2", "shutdown": "3"}.get(c["enforce"]["action"], c["enforce"]["action"]),
              lambda s: {"1": "lock", "2": "sleep", "3": "shutdown"}[s.strip()])
     if a in CAUTION_ACTIONS:
         io.print(M.MENU_ENFORCE_CAUTION.format(caution=M.ENFORCE_CAUTION[a]))

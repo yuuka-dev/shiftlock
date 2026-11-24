@@ -23,6 +23,26 @@ public sealed class ConfigTests
         return Vectors.Materialize(new JsonObject { ["shifts.json"] = shifts });
     }
 
+    [Fact]
+    public void Defaults_HaveApps()
+    {
+        using var folder = Folder();
+        var cfg = ShiftConfig.Load(folder.ShiftsJson);
+        var apps = cfg.Raw["apps"]!.AsObject();
+        Assert.Empty(apps["registered"]!.AsObject());
+        Assert.Equal(5, apps["active_input_minutes"]!.GetValue<double>());
+        Assert.Equal(5, apps["active_cpu_percent"]!.GetValue<double>());
+    }
+
+    [Fact]
+    public void Load_MergesAppsRegistered()
+    {
+        using var folder = Folder("""{"apps":{"registered":{"code.exe":"dev"}}}""");
+        var apps = ShiftConfig.Load(folder.ShiftsJson).Raw["apps"]!.AsObject();
+        Assert.Equal("dev", apps["registered"]!["code.exe"]!.GetValue<string>());
+        Assert.Equal(5, apps["active_input_minutes"]!.GetValue<double>());
+    }
+
     [Theory]
     [MemberData(nameof(WorkdayCases))]
     public void IsWorkday_MatchesPython(VectorCase c)
@@ -135,6 +155,86 @@ public sealed class ConfigTests
         Assert.Equal((90, 40, 5, 4), (cfg.PrepMinutes, cfg.LastcallMinutes, cfg.SleepTargetHours, cfg.SleepMinHours));
         Assert.Empty(cfg.NoSleep);
         Assert.Equal(folder.Dir, cfg.Dir);
+    }
+
+    private static void AssertJson(string expected, JsonNode? actual) =>
+        Assert.True(JsonNode.DeepEquals(JsonNode.Parse(expected), actual), $"expected {expected}\nactual   {actual?.ToJsonString()}");
+
+    [Fact]
+    public void Load_EmptyObject_HasPythonDefaultSections()
+    {
+        // pc/shiftlock/config.py の DEFAULTS と同じ値（見張りが使う節）
+        using var folder = Vectors.Materialize(new JsonObject { ["shifts.json"] = new JsonObject() });
+        var cfg = ShiftConfig.Load(folder.ShiftsJson);
+        AssertJson("""{"nag_after_minutes":120,"nag_every_minutes":30,"idle_reset_minutes":20,"game_idle_minutes":180}""", cfg.Section("usage"));
+        AssertJson("""{"phase":"toast","hard":"popup","nag":"toast","speak":false,"sound":{},"sound_volume":0.8,"sound_max_seconds":20}""",
+            cfg.Section("notify"));
+        AssertJson("""{"days_keep":60,"log_keep_days":180,"events_keep_days":365}""", cfg.Section("retention"));
+        AssertJson("""{"closing_day":20,"keep_months":3}""", cfg.Section("report"));
+        AssertJson("""{"mode":"ask","lookback_days":7,"home_activity_minutes":60,"okita_means_worked":true}""", cfg.Section("confirm"));
+        AssertJson("""{"window_shifts":24,"warn_at":5}""", cfg.Section("absence"));
+        AssertJson("""{"action":"lock","duration_hours":2,"grace_minutes":15,"relock_minutes":5,"max_runs":6,"boot_grace_minutes":15,"skip_if_remote":true}""",
+            cfg.Section("enforce"));
+        AssertJson("""{"steps":[75,50,25,10],"baseline_minutes":30,"apps":[],"exclude":[]}""",
+            new JsonObject { ["steps"] = cfg.Section("limit")["steps"]!.DeepClone(), ["baseline_minutes"] = cfg.Section("limit")["baseline_minutes"]!.DeepClone(),
+                             ["apps"] = cfg.Section("limit")["apps"]!.DeepClone(), ["exclude"] = cfg.Section("limit")["exclude"]!.DeepClone() });
+        Assert.Contains("EasyAntiCheat*", cfg.Section("limit")["anticheat_markers"]!.AsArray().Select(x => x!.GetValue<string>()));
+        Assert.Equal(19, cfg.Section("limit")["anticheat_markers"]!.AsArray().Count);
+        Assert.Equal(36, cfg.Section("limit")["never"]!.AsArray().Count);
+        Assert.Equal(8, cfg.Section("limit")["protect"]!.AsArray().Count);
+        AssertJson("""{"ics_url":"","sources":[],"off_keywords":["休み","公休","有給"],"work_keywords":["出勤"],"sync_minutes":60}""",
+            cfg.Section("calendar"));
+        AssertJson("\"\"", cfg.Raw["mood_file"]);
+        AssertJson("\"07:00\"", cfg.Raw["shift_end_earliest"]);
+        AssertJson("\"09:00\"", cfg.Raw["home_by_latest"]);
+        AssertJson("true", cfg.Raw["auto_wake"]);
+        Assert.True(cfg.Raw.ContainsKey("auto_wake_hours"));
+        Assert.Null(cfg.Raw["auto_wake_hours"]);
+        AssertJson("true", cfg.Raw["steam_libraries"]);
+        AssertJson("[]", cfg.Raw["game_dirs"]);
+        AssertJson("[]", cfg.Raw["game_exclude_dirs"]);
+        AssertJson("[]", cfg.Raw["game_processes"]);
+        AssertJson("""["UnityCrashHandler*","CrashReport*","*crashpad*","unins*","vc_redist*","dxsetup*","*Redist*","steamerrorreporter*","*Setup*"]""",
+            cfg.Raw["game_exclude"]);
+    }
+
+    [Fact]
+    public void Load_Sections_MergeOverDefaults()
+    {
+        // deep_merge: 辞書は中まで重ねる．それ以外（配列・値）は書いてあるものに置き換える
+        using var folder = Folder(
+            """{"usage":{"nag_after_minutes":90},"notify":{"sound":{"hard":"C:\\a.wav"}},"game_exclude":[],"calendar":{"sources":[{"name":"A","ics_url":"u"}]},"confirm":{"mode":"off","x":1}}""");
+        var cfg = ShiftConfig.Load(folder.ShiftsJson);
+        AssertJson("""{"nag_after_minutes":90,"nag_every_minutes":30,"idle_reset_minutes":20,"game_idle_minutes":180}""", cfg.Section("usage"));
+        AssertJson("""{"hard":"C:\\a.wav"}""", cfg.Section("notify")["sound"]);
+        AssertJson("\"popup\"", cfg.Section("notify")["hard"]);
+        AssertJson("[]", cfg.Raw["game_exclude"]);
+        AssertJson("""[{"name":"A","ics_url":"u"}]""", cfg.Section("calendar")["sources"]);
+        AssertJson("60", cfg.Section("calendar")["sync_minutes"]);
+        AssertJson("""{"mode":"off","lookback_days":7,"home_activity_minutes":60,"okita_means_worked":true,"x":1}""", cfg.Section("confirm"));
+        AssertJson("60", cfg.Raw["prep_minutes"]);
+    }
+
+    [Theory]
+    [InlineData("""{"notify":{"sound":[]}}""")]
+    [InlineData("""{"notify":{"sound":"C:\\a.wav"}}""")]
+    [InlineData("""{"notify":{"sound":null}}""")]
+    public void Load_NotifySoundNotDict_BecomesEmpty(string over)
+    {
+        // 任意機能の設定ミスで本線を止めない（Python の load_config と同じ）
+        using var folder = Folder(over);
+        AssertJson("{}", ShiftConfig.Load(folder.ShiftsJson).Section("notify")["sound"]);
+    }
+
+    [Theory]
+    [InlineData("""{"usage":"120"}""", "usage は {...} の形で書いて")]
+    [InlineData("""{"absence":[]}""", "absence は {...} の形で書いて")]
+    [InlineData("""{"calendar":{"sources":{}}}""", "calendar.sources は")]
+    public void Load_BrokenSection_ThrowsConfigException(string over, string head)
+    {
+        using var folder = Folder(over);
+        var e = Assert.Throws<ConfigException>(() => ShiftConfig.Load(folder.ShiftsJson));
+        Assert.StartsWith(head, e.Message);
     }
 
     [Theory]

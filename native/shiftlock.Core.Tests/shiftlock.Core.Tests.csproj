@@ -21,6 +21,7 @@
   <!-- テストベクタ（Python 版から書き出したもの）を出力の vectors/ へ写す -->
   <ItemGroup>
     <Content Include="..\..\docs\test-vectors\*.json" Link="vectors\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\docs\test-vectors\*.jsonl" Link="vectors\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

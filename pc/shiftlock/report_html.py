@@ -78,8 +78,12 @@ def render_report(data: dict) -> str:
             if r["visit"][h]:
                 cls.append("vs")
             inner = ""
-            if r["game"][h] >= 15:
-                inner += '<i class="g"></i>'
+            dev = (r.get("dev") or [0] * 24)[h]
+            adobe = (r.get("adobe") or [0] * 24)[h]
+            bands = "".join(tag for m, tag in ((r["game"][h], '<i class="g"></i>'), (dev, '<i class="dv"></i>'),
+                                               (adobe, '<i class="ad"></i>')) if m >= 15)
+            if bands:   # 15 分以上のカテゴリだけをゲーム → 開発 → Adobe の順で並べる
+                inner += f'<i class="bd">{bands}</i>'
             if r["claude"][h]:
                 inner += '<i class="d"></i>'
             if not r["cov"][h]:
@@ -87,8 +91,15 @@ def render_report(data: dict) -> str:
             elif r["away"][h] and r["pc"][h] == 0:
                 tip = M.REPORT_TIP_AWAY
             else:
-                tip = M.REPORT_TIP_PC.format(pc=r["pc"][h]) + (M.REPORT_TIP_GAME.format(game=r["game"][h]) if r["game"][h] else "") + \
-                      (M.REPORT_TIP_CLAUDE.format(n=r["claude"][h]) if r["claude"][h] else "")
+                tip = M.REPORT_TIP_PC.format(pc=r["pc"][h])
+                if r["game"][h]:
+                    tip += M.REPORT_TIP_GAME.format(game=r["game"][h])
+                if dev:
+                    tip += M.REPORT_TIP_DEV.format(dev=dev)
+                if adobe:
+                    tip += M.REPORT_TIP_ADOBE.format(adobe=adobe)
+                if r["claude"][h]:
+                    tip += M.REPORT_TIP_CLAUDE.format(n=r["claude"][h])
             if r["visit"][h]:
                 tip += M.REPORT_TIP_VISIT
             cells.append(f'<td class="{" ".join(cls)}" data-tip="{E(M.REPORT_TIP_CELL.format(label=r["label"], h=h, tip=tip))}">{inner}</td>')
@@ -104,6 +115,8 @@ def render_report(data: dict) -> str:
             f'<td class="n" title="{E(r["sleep_span"])}">{_hm(r["sleep_min"])}</td>'
             f'<td class="n">{_h1(r["pc_total"])}</td>'
             f'<td class="n">{_h1(r["game_total"])}</td>'
+            f'<td class="n">{_h1(r.get("dev_total") or 0)}</td>'
+            f'<td class="n">{_h1(r.get("adobe_total") or 0)}</td>'
             f'<td class="n">{r["claude_total"] or ""}</td>'
             + (f'<td class="n md">{mood_cell(r["mood"])}</td>' if data.get("mood_enabled") else "")
             + f'<td class="n fl">{flag}</td></tr>')
@@ -135,12 +148,12 @@ def render_report(data: dict) -> str:
  --surface-1:#fcfcfb;--surface-2:#f3f2ef;--border:#dcdbd6;
  --text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#77766f;
  --l0:#f1f0ec;--l1:#b7d3f6;--l2:#86b6ef;--l3:#3987e5;--l4:#1c5cab;
- --away:#c4c2bb;--nodata:#c9c7c0;--game:#eb6834;--dot:#0b0b0b;--yasumi:#d03b3b}}
+ --away:#c4c2bb;--nodata:#c9c7c0;--game:#eb6834;--dev:#2f7d5b;--adobe:#8a4fd0;--dot:#0b0b0b;--yasumi:#d03b3b}}
 @media (prefers-color-scheme:dark){{:root:where(:not([data-theme="light"])) .viz-root{{color-scheme:dark;
  --surface-1:#1a1a19;--surface-2:#232321;--border:#3a3a37;
  --text-primary:#f0efec;--text-secondary:#c3c2b7;--text-muted:#9a998f;
  --l0:#232321;--l1:#104281;--l2:#256abf;--l3:#3987e5;--l4:#86b6ef;
- --away:#4a4a46;--nodata:#5a5a55;--game:#d95926;--dot:#f0efec;--yasumi:#e66767}}}}
+ --away:#4a4a46;--nodata:#5a5a55;--game:#d95926;--dev:#4fb389;--adobe:#b08af0;--dot:#f0efec;--yasumi:#e66767}}}}
 *{{box-sizing:border-box}}
 body{{margin:0;background:#fcfcfb}}
 .viz-root{{background:var(--surface-1);color:var(--text-primary);min-height:100vh;
@@ -169,7 +182,9 @@ td.c{{width:20px;height:18px;border-radius:3px;position:relative;padding:0}}
 .aw{{background:var(--away)}}
 .nd{{background:repeating-linear-gradient(45deg,var(--nodata) 0 1.5px,transparent 1.5px 4.5px)}}
 .vs{{outline:1.5px dashed var(--text-secondary);outline-offset:-1.5px}}
-i.g{{position:absolute;left:2px;right:2px;bottom:2px;height:4px;border-radius:2px;background:var(--game);box-shadow:0 0 0 1px var(--surface-1)}}
+i.bd{{position:absolute;left:2px;right:2px;bottom:2px;height:4px;display:flex;gap:1px}}
+i.bd i{{flex:1;border-radius:2px;box-shadow:0 0 0 1px var(--surface-1)}}
+i.g{{background:var(--game)}}i.dv{{background:var(--dev)}}i.ad{{background:var(--adobe)}}
 i.d{{position:absolute;right:2px;top:2px;width:5px;height:5px;border-radius:50%;background:var(--dot);box-shadow:0 0 0 1px var(--surface-1)}}
 td.n{{padding:0 8px;text-align:right;white-space:nowrap;color:var(--text-primary)}}
 td.fl{{text-align:left;color:var(--text-secondary);font-size:12px}}
@@ -199,7 +214,9 @@ h2{{font-size:15px;margin:18px 0 6px;font-weight:650}}
  <span>{M.REPORT_LEGEND_PC}
   <span class="ramp"><i class="sw l0"></i><i class="sw l1"></i><i class="sw l2"></i><i class="sw l3"></i><i class="sw l4"></i></span>
   {M.REPORT_LEGEND_RAMP}</span>
- <span><i class="sw" style="background:var(--surface-2)"><i class="g"></i></i>{M.REPORT_LEGEND_GAME}</span>
+ <span><i class="sw" style="background:var(--surface-2)"><i class="bd"><i class="g"></i></i></i>{M.REPORT_LEGEND_GAME}</span>
+ <span><i class="sw" style="background:var(--surface-2)"><i class="bd"><i class="dv"></i></i></i>{M.REPORT_LEGEND_DEV}</span>
+ <span><i class="sw" style="background:var(--surface-2)"><i class="bd"><i class="ad"></i></i></i>{M.REPORT_LEGEND_ADOBE}</span>
  <span><i class="sw" style="background:var(--surface-2)"><i class="d"></i></i>{M.REPORT_LEGEND_CLAUDE}</span>
  <span><i class="sw aw"></i>{M.REPORT_LEGEND_AWAY}</span>
  <span><i class="sw nd"></i>{M.REPORT_LEGEND_NODATA}</span>
@@ -207,7 +224,7 @@ h2{{font-size:15px;margin:18px 0 6px;font-weight:650}}
 </div>
 <table aria-label="{M.REPORT_TABLE_ARIA}">
 <thead><tr><th></th>{head}<th class="colh">{M.REPORT_COL_SHIFT}</th><th class="colh">{M.REPORT_COL_NERU}</th><th class="colh">{M.REPORT_COL_OKITA}</th><th class="colh">{M.REPORT_COL_SLEEP}</th>
-<th class="colh">{M.REPORT_COL_PC}</th><th class="colh">{M.REPORT_COL_GAME}</th><th class="colh">{M.REPORT_COL_CLAUDE}</th>{mood_col}<th class="colh" style="text-align:left">{M.REPORT_COL_MEMO}</th></tr></thead>
+<th class="colh">{M.REPORT_COL_PC}</th><th class="colh">{M.REPORT_COL_GAME}</th><th class="colh">{M.REPORT_COL_DEV}</th><th class="colh">{M.REPORT_COL_ADOBE}</th><th class="colh">{M.REPORT_COL_CLAUDE}</th>{mood_col}<th class="colh" style="text-align:left">{M.REPORT_COL_MEMO}</th></tr></thead>
 <tbody>{"".join(body)}</tbody></table>
 <p class="note">{note}</p>
 {memo_html}

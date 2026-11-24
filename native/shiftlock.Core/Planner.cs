@@ -146,7 +146,7 @@ public static class Planner
         TimeSpan.FromTicks((long)Math.Round(value * microsPerUnit, MidpointRounding.ToEven) * 10);
 
     /// <summary>d0〜d1 の各日の寝られない時間帯（plan.no_sleep_intervals）．終わりが始まり以前なら翌日にまたぐ．</summary>
-    private static List<(DateTime Start, DateTime End)> NoSleepIntervals(ShiftConfig cfg, DateOnly d0, DateOnly d1)
+    internal static List<(DateTime Start, DateTime End)> NoSleepIntervals(ShiftConfig cfg, DateOnly d0, DateOnly d1)
     {
         var result = new List<(DateTime, DateTime)>();
         for (var d = d0; d <= d1; d = d.AddDays(1))

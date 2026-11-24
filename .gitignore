@@ -8,6 +8,10 @@ pc/learned.json
 pc/maintenance.json
 pc/notified.json
 pc/usage-*.json
+pc/limit.json
+pc/limit.json.bad
+pc/limit-games.json
+pc/claude-busy.json
 pc/events.log
 pc/guard.log
 pc/game-scan.txt

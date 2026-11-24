@@ -18,7 +18,7 @@ EXCLUDE=(
 )
 
 # 追跡されていたら止める個人データの名前（CLAUDE.md の「絶対」と同じ）
-PERSONAL='(^|/)(shifts\.json|days\.json|state\.json|calendar\.json|learned\.json|events\.log|usage-[^/]*\.json|report\.html|mood\.csv)$|(^|/)(log|reports)/'
+PERSONAL='(^|/)(shifts\.json|days\.json|state\.json|calendar\.json|learned\.json|limit\.json|limit\.json\.bad|limit-games\.json|claude-busy\.json|events\.log|usage-[^/]*\.json|report\.html|mood\.csv)$|(^|/)(log|reports)/'
 
 die() { echo "中止: $*" >&2; exit 1; }
 

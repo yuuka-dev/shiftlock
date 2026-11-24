@@ -47,6 +47,35 @@ public static class TimeUtil
     /// <summary>"MM/dd"（Python の %m/%d）．</summary>
     public static string FmtMd(DateTime t) => t.ToString("MM'/'dd", CultureInfo.InvariantCulture);
 
+    /// <summary>区間 iv から cuts の各区間を引いた残り（timeutil._subtract）．</summary>
+    public static IReadOnlyList<(DateTime S, DateTime E)> Subtract((DateTime S, DateTime E) iv,
+        IEnumerable<(DateTime Start, DateTime End)> cuts)
+    {
+        var pieces = new List<(DateTime S, DateTime E)> { iv };
+        foreach (var (cs, ce) in cuts)
+        {
+            var next = new List<(DateTime S, DateTime E)>();
+            foreach (var (s, e) in pieces)
+            {
+                if (ce <= s || cs >= e)
+                {
+                    next.Add((s, e));
+                    continue;
+                }
+                if (s < cs)
+                {
+                    next.Add((s, cs));
+                }
+                if (ce < e)
+                {
+                    next.Add((ce, e));
+                }
+            }
+            pieces = next;
+        }
+        return pieces;
+    }
+
     private static readonly string[] IsoFormats =
     [
         "yyyy'-'MM'-'dd'T'HH':'mm", "yyyy'-'MM'-'dd'T'HH':'mm':'ss", "yyyy'-'MM'-'dd'T'HH':'mm':'ss'.'FFFFFFF",

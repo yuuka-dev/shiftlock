@@ -21,8 +21,57 @@ from .timeutil import fmt_dur
 from .usage import due_nag, touch_usage
 
 
+_BUSY_FILE = "claude-busy.json"
+_BUSY_KEEP = timedelta(days=1)   # Stop が来なかった印がたまらんように，1 日より古いのは捨てる
+
+
+def _save_busy(path: Path, marks: dict) -> None:
+    _write(path, marks)
+
+
+def _update_busy(cfg_path: Path, payload: dict, event: str, code: int, now: datetime) -> None:
+    """Claude Code が処理中の印を残す／消す（Agent が通知を待たせるのに読む）。失敗しても何も起こさへん。"""
+    try:
+        sid = payload.get("session_id")
+        if not isinstance(sid, str) or not sid:
+            return
+        if event == "UserPromptSubmit":
+            if code != 0:
+                return   # exit 2 の道は Claude が動かへんので Stop も来ない．設定エラー（1）の道も足さない
+        elif event != "Stop":
+            return
+        path = Store(cfg_path).p(_BUSY_FILE)
+        raw = _read(path, {})
+        marks = {}
+        for k, v in (raw.items() if isinstance(raw, dict) else []):
+            try:
+                if isinstance(k, str) and now - datetime.fromisoformat(v) <= _BUSY_KEEP:
+                    marks[k] = v
+            except (TypeError, ValueError):
+                pass   # 読めへん印は捨てる
+        if event == "Stop":
+            marks.pop(sid, None)
+        else:
+            marks[sid] = now.replace(microsecond=0).isoformat()
+        _save_busy(path, marks)
+    except Exception:
+        pass
+
+
 def run_hook(cfg_path: Path, stdin_text: str, now: datetime) -> tuple[int, str, str]:
     """returns (exit_code, stdout, stderr)"""
+    try:
+        payload = json.loads(stdin_text) if stdin_text.strip() else {}
+        if not isinstance(payload, dict):
+            payload = {}
+    except json.JSONDecodeError:
+        payload = {}
+    result = _run_hook(cfg_path, stdin_text, now)
+    _update_busy(cfg_path, payload, payload.get("hook_event_name", ""), result[0], now)
+    return result
+
+
+def _run_hook(cfg_path: Path, stdin_text: str, now: datetime) -> tuple[int, str, str]:
     try:
         payload = json.loads(stdin_text) if stdin_text.strip() else {}
     except json.JSONDecodeError:

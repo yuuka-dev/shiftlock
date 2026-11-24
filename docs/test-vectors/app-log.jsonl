@@ -1,0 +1,4 @@
+{"t": "2026-12-07T21:05:00", "span": 300, "apps": {"code.exe": {"cat": "dev", "act": 300, "cpu": 1.0}}, "other": 0}
+{"t": "2026-12-07T21:10:00", "span": 300, "apps": {"code.exe": {"cat": "dev", "act": 0, "cpu": 1.0}}, "other": 300}
+{"t": "2026-12-07T21:15:00", "span": 300, "apps": {"eldenring.exe": {"cat": "game", "act": 300, "cpu": 10.0}}, "other": 0}
+{"t": "2026-12-07T21:20:00", "span": 240, "apps": {"photoshop.exe": {"cat": "adobe", "act": 240, "cpu": 1.0}}, "other": 0}

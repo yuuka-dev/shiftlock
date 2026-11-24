@@ -119,11 +119,13 @@ shiftlock.Agent（ユーザーセッション）
 |---|---|---|
 | `STOP.txt` を置く | 強制だけ止まる．通知は続く | エクスプローラー |
 | トレイメニュー「緊急解除」／`shl kaijo` | 同上＋予約シャットダウンの中止 | ログインできること |
-| Agent を終了（段階 1） | 全部止まる | タスクマネージャー |
+| Agent を終了（段階 1） | 全部止まる | トレイメニュー「終了」（確認なし）か，タスクマネージャー |
 | サービス停止（段階 2） | 全部止まる | 管理者（UAC） |
 | セーフモード起動 | 全部止まる | 物理アクセス |
 
 解除は全部 `events.log` に残し，レポートに回数を出す．
+
+区切り 2 で作ったのは段階 1 の分: トレイの「緊急解除」は `guard.ps1 -Release` と同じこと（予約済みシャットダウンの中止 → `STOP.txt` → 宣言に `released_at` と `events.log`．理由は `tray`）をする．トレイに置くのは解除だけで，宣言・再開（`shl enforce resume`）・設定は置かない．
 
 ## 6. 一般の人向けに足すもの
 
@@ -157,6 +159,16 @@ shiftlock.Agent（ユーザーセッション）
 Python 版は v12 が安定するまで残す（同じデータ形式なので並走できる）．
 
 **2026-11-17 に順番を入れ替えた．** 上の表では GUI が最後（v12）だが，画面ごとに「その画面に要るロジックだけ」を C# に移し，区切りごとに動くものを出す: 1 状態と記録の画面 → 2 トレイ常駐と通知 → 3 設定画面と初回ウィザード → 4 レポート → 5 配布．hook（`shl.exe`）と強制モードはこの 5 つとは別に扱う．区切り 1（状態と記録の画面）は実装済みで，設計は [superpowers/specs/2026-11-17-native-status-window-design.md](superpowers/specs/2026-11-17-native-status-window-design.md)．上の表は構成（Core／Agent／App／`shl`）の説明として残す．
+
+| 区切り | 内容 | 状態 |
+|---|---|---|
+| 1 | 状態と記録の画面（`shiftlock.exe`） | 実装済み |
+| 2 | トレイ常駐と見張り（`shiftlock-agent.exe`．`tick` の判断を全部 C# に移し，`guard.ps1` とタスク `shiftlock-guard` を置き換える） | 実装済み．設計は [superpowers/specs/2026-11-17-native-agent-design.md](superpowers/specs/2026-11-17-native-agent-design.md)．本番への切り替えは本人が行う（[native/README.md](../native/README.md)） |
+| 2 の続き ② | アプリごとの稼働計測（同じ Agent に載せる．`log/app-*.jsonl`・`shl app`・レポートのカテゴリの帯と列） | 実装済み（issue #6）．設計は [superpowers/specs/2026-11-22-native-app-meter-design.md](superpowers/specs/2026-11-22-native-app-meter-design.md)，作業記録は [native-agent-worklog.md](native-agent-worklog.md) の区切り 3 の節．本番への反映は本人が行う |
+| 2 の続き ③ | 減速・一時停止（同じ Agent に載せる．強制モードの動作 `throttle`／`suspend`） | 実装済み（issue #9．合成の対象での通し確認と本番での確認は本人に残る）．設計は [superpowers/specs/2026-11-23-native-app-limit-design.md](superpowers/specs/2026-11-23-native-app-limit-design.md)，作業記録は [native-agent-worklog.md](native-agent-worklog.md) の区切り 4 の節 |
+| 3 | 設定画面と初回ウィザード | 未着手 |
+| 4 | レポート | 未着手 |
+| 5 | 配布 | 未着手 |
 
 計画の具体化の範囲（判断）: α・β・v12 は作業単位まで分解する．v13（一般配布）と Android／iOS はマイルストーンだけにし，それぞれ着手時に別の計画を書く．α は v11 の数値（猶予・回数・閾値）が本人の運用で固まってから始める．v13 を見据えて α の時点でやっておくのは **文言の外出し**（関西弁の直書きをやめる）だけ．
 
