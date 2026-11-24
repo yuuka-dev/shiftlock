@@ -39,14 +39,14 @@ SHARED = REPO / "native" / "shared"
 VECTORS = REPO / "docs" / "test-vectors"
 
 # 書き出すキー。ネイティブ版が使う文だけに絞る（設定メニューは持っていかない。CLI_・SHL_ は shl.exe が使う）
-EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP", "DAYS_NOTE", "DAYS_EXCEPTION_MARK",
+EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP",
          # 見張り（shiftlock.Agent）が使う文
-         "PHONE_LATE_PREFIX", "PHONE_OKITA", "RECORDS_YASUMI_PAID", "CONFIRM_HOME_HINT", "CONFIRM_MORE", "CONFIRM_USER",
+         "PHONE_LATE_PREFIX", "PHONE_OKITA", "RECORDS_YASUMI_PAID",
          # 強制モードは発動と解除で使う文だけ（宣言・状態表示の文は持っていかない。C# に宣言の入口を作らない）
          "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_SUFFIX_LIMIT", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
          "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY")
 PREFIXES = ("TIME_DUR_", "RECORDS_KITAKU", "RECORDS_NERU", "RECORDS_OKITA", "RECORDS_SHUPPATSU", "RECORDS_UNDO_",
-            "CONFIG_", "APP_", "AGENT_", "CLI_", "SHL_",
+            "CONFIG_", "APP_", "AGENT_", "CLI_", "SHL_", "STATUS_", "DAYS_", "CONFIRM_",
             "PHASE_", "AUTOWAKE_", "RECORDS_LATE_", "RECORDS_PAID_", "ABSENCE_", "NOTIFY_", "TICK_", "CAL_")
 SKIP_SUFFIX = "_CTX"   # Claude 向けの文（hook が使う）。ネイティブ版は使わない
 
@@ -1113,6 +1113,150 @@ def _skip_cleanup(row):
     return name, {**files, "maintenance.json": {"last_cleanup": day}}, inp
 
 
+# ---- 見るだけのコマンド（shl status / yotei / day list / kakunin）----
+# status_text・kakunin_text: input {"now"}、expect {"text", "state": 終わったあとの state.json（無ければ null）}
+#   （未確認の乗務を数えるとき、confirm_since が無ければ state.json に書く）
+# schedule_text: input {"now", "n": 日数}、expect {"text"}
+
+def _pc_log(*stamps, idle=30, game=0) -> str:
+    return "".join(json.dumps({"t": s, "idle": idle, "game": game}) + "\n" for s in stamps)
+
+
+def _state_or_none(store):
+    return _read_state(store) if store.p("state.json").exists() else None
+
+
+def _expect_status_text(cfg, store, inp) -> dict:
+    text = sl.status_text(cfg, store, datetime.fromisoformat(inp["now"]))
+    return {"text": text, "state": _state_or_none(store)}
+
+
+def _expect_kakunin_text(cfg, store, inp) -> dict:
+    text = sl.kakunin_text(cfg, store, datetime.fromisoformat(inp["now"]))
+    return {"text": text, "state": _state_or_none(store)}
+
+
+def _expect_schedule_text(cfg, store, inp) -> dict:
+    return {"text": sl.schedule_text(cfg, datetime.fromisoformat(inp["now"]).date(), inp["n"])}
+
+
+def _status_rows() -> list:
+    """いまは 2026-12-10（木）。記録開始日は log/pc-2026-12.jsonl の最初の行（12/01）。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**over)}
+
+    b = cfg()
+    d = "2026-12-10"
+    log = {"log/pc-2026-12.jsonl": _pc_log("2026-12-01T09:00")}
+    worked = {"status": "worked", "at": "2026-12-08T16:00"}
+    cal4 = {"sources": [{"name": "A", "ics_url": CAL_A}, {"name": "B", "ics_url": CAL_B},
+                        {"ics_url": "https://cal.example/c.ics"}, {"name": "A", "ics_url": "https://cal.example/d.ics"}]}
+    declared = {
+        "2026-12-08": {"enforce": _declared_enforce()},                                   # おとといより前は出さない
+        "2026-12-09": {"enforce": _declared_enforce(action="sleep", duration_hours=2.5, released_at="2026-12-09T11:00",
+                                                    runs=[{"at": "2026-12-09T10:45:00", "action": "sleep"}])},
+        "2026-12-10": {"enforce": _declared_enforce(runs=[{"at": f"{d}T10:45:00", "action": "lock"},
+                                                          {"at": f"{d}T10:55:00", "action": "lock"}])},
+        "2026-12-11": {"enforce": _declared_enforce(action="suspend", steps=[75, 50, 25, 10])},
+        "2026-12-14": {"enforce": {"consented_at": f"{d}T06:00"}},                        # 古い宣言（項目が無い）
+        "2026-12-15": {"enforce": {"action": "lock", "declared_at": f"{d}T06:00"}},       # 同意が無い宣言は出さない
+        "2026-12-16": {"enforce": _declared_enforce(action="shutdown", duration_hours="3")},
+    }
+    return [
+        ("記録なし・就寝準備の時間", b, {"now": f"{d}T07:30"}),
+        ("起きた乗務", {**b, "state.json": _state(d, status="okita", at=f"{d}T14:00")}, {"now": f"{d}T15:50"}),
+        ("金曜の夜（次は月曜で 24 時間より先）", b, {"now": "2026-12-11T18:00"}),
+        ("work_weekdays が空（乗務なし）", cfg(work_weekdays=[]), {"now": f"{d}T09:00"}),
+        ("睡眠の時間が小数（7.5・6.0）", cfg(sleep_target_hours=7.5, sleep_min_hours=6.0), {"now": f"{d}T09:00"}),
+        ("当日欠勤が目安に達している（有給は数えない・窓より前の休みも数えない）",
+         {**cfg(absence={"window_shifts": 6, "warn_at": 2}), **log,
+          "state.json": {"confirm_since": "2026-12-01",
+                         "shifts": {"2026-12-03": {"status": "yasumi", "at": "2026-12-03T10:00"},
+                                    "2026-12-04": {"status": "yasumi", "at": "2026-12-04T10:00", "paid": True},
+                                    "2026-12-07": {"status": "yasumi", "at": "2026-12-07T10:00"},
+                                    "2026-12-08": worked, "2026-12-09": worked,
+                                    "2026-12-01": {"status": "yasumi", "at": "2026-12-01T10:00"}}}},
+         {"now": f"{d}T18:00"}),
+        ("当日欠勤の目安が 0（行を出さない）", cfg(absence={"warn_at": 0}), {"now": f"{d}T09:00"}),
+        ("当日欠勤の設定が壊れている（既定に戻す）", cfg(absence={"window_shifts": "abc", "warn_at": 500}), {"now": f"{d}T09:00"}),
+        ("カレンダー 4 本（同期済み・未・エラー・名前の重なり）",
+         {**cfg(calendar=cal4),
+          "calendar.json": {"sources": {"A": {"fetched": "2026-12-10T06:00:12", "off": {"2026-12-14": "公休"}, "work": {}},
+                                        "カレンダー3": {"fetched": "2026-12-09T23:10:00", "error": "HTTP Error 404: Not Found",
+                                                    "off": {}, "work": {"2026-12-12": ""}}}}},
+         {"now": f"{d}T09:00"}),
+        ("カレンダーが旧形式（ics_url が 1 本・calendar.json に sources が無い）",
+         {**cfg(calendar={"ics_url": CAL_A}), "calendar.json": {"fetched": "2026-12-09T23:00", "off": {"2026-12-11": "有給"}, "work": {}}},
+         {"now": f"{d}T09:00"}),
+        ("カレンダーの設定はあるが calendar.json が無い", cfg(calendar={"ics_url": CAL_A}), {"now": f"{d}T09:00"}),
+        ("未確認の乗務（聞いた乗務も並ぶ・出た乗務は並ばない）",
+         {**b, **log, "state.json": {"confirm_since": "2026-12-01",
+                                    "shifts": {"2026-12-08": worked, "2026-12-07": {"confirm_asked": "2026-12-08T09:00"}}}},
+         {"now": f"{d}T12:00"}),
+        ("confirm_since が無ければ前日を書く（未確認は昨日の乗務だけ）", {**b, **log}, {"now": f"{d}T12:00"}),
+        ("強制モードの宣言（実行済み・解除済み・一時停止・古い宣言）と STOP.txt",
+         {**b, "state.json": {"shifts": declared}, "STOP.txt": "2026-12-10 11:00 kaijo\n"}, {"now": f"{d}T12:00"}),
+        ("強制モードの宣言（STOP.txt なし）", {**b, "state.json": {"shifts": declared}}, {"now": f"{d}T12:00"}),
+        ("減速の宣言", {**b, "state.json": {"shifts": {d: {"enforce": _declared_enforce(action="throttle", steps=[75, 50, 25, 10])}}}},
+         {"now": f"{d}T12:00"}),
+        ("STOP.txt だけ（宣言なし）", {**b, "STOP.txt": "2026-12-10 11:00 kaijo\n"}, {"now": f"{d}T12:00"}),
+        ("例外日（理由つき・理由なし）",
+         {**b, "days.json": {"off": {"2026-12-11": "通院", "2026-12-14": ""}, "work": {"2026-12-12": "振替"}}},
+         {"now": f"{d}T18:00"}),
+        ("関西弁",
+         {**cfg(lang="ja_kansai", calendar=cal4, absence={"window_shifts": 6, "warn_at": 1}), **log,
+          "state.json": {"confirm_since": "2026-12-01",
+                         "shifts": {**declared, "2026-12-07": {"status": "yasumi", "at": "2026-12-07T10:00"}}},
+          "STOP.txt": "2026-12-10 11:00 kaijo\n"},
+         {"now": f"{d}T12:00"}),
+        ("関西弁・乗務なし", cfg(lang="ja_kansai", work_weekdays=[]), {"now": f"{d}T09:00"}),
+    ]
+
+
+def _kakunin_rows() -> list:
+    b = {"shifts.json": _base()}
+    log = {"log/pc-2026-12.jsonl": _pc_log("2026-12-01T09:00")}
+    worked = {"status": "worked", "at": "2026-12-08T16:00"}
+    now = {"now": "2026-12-10T12:00"}
+
+    def state(**shifts):
+        return {"state.json": {"confirm_since": "2026-12-01", "shifts": {d.replace("_", "-"): v for d, v in shifts.items()}}}
+
+    return [
+        ("記録が無ければ未確認もない", b, now),
+        ("全部確認済み（出た・休んだ・起きた）",
+         {**b, **log, **state(**{"2026_12_03": worked, "2026_12_04": {"status": "yasumi", "at": "2026-12-04T10:00"},
+                                 "2026_12_07": {"status": "okita", "at": "2026-12-07T14:00"}, "2026_12_08": worked,
+                                 "2026_12_09": worked})}, now),
+        ("未確認が並ぶ（古い順・聞いた乗務も）",
+         {**b, **log, **state(**{"2026_12_08": worked, "2026_12_07": {"confirm_asked": "2026-12-08T09:00"}})}, now),
+        ("起きただけの乗務を「出た」と数えない設定",
+         {"shifts.json": _base(confirm={"okita_means_worked": False}), **log,
+          **state(**{"2026_12_09": {"status": "okita", "at": "2026-12-09T14:00"}, "2026_12_08": worked, "2026_12_07": worked,
+                     "2026_12_04": worked, "2026_12_03": worked})}, now),
+        ("今朝終わったばかりの乗務は 07:00 から", {**b, **log, **state()}, {"now": "2026-12-10T06:59"}),
+        ("confirm_since が無ければ前日を書く", {**b, **log}, now),
+        ("lookback_days 2", {"shifts.json": _base(confirm={"lookback_days": 2}), **log, **state()}, now),
+        ("関西弁", {"shifts.json": _base(lang="ja_kansai"), **log, **state()}, now),
+        ("関西弁・未確認なし", {"shifts.json": _base(lang="ja_kansai")}, now),
+    ]
+
+
+def _schedule_rows() -> list:
+    b = {"shifts.json": _base()}
+    days = {"days.json": {"off": {"2026-12-11": "通院", "2026-12-14": ""}, "work": {"2026-12-12": "振替", "2026-12-20": ""}},
+            "calendar.json": {"sources": {"A": {"off": {"2026-12-16": "公休", "2026-12-12": "手動が勝つ"}, "work": {"2026-12-19": ""}}}}}
+    return [
+        ("14 日（yotei）", b, {"now": "2026-12-10T12:00", "n": 14}),
+        ("28 日（day list）・年またぎ", b, {"now": "2026-12-10T12:00", "n": 28}),
+        ("例外日（理由つき・理由なし・カレンダー）", {**b, **days}, {"now": "2026-12-10T00:00", "n": 14}),
+        ("例外日・28 日", {**b, **days}, {"now": "2026-12-10T23:59", "n": 28}),
+        ("7 で割り切れない日数", b, {"now": "2026-12-10T12:00", "n": 10}),
+        ("1 日だけ", b, {"now": "2026-12-10T12:00", "n": 1}),
+        ("関西弁", {"shifts.json": _base(lang="ja_kansai"), **days}, {"now": "2026-12-10T12:00", "n": 14}),
+    ]
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -1144,6 +1288,11 @@ def build_vectors() -> dict:
             "calendar": _cases(_tick_calendar_rows(), _expect_tick),
             "maintenance": _cases(_tick_maintenance_rows(), _expect_tick),
             "release": _cases(_release_rows(), _expect_release),
+        },
+        "commands.json": {
+            "status_text": _cases(_status_rows(), _expect_status_text),
+            "schedule_text": _cases(_schedule_rows(), _expect_schedule_text),
+            "kakunin_text": _cases(_kakunin_rows(), _expect_kakunin_text),
         },
     }
 

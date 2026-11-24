@@ -1,0 +1,2120 @@
+{
+ "status_text": [
+  {
+   "name": "記録なし・就寝準備の時間",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:30"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 07:30 / フェーズ: lastcall\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "起きた乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "okita",
+       "at": "2026-12-10T14:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T15:50"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 15:50 / フェーズ: go\n  乗務 12/10（okita）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "okita",
+       "at": "2026-12-10T14:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "金曜の夜（次は月曜で 24 時間より先）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-11T18:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/11 18:00 / フェーズ: free\n  乗務 12/14（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/14 08:00（8h） / 最低ライン 12/14 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出  12/17木出\n  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出  12/24木出",
+    "state": null
+   }
+  },
+  {
+   "name": "work_weekdays が空（乗務なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: free\n  予定されている乗務はもうないよ\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 0 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/10木休  12/11金休  12/12土休  12/13日休  12/14月休  12/15火休  12/16水休\n  12/17木休  12/18金休  12/19土休  12/20日休  12/21月休  12/22火休  12/23水休",
+    "state": null
+   }
+  },
+  {
+   "name": "睡眠の時間が小数（7.5・6.0）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 7.5,
+     "sleep_min_hours": 6.0,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: soft\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:30（7.5h） / 最低ライン 12/10 10:30（6.0h） / 就寝準備 07:50〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "当日欠勤が目安に達している（有給は数えない・窓より前の休みも数えない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "absence": {
+      "window_shifts": 6,
+      "warn_at": 2
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-03": {
+       "status": "yasumi",
+       "at": "2026-12-03T10:00"
+      },
+      "2026-12-04": {
+       "status": "yasumi",
+       "at": "2026-12-04T10:00",
+       "paid": true
+      },
+      "2026-12-07": {
+       "status": "yasumi",
+       "at": "2026-12-07T10:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-01": {
+       "status": "yasumi",
+       "at": "2026-12-01T10:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T18:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 18:00 / フェーズ: free\n  乗務 12/11（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/11 08:00（8h） / 最低ライン 12/11 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 4 回\n  当日欠勤（有給除く）: 直近 6 乗務で 2 回（有給 1）/ 目安 2 回 ！\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-03": {
+       "status": "yasumi",
+       "at": "2026-12-03T10:00"
+      },
+      "2026-12-04": {
+       "status": "yasumi",
+       "at": "2026-12-04T10:00",
+       "paid": true
+      },
+      "2026-12-07": {
+       "status": "yasumi",
+       "at": "2026-12-07T10:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-01": {
+       "status": "yasumi",
+       "at": "2026-12-01T10:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "当日欠勤の目安が 0（行を出さない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "absence": {
+      "warn_at": 0
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: soft\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "当日欠勤の設定が壊れている（既定に戻す）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "absence": {
+      "window_shifts": "abc",
+      "warn_at": 500
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: soft\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "カレンダー 4 本（同期済み・未・エラー・名前の重なり）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "calendar": {
+      "sources": [
+       {
+        "name": "A",
+        "ics_url": "https://cal.example/a.ics"
+       },
+       {
+        "name": "B",
+        "ics_url": "https://cal.example/b.ics"
+       },
+       {
+        "ics_url": "https://cal.example/c.ics"
+       },
+       {
+        "name": "A",
+        "ics_url": "https://cal.example/d.ics"
+       }
+      ]
+     }
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "fetched": "2026-12-10T06:00:12",
+       "off": {
+        "2026-12-14": "公休"
+       },
+       "work": {}
+      },
+      "カレンダー3": {
+       "fetched": "2026-12-09T23:10:00",
+       "error": "HTTP Error 404: Not Found",
+       "off": {},
+       "work": {
+        "2026-12-12": ""
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: soft\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  カレンダー「A」: 最終同期 2026-12-10 06:00\n  カレンダー「B」: 最終同期 未\n  カレンダー「カレンダー3」: 最終同期 2026-12-09 23:10 / エラー HTTP Error 404: Not Found\n  カレンダー「A'」: 最終同期 未\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土出*  12/13日休  12/14月休（公休）  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "カレンダーが旧形式（ics_url が 1 本・calendar.json に sources が無い）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "calendar": {
+      "ics_url": "https://cal.example/a.ics"
+     }
+    },
+    "calendar.json": {
+     "fetched": "2026-12-09T23:00",
+     "off": {
+      "2026-12-11": "有給"
+     },
+     "work": {}
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: soft\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  カレンダー「カレンダー」: 最終同期 2026-12-09 23:00\n  この先2週間（* = 例外日）\n  12/10木出  12/11金休（有給）  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "カレンダーの設定はあるが calendar.json が無い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "calendar": {
+      "ics_url": "https://cal.example/a.ics"
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: soft\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  カレンダー「カレンダー」: 最終同期 未\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "未確認の乗務（聞いた乗務も並ぶ・出た乗務は並ばない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "confirm_asked": "2026-12-08T09:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 12:00 / フェーズ: hard\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 8 乗務で 0 回（有給 0）/ 目安 5 回\n  未確認の乗務: 12/03, 12/04, 12/07, 12/09（『出た』『休んだ』で記録）\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "confirm_asked": "2026-12-08T09:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "confirm_since が無ければ前日を書く（未確認は昨日の乗務だけ）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n"
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 12:00 / フェーズ: hard\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 8 乗務で 0 回（有給 0）/ 目安 5 回\n  未確認の乗務: 12/09（『出た』『休んだ』で記録）\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "confirm_since": "2026-12-09"
+    }
+   }
+  },
+  {
+   "name": "強制モードの宣言（実行済み・解除済み・一時停止・古い宣言）と STOP.txt",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-09": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2.5,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-09T10:45:00",
+          "action": "sleep"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-09T11:00"
+       }
+      },
+      "2026-12-10": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-10T10:45:00",
+          "action": "lock"
+         },
+         {
+          "at": "2026-12-10T10:55:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-11": {
+       "enforce": {
+        "action": "suspend",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      },
+      "2026-12-14": {
+       "enforce": {
+        "consented_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-15": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-16": {
+       "enforce": {
+        "action": "shutdown",
+        "duration_hours": "3",
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    },
+    "STOP.txt": "2026-12-10 11:00 kaijo\n"
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 12:00 / フェーズ: hard\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  強制モード: STOP.txt で解除中 12/09 スリープ 2.5h（解除済み）、12/10 ロック 2h（実行 2 回）、12/11 アプリの一時停止（実行 0 回）、12/14 None 2h（実行 0 回）、12/16 シャットダウン 3h（実行 0 回）\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-09": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2.5,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-09T10:45:00",
+          "action": "sleep"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-09T11:00"
+       }
+      },
+      "2026-12-10": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-10T10:45:00",
+          "action": "lock"
+         },
+         {
+          "at": "2026-12-10T10:55:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-11": {
+       "enforce": {
+        "action": "suspend",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      },
+      "2026-12-14": {
+       "enforce": {
+        "consented_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-15": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-16": {
+       "enforce": {
+        "action": "shutdown",
+        "duration_hours": "3",
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "強制モードの宣言（STOP.txt なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-09": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2.5,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-09T10:45:00",
+          "action": "sleep"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-09T11:00"
+       }
+      },
+      "2026-12-10": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-10T10:45:00",
+          "action": "lock"
+         },
+         {
+          "at": "2026-12-10T10:55:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-11": {
+       "enforce": {
+        "action": "suspend",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      },
+      "2026-12-14": {
+       "enforce": {
+        "consented_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-15": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-16": {
+       "enforce": {
+        "action": "shutdown",
+        "duration_hours": "3",
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 12:00 / フェーズ: hard\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  強制モード: 12/09 スリープ 2.5h（解除済み）、12/10 ロック 2h（実行 2 回）、12/11 アプリの一時停止（実行 0 回）、12/14 None 2h（実行 0 回）、12/16 シャットダウン 3h（実行 0 回）\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-09": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2.5,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-09T10:45:00",
+          "action": "sleep"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-09T11:00"
+       }
+      },
+      "2026-12-10": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-10T10:45:00",
+          "action": "lock"
+         },
+         {
+          "at": "2026-12-10T10:55:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-11": {
+       "enforce": {
+        "action": "suspend",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      },
+      "2026-12-14": {
+       "enforce": {
+        "consented_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-15": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-16": {
+       "enforce": {
+        "action": "shutdown",
+        "duration_hours": "3",
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "減速の宣言",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "enforce": {
+        "action": "throttle",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 12:00 / フェーズ: hard\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  強制モード: 12/10 アプリの減速（実行 0 回）\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "enforce": {
+        "action": "throttle",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "STOP.txt だけ（宣言なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "STOP.txt": "2026-12-10 11:00 kaijo\n"
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 12:00 / フェーズ: hard\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  強制モード: STOP.txt で解除中 \n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "例外日（理由つき・理由なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院",
+      "2026-12-14": ""
+     },
+     "work": {
+      "2026-12-12": "振替"
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T18:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 18:00 / フェーズ: free\n  乗務 12/12（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/12 08:00（8h） / 最低ライン 12/12 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 24 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/10木出  12/11金休（通院）  12/12土出（振替）  12/13日休  12/14月休*  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": null
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "calendar": {
+      "sources": [
+       {
+        "name": "A",
+        "ics_url": "https://cal.example/a.ics"
+       },
+       {
+        "name": "B",
+        "ics_url": "https://cal.example/b.ics"
+       },
+       {
+        "ics_url": "https://cal.example/c.ics"
+       },
+       {
+        "name": "A",
+        "ics_url": "https://cal.example/d.ics"
+       }
+      ]
+     },
+     "absence": {
+      "window_shifts": 6,
+      "warn_at": 1
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-09": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2.5,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-09T10:45:00",
+          "action": "sleep"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-09T11:00"
+       }
+      },
+      "2026-12-10": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-10T10:45:00",
+          "action": "lock"
+         },
+         {
+          "at": "2026-12-10T10:55:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-11": {
+       "enforce": {
+        "action": "suspend",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      },
+      "2026-12-14": {
+       "enforce": {
+        "consented_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-15": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-16": {
+       "enforce": {
+        "action": "shutdown",
+        "duration_hours": "3",
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-07": {
+       "status": "yasumi",
+       "at": "2026-12-07T10:00"
+      }
+     }
+    },
+    "STOP.txt": "2026-12-10 11:00 kaijo\n"
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 12:00 / フェーズ: hard\n  乗務 12/10（-）: 出庫 17:00〜17:30 / 出発 16:00〜16:30\n  就寝目安 12/10 08:00（8h） / 最低ライン 12/10 10:30（6h） / 就寝準備 07:20〜\n  今月の休み: 1 回\n  当日欠勤（有給除く）: 直近 6 乗務で 1 回（有給 0）/ 目安 1 回 ！\n  カレンダー「A」: 最終同期 未\n  カレンダー「B」: 最終同期 未\n  カレンダー「カレンダー3」: 最終同期 未\n  カレンダー「A'」: 最終同期 未\n  未確認の乗務: 12/03, 12/04, 12/08, 12/09（『出た』『休んだ』で記録）\n  強制モード: STOP.txt で解除中 12/09 スリープ 2.5h（解除済み）、12/10 ロック 2h（実行 2 回）、12/11 アプリの一時停止（実行 0 回）、12/14 None 2h（実行 0 回）、12/16 シャットダウン 3h（実行 0 回）\n  この先2週間（* = 例外日）\n  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-08": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-09": {
+       "enforce": {
+        "action": "sleep",
+        "duration_hours": 2.5,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-09T10:45:00",
+          "action": "sleep"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "released_at": "2026-12-09T11:00"
+       }
+      },
+      "2026-12-10": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [
+         {
+          "at": "2026-12-10T10:45:00",
+          "action": "lock"
+         },
+         {
+          "at": "2026-12-10T10:55:00",
+          "action": "lock"
+         }
+        ],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-11": {
+       "enforce": {
+        "action": "suspend",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15,
+        "steps": [
+         75,
+         50,
+         25,
+         10
+        ]
+       }
+      },
+      "2026-12-14": {
+       "enforce": {
+        "consented_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-15": {
+       "enforce": {
+        "action": "lock",
+        "declared_at": "2026-12-10T06:00"
+       }
+      },
+      "2026-12-16": {
+       "enforce": {
+        "action": "shutdown",
+        "duration_hours": "3",
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      },
+      "2026-12-07": {
+       "status": "yasumi",
+       "at": "2026-12-07T10:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "関西弁・乗務なし",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00"
+   },
+   "expect": {
+    "text": "[shiftlock] いま 12/10 09:00 / フェーズ: free\n  予定されてる乗務はもうないで\n  今月の休み: 0 回\n  当日欠勤（有給除く）: 直近 0 乗務で 0 回（有給 0）/ 目安 5 回\n  この先2週間（* = 例外日）\n  12/10木休  12/11金休  12/12土休  12/13日休  12/14月休  12/15火休  12/16水休\n  12/17木休  12/18金休  12/19土休  12/20日休  12/21月休  12/22火休  12/23水休",
+    "state": null
+   }
+  }
+ ],
+ "schedule_text": [
+  {
+   "name": "14 日（yotei）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "n": 14
+   },
+   "expect": {
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出"
+   }
+  },
+  {
+   "name": "28 日（day list）・年またぎ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "n": 28
+   },
+   "expect": {
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出\n  12/24木出  12/25金出  12/26土休  12/27日休  12/28月出  12/29火出  12/30水出\n  12/31木出  01/01金出  01/02土休  01/03日休  01/04月出  01/05火出  01/06水出"
+   }
+  },
+  {
+   "name": "例外日（理由つき・理由なし・カレンダー）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院",
+      "2026-12-14": ""
+     },
+     "work": {
+      "2026-12-12": "振替",
+      "2026-12-20": ""
+     }
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "off": {
+        "2026-12-16": "公休",
+        "2026-12-12": "手動が勝つ"
+       },
+       "work": {
+        "2026-12-19": ""
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T00:00",
+    "n": 14
+   },
+   "expect": {
+    "text": "  12/10木出  12/11金休（通院）  12/12土出（振替）  12/13日休  12/14月休*  12/15火出  12/16水休（公休）\n  12/17木出  12/18金出  12/19土出*  12/20日出*  12/21月出  12/22火出  12/23水出"
+   }
+  },
+  {
+   "name": "例外日・28 日",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院",
+      "2026-12-14": ""
+     },
+     "work": {
+      "2026-12-12": "振替",
+      "2026-12-20": ""
+     }
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "off": {
+        "2026-12-16": "公休",
+        "2026-12-12": "手動が勝つ"
+       },
+       "work": {
+        "2026-12-19": ""
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T23:59",
+    "n": 28
+   },
+   "expect": {
+    "text": "  12/10木出  12/11金休（通院）  12/12土出（振替）  12/13日休  12/14月休*  12/15火出  12/16水休（公休）\n  12/17木出  12/18金出  12/19土出*  12/20日出*  12/21月出  12/22火出  12/23水出\n  12/24木出  12/25金出  12/26土休  12/27日休  12/28月出  12/29火出  12/30水出\n  12/31木出  01/01金出  01/02土休  01/03日休  01/04月出  01/05火出  01/06水出"
+   }
+  },
+  {
+   "name": "7 で割り切れない日数",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "n": 10
+   },
+   "expect": {
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休"
+   }
+  },
+  {
+   "name": "1 日だけ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "n": 1
+   },
+   "expect": {
+    "text": "  12/10木出"
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院",
+      "2026-12-14": ""
+     },
+     "work": {
+      "2026-12-12": "振替",
+      "2026-12-20": ""
+     }
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "off": {
+        "2026-12-16": "公休",
+        "2026-12-12": "手動が勝つ"
+       },
+       "work": {
+        "2026-12-19": ""
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "n": 14
+   },
+   "expect": {
+    "text": "  12/10木出  12/11金休（通院）  12/12土出（振替）  12/13日休  12/14月休*  12/15火出  12/16水休（公休）\n  12/17木出  12/18金出  12/19土出*  12/20日出*  12/21月出  12/22火出  12/23水出"
+   }
+  }
+ ],
+ "kakunin_text": [
+  {
+   "name": "記録が無ければ未確認もない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務はないよ。",
+    "state": null
+   }
+  },
+  {
+   "name": "全部確認済み（出た・休んだ・起きた）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "yasumi",
+       "at": "2026-12-04T10:00"
+      },
+      "2026-12-07": {
+       "status": "okita",
+       "at": "2026-12-07T14:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務はないよ。",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "yasumi",
+       "at": "2026-12-04T10:00"
+      },
+      "2026-12-07": {
+       "status": "okita",
+       "at": "2026-12-07T14:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "未確認が並ぶ（古い順・聞いた乗務も）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "confirm_asked": "2026-12-08T09:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務（『出た』『休んだ』か、shl deru 11/3 / shl yasumi 11/3 で記録）:\n  12/03(木)\n  12/04(金)\n  12/07(月)\n  12/09(水)",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "confirm_asked": "2026-12-08T09:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "起きただけの乗務を「出た」と数えない設定",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "okita_means_worked": false
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-09": {
+       "status": "okita",
+       "at": "2026-12-09T14:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務（『出た』『休んだ』か、shl deru 11/3 / shl yasumi 11/3 で記録）:\n  12/09(水)",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {
+      "2026-12-09": {
+       "status": "okita",
+       "at": "2026-12-09T14:00"
+      },
+      "2026-12-08": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-07": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-04": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      },
+      "2026-12-03": {
+       "status": "worked",
+       "at": "2026-12-08T16:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "今朝終わったばかりの乗務は 07:00 から",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {}
+    }
+   },
+   "input": {
+    "now": "2026-12-10T06:59"
+   },
+   "expect": {
+    "text": "未確認の乗務（『出た』『休んだ』か、shl deru 11/3 / shl yasumi 11/3 で記録）:\n  12/03(木)\n  12/04(金)\n  12/07(月)\n  12/08(火)",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {}
+    }
+   }
+  },
+  {
+   "name": "confirm_since が無ければ前日を書く",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n"
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務（『出た』『休んだ』か、shl deru 11/3 / shl yasumi 11/3 で記録）:\n  12/09(水)",
+    "state": {
+     "confirm_since": "2026-12-09"
+    }
+   }
+  },
+  {
+   "name": "lookback_days 2",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "confirm": {
+      "lookback_days": 2
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {}
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務（『出た』『休んだ』か、shl deru 11/3 / shl yasumi 11/3 で記録）:\n  12/08(火)\n  12/09(水)",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {}
+    }
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "confirm_since": "2026-12-01",
+     "shifts": {}
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務（『出た』『休んだ』か、shl deru 11/3 / shl yasumi 11/3 で記録）:\n  12/03(木)\n  12/04(金)\n  12/07(月)\n  12/08(火)\n  12/09(水)",
+    "state": {
+     "confirm_since": "2026-12-01",
+     "shifts": {}
+    }
+   }
+  },
+  {
+   "name": "関西弁・未確認なし",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00"
+   },
+   "expect": {
+    "text": "未確認の乗務はないで。",
+    "state": null
+   }
+  }
+ ]
+}

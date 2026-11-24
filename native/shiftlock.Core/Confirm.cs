@@ -33,6 +33,15 @@ public static class Confirm
         return m.Format("CONFIRM_USER", ("label", LateReport.Label(Day(p))), ("hint", hint), ("more", more));
     }
 
+    /// <summary>未確認の乗務の一覧の文（confirm.kakunin_text．shl kakunin）．聞いた乗務も並べる．</summary>
+    public static string KakuninText(ShiftConfig cfg, Store store, Messages m, DateTime now)
+    {
+        var unconfirmed = Unconfirmed(cfg, store, now, includeAsked: true);
+        return unconfirmed.Count == 0
+            ? m["CONFIRM_KAKUNIN_NONE"]
+            : m["CONFIRM_KAKUNIN_HEAD"] + "\n" + string.Join("\n", unconfirmed.Select(p => "  " + LateReport.Label(Day(p))));
+    }
+
     /// <summary>聞いたことを残す（confirm.mark_confirm_asked）．聞くのは 1 日 1 件．</summary>
     public static void MarkAsked(Store store, string day, DateTime now)
     {
@@ -44,9 +53,9 @@ public static class Confirm
 
     /// <summary>
     /// 終わった乗務で「出た／休んだ」が無いもの（confirm.unconfirmed_shifts）．記録開始日以降，直近 lookback_days．古い順．
-    /// もう聞いた乗務は除く．
+    /// includeAsked が偽なら，もう聞いた乗務は除く．未確認の扱いを始めた日が無ければ state.json に書く．
     /// </summary>
-    private static List<Plan> Unconfirmed(ShiftConfig cfg, Store store, DateTime now)
+    public static IReadOnlyList<Plan> Unconfirmed(ShiftConfig cfg, Store store, DateTime now, bool includeAsked = false)
     {
         var cf = cfg.Section("confirm");
         if (store.FirstLogDate() is not { } since)
@@ -73,7 +82,7 @@ public static class Confirm
             {
                 continue;
             }
-            if (JsonX.Truthy(me?["confirm_asked"]))
+            if (!includeAsked && JsonX.Truthy(me?["confirm_asked"]))
             {
                 continue;
             }
@@ -109,7 +118,7 @@ public static class Confirm
     private static DateTime ShiftEnd(ShiftConfig cfg, DateOnly d) =>
         TimeUtil.At(d.AddDays(1), JsonX.Str(cfg.Raw["shift_end_earliest"]) ?? "07:00");
 
-    private static DateOnly Day(Plan p) => DateOnly.ParseExact(p.Day, "yyyy'-'MM'-'dd", CultureInfo.InvariantCulture);
+    internal static DateOnly Day(Plan p) => DateOnly.ParseExact(p.Day, "yyyy'-'MM'-'dd", CultureInfo.InvariantCulture);
 
     private static DateOnly? ParseDay(string? s) =>
         DateOnly.TryParseExact(s, "yyyy'-'MM'-'dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var d) ? d : null;

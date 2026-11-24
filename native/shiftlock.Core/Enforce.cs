@@ -287,6 +287,6 @@ public static class Enforce
     private static InvalidDataException Unreadable(string key) => new($"enforce.{key}");
 
     /// <summary>Python の f"{x:g}"（有効 6 桁．15.0 → "15"，2.5 → "2.5"）．</summary>
-    private static string G(double v) =>
+    internal static string G(double v) =>
         v.ToString("G6", CultureInfo.InvariantCulture).Replace("E+", "e+", StringComparison.Ordinal).Replace("E-", "e-", StringComparison.Ordinal);
 }

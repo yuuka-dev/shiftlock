@@ -15,6 +15,8 @@ namespace Shiftlock.Core;
 /// - --config は省ける（環境変数 SHIFTLOCK_DIR → %USERPROFILE%\shift-lock の順で shifts.json を探す）．置く場所はどこでもよい
 /// - 設定が無い・lang が無いときの言葉づかいは標準語（Python 版の既定は関西弁．ShiftConfig と同じ）
 /// - 行末は LF だけ（Python 版は Windows の端末・パイプで CRLF）
+/// - 設定が無い・壊れているときは 1 行の文を標準エラーに出して 1（Python 版はトレースバック）
+/// - 引数を取らないコマンド（status・yotei・kakunin）に余分な引数があれば断る（Python 版は argparse が 2 で終わる）
 /// </summary>
 public static class ShlCli
 {
@@ -30,11 +32,16 @@ public static class ShlCli
     /// <summary>Python 版の shl にあって，ネイティブ版にまだ入れていないコマンド（docs/native-gap.md §5 の順に減らす）．</summary>
     private static readonly string[] NotYet =
     [
-        "status", "yotei", "kakunin", "day",
         "okita", "neru", "itte", "yasumi", "deru",
         "sync", "cleanup", "kaijo", "app", "enforce",
         "learned", "learn", "unlearn", "install-hook", "report", "settings",
     ];
+
+    /// <summary>day の操作のうち，まだ入れていないもの（docs/native-gap.md §5 の S3 で入れる）．</summary>
+    private static readonly string[] DayNotYet = ["off", "work", "rm"];
+
+    /// <summary>day list の日数（cli.py と同じ）．yotei は Snapshot.ScheduleDays（14 日）．</summary>
+    private const int DayListDays = 28;
 
     /// <summary>ヘルプを出す語（pc/shiftlock-profile.ps1 の shl 関数と同じ）．</summary>
     private static readonly string[] HelpWords = ["help", "-h", "--help", "?", "/?"];
@@ -45,7 +52,9 @@ public static class ShlCli
     /// <param name="Stderr">標準エラー．</param>
     /// <param name="GetEnv">環境変数を引く．</param>
     /// <param name="HomeDir">ユーザーのホーム（%USERPROFILE%）．</param>
-    public sealed record Io(TextReader Stdin, TextWriter Stdout, TextWriter Stderr, Func<string, string?> GetEnv, string HomeDir);
+    /// <param name="Now">いまの時刻（ローカル）．</param>
+    public sealed record Io(TextReader Stdin, TextWriter Stdout, TextWriter Stderr, Func<string, string?> GetEnv, string HomeDir,
+        DateTime Now);
 
     /// <summary>引数を解釈して 1 つのコマンドを動かし，終了コードを返す．</summary>
     public static int Run(IReadOnlyList<string> args, Io io)
@@ -70,8 +79,64 @@ public static class ShlCli
             io.Stdout.Write(m["CLI_HELP"] + "\n");
             return 0;
         }
-        var key = Array.IndexOf(NotYet, parsed.Command) >= 0 ? "SHL_NOT_YET" : "SHL_UNKNOWN";
-        io.Stderr.Write(m.Format(key, ("cmd", parsed.Command)) + "\n");
+        switch (parsed.Command)
+        {
+            case "status" or "yotei" or "kakunin":
+                // 引数は取らない（余分な語を黙って捨てない）
+                return parsed.Rest.Count > 0
+                    ? Refuse(io, m, "SHL_UNKNOWN", parsed.Rest[0])
+                    : View(parsed.Command, configPath, m, io);
+            case "day":
+                var action = parsed.Rest.Count > 0 ? parsed.Rest[0] : null;
+                if (action == "list")
+                {
+                    return View("day list", configPath, m, io);
+                }
+                return Refuse(io, m, Array.IndexOf(DayNotYet, action) >= 0 ? "SHL_NOT_YET" : "SHL_UNKNOWN",
+                    action is null ? "day" : "day " + action);
+            default:
+                return Refuse(io, m, Array.IndexOf(NotYet, parsed.Command) >= 0 ? "SHL_NOT_YET" : "SHL_UNKNOWN", parsed.Command);
+        }
+    }
+
+    /// <summary>
+    /// 見るだけのコマンド（status・yotei・day list・kakunin）．設定を読んで文を標準出力に出す．
+    /// 設定が無い・壊れているときは理由を標準エラーに出して 1．
+    /// status と kakunin は，未確認の扱いを始めた日が無ければ state.json に書く（Python 版と同じ）．
+    /// </summary>
+    private static int View(string command, string configPath, Messages m, Io io)
+    {
+        ShiftConfig cfg;
+        try
+        {
+            cfg = ShiftConfig.Load(configPath);
+        }
+        catch (FileNotFoundException)
+        {
+            io.Stderr.Write(m.Format("APP_NO_CONFIG", ("path", configPath)) + "\n");
+            return 1;
+        }
+        catch (ConfigException e)
+        {
+            io.Stderr.Write(e.Message + "\n");
+            return 1;
+        }
+        var store = new Store(cfg.Dir);
+        var today = DateOnly.FromDateTime(io.Now);
+        var text = command switch
+        {
+            "status" => Commands.StatusText(cfg, store, cfg.Msg, io.Now),
+            "yotei" => Commands.ScheduleText(cfg, cfg.Msg, today),
+            "day list" => Commands.ScheduleText(cfg, cfg.Msg, today, DayListDays),
+            _ => Confirm.KakuninText(cfg, store, cfg.Msg, io.Now),
+        };
+        io.Stdout.Write(text + "\n");
+        return 0;
+    }
+
+    private static int Refuse(Io io, Messages m, string key, string shown)
+    {
+        io.Stderr.Write(m.Format(key, ("cmd", shown)) + "\n");
         return 1;
     }
 
