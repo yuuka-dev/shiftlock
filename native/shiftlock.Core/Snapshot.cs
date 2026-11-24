@@ -43,22 +43,27 @@ public static class Snapshot
         var (key, to) = Countdown(phase, cur, now);
         var rec = next is null ? null : status[next.Day] as JsonObject;
 
-        var schedule = new List<DayCell>(ScheduleDays);
-        for (var i = 0; i < ScheduleDays; i++)
+        return new StatusSnapshot(now, phase, key, to, next,
+            JsonX.Str(rec?["status"]),
+            TimeUtil.ParseIso(JsonX.Str(rec?["sleep_at"])),
+            TimeUtil.ParseIso(JsonX.Str(rec?["kitaku"])),
+            Cells(cfg, today, ScheduleDays));
+    }
+
+    /// <summary>today から n 日ぶんの出／休（days.schedule_text の 1 日ぶんの判断）．</summary>
+    public static IReadOnlyList<DayCell> Cells(ShiftConfig cfg, DateOnly today, int n)
+    {
+        var cells = new List<DayCell>(Math.Max(n, 0));
+        for (var i = 0; i < n; i++)
         {
             var d = today.AddDays(i);
             var ds = Planner.DayKey(d);
             var work = Planner.IsWorkday(cfg, d);
             var why = (work ? cfg.DaysWork : cfg.DaysOff).GetValueOrDefault(ds);
-            schedule.Add(new DayCell(d, work, string.IsNullOrEmpty(why) ? null : why,
+            cells.Add(new DayCell(d, work, string.IsNullOrEmpty(why) ? null : why,
                 cfg.DaysOff.ContainsKey(ds) || cfg.DaysWork.ContainsKey(ds)));
         }
-
-        return new StatusSnapshot(now, phase, key, to, next,
-            JsonX.Str(rec?["status"]),
-            TimeUtil.ParseIso(JsonX.Str(rec?["sleep_at"])),
-            TimeUtil.ParseIso(JsonX.Str(rec?["kitaku"])),
-            schedule);
+        return cells;
     }
 
     /// <summary>

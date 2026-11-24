@@ -3,6 +3,9 @@ using System.Text.Json.Nodes;
 
 namespace Shiftlock.Core;
 
+/// <summary>当日欠勤の目安の数（attendance.absence_stats）．Limit が 0 なら目安なし．</summary>
+public sealed record AbsenceCount(int Limit, int Shifts, int Absent, int Paid, bool Over);
+
 /// <summary>
 /// 終わった乗務の事後報告（「休んだ」「出た」）と，それが使う部品（pc/shiftlock/records.py の _late_report・
 /// resolve_past_day・month_yasumi_count，timeutil.parse_day，days.days_set，attendance.absence_note，
@@ -191,6 +194,16 @@ public static class LateReport
     /// </summary>
     public static string AbsenceNote(ShiftConfig cfg, Store store, Messages m, DateTime now)
     {
+        var s = AbsenceStats(cfg, store, now);
+        return s.Over ? m.Format("ABSENCE_OVER", ("n", s.Absent), ("shifts", s.Shifts), ("limit", s.Limit)) : "";
+    }
+
+    /// <summary>
+    /// 今日までの直近 window_shifts 乗務日の数（attendance.absence_stats）．記録開始日より前の乗務日は数えない．
+    /// Absent は有給の印が無い休み，Paid は有給の印がある休み．Over は Limit が 1 以上で Absent がそれ以上．
+    /// </summary>
+    public static AbsenceCount AbsenceStats(ShiftConfig cfg, Store store, DateTime now)
+    {
         var a = cfg.Section("absence");
         var window = Num(a["window_shifts"], 24, 1, 365);
         var limit = Num(a["warn_at"], 5, 0, 100);
@@ -204,9 +217,7 @@ public static class LateReport
             .ToList();
         var yasumi = days.Select(day => status[day] as JsonObject).Where(v => JsonX.Str(v?["status"]) == "yasumi").ToList();
         var absent = yasumi.Count(v => !JsonX.Truthy(v?["paid"]));
-        return limit > 0 && absent >= limit
-            ? m.Format("ABSENCE_OVER", ("n", absent), ("shifts", days.Count), ("limit", limit))
-            : "";
+        return new AbsenceCount(limit, days.Count, absent, yasumi.Count - absent, limit > 0 && absent >= limit);
 
         // 無い・壊れている（文字列・inf・nan）・範囲外のときは既定（任意機能の設定ミスで記録を止めない）
         static int Num(JsonNode? v, int fallback, int lo, int hi) =>

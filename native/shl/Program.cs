@@ -34,7 +34,7 @@ try
     // 標準入力は使うコマンド（hook）が読むときに初めて開く
     using var stdin = new LazyStdin(utf8);
     var io = new ShlCli.Io(stdin, stdout, stderr, Environment.GetEnvironmentVariable,
-        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
+        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), DateTime.Now);
     code = ShlCli.Run(args, io);
 }
 catch (Exception e)

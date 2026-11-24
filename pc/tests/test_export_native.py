@@ -32,6 +32,9 @@ def test_messages_have_app_keys_in_both_langs():
     # 要らない文（設定メニュー）は書き出さない。CLI_ は shl.exe が使う
     assert not any(k.startswith(("MENU_", "SETTINGS_")) for k in ja)
     assert ja["CLI_HELP"].startswith("shiftlock の使い方") and "{cmd}" in ja["SHL_UNKNOWN"] and "{cmd}" in ja["SHL_NOT_YET"]
+    # 見るだけのコマンド（shl status / yotei / day list / kakunin）の文。Claude 向けの文（_CTX）は持っていかない
+    assert {"STATUS_HEAD", "STATUS_ENFORCE_ITEM_LIMIT", "DAYS_CELL", "DAYS_WORK", "CONFIRM_KAKUNIN_HEAD", "CONFIRM_USER"} <= set(ja)
+    assert not any(k.endswith("_CTX") for k in ja)
     assert "INTENT_LABEL_SEP" in ja and "INTENT_LABEL" in ja
     assert all(k in ("INTENT_LABEL", "INTENT_LABEL_SEP") for k in ja if k.startswith("INTENT_"))
 

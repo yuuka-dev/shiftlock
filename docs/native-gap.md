@@ -305,6 +305,7 @@ D1（設計）は実装と並べて早めに始めてよい．hook（H1〜H3）�
 | # | 状態 | 確かめたこと |
 |---|---|---|
 | S1 | 済み（2026-11-25） | 下の「S1 の結果」 |
+| S2 | 済み（2026-11-25） | 下の「S2 の結果」 |
 
 **S1 の結果**（合成の設定のフォルダで．本番のフォルダには向けていない）
 
@@ -313,8 +314,21 @@ D1（設計）は実装と並べて早めに始めてよい．hook（H1〜H3）�
 - 起動時間（Windows の PowerShell から 30 回）: 空の `hook` は中央値 25 ms，`help`（文面の JSON を読む．186 キー）は 27 ms．同じ測り方の `cmd /c exit` は 19 ms【確認】．文面を読む分は 2 ms ほどなので，キーが約 530 になっても数 ms の見込み【推測】．
 - WSL から `/mnt/c/.../shl.exe hook` を 20 回続けて呼ぶと 1 回あたり約 65 ms，Git Bash からは約 80 ms（どちらも `echo` とパイプの分を含む）【確認】．
 - 出力は UTF-8（BOM なし）・行末 LF．ファイルに受けた `help` の出力は，WSL から呼んで書き出した文面（`CLI_HELP`＋改行）とバイト数が一致．Git Bash のパイプでも先頭と末尾のバイトが UTF-8・LF【確認】．
-- 端末に直接出すときは，コードページを UTF-8 にして書き，終わったら戻す作りにした．本物の端末（Windows Terminal・conhost）で文字化けしないこと・戻ることは見ていない【未確認】．
+- 端末に直接出すときは，コードページを UTF-8 にして書き，終わったら戻す作りにした．本物の端末で文字化けしないことは本人が確認（2026-11-25）【確認】．終わった後にコードページが元に戻ることは見ていない【未確認】．
 - Python 版との違い（`ShlCli` の頭のコメントにも書いた）: 知らないコマンドは 1（Python 版は argparse が 2）／`--config` は省ける／設定が無いときの言葉づかいは標準語／行末は LF．
+
+**S2 の結果**（合成の設定のフォルダで．本番のフォルダには向けていない）
+
+- `status`・`yotei`（14 日）・`day list`（28 日）・`kakunin` が動く．文は Core の `Commands.StatusText`・`Commands.ScheduleText`・`Confirm.KakuninText` が作り，`ShlCli` は設定を読んで出すだけ【確認】．
+- Python 版と同じ文になることを `docs/test-vectors/commands.json`（`status_text` 20 件・`schedule_text` 7 件・`kakunin_text` 9 件）で確かめている．`status` と `kakunin` は，未確認の扱いを始めた日（`confirm_since`）が無ければ `state.json` に書く（Python 版と同じ）．その結果の `state.json` もベクタで比べる【確認】．
+- 発行した `shl.exe` と Python 版（WSL）を同じ合成のフォルダに向けて，4 つのコマンドの標準出力がバイト単位で同じ【確認】．
+- NativeAOT の発行は今回も警告なし（`ShiftConfig`・`Planner`・`Store`・`Confirm`・`CalendarSync` の一部が届く範囲に入った）【確認】．
+- 書き出す文面に `STATUS_`・`DAYS_`・`CONFIRM_`（`_CTX` を除く）を足した．
+- `day off|work|rm` は S3 で入れる．それまでは「まだ無い」で 1（何も書かない）．
+- `Snapshot` に当日欠勤の目安・カレンダーの同期の状況・強制の行は無かった（§2.1 の【未確認】の答え）．`status` の文は `Commands.StatusText` が `LateReport.AbsenceStats`・`CalendarSync.SourceNames`・`state.json` の宣言から組む．画面に出すときは U1 以降で `Snapshot` に足す．
+- Python 版との違い（S1 の分に加えて）: 設定が無い・壊れているときは理由を 1 行で標準エラーに出して 1（Python 版はトレースバック）／`status`・`yotei`・`kakunin` に余分な引数があれば断る／強制モードの宣言の中身が読めないときは例外で 1（Python 版も例外で落ちる．文は違う）．
+- 壊れたファイルの扱いは Python 版とそろえていない（ベクタにも無い）: `calendar.json` の `sources` が辞書でないとき C# は「未」と出す（Python 版は落ちる）／宣言の `runs` が配列でないとき C# は例外で 1（Python 版は長さを出す）／`state.json` が JSON として読めないとき C# は読めない旨で 1（Python 版は空として進む）．
+- 古い宣言（`action` が無い）の行は Python 版と同じく `None` と出る（文をそろえることを優先して，そのまま移した）．直すなら Python 版と一緒に直す【未決】．
 
 ## 6. 一本化しても Python に残るもの
 
