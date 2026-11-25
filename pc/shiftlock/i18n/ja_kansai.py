@@ -594,6 +594,7 @@ CLI_INSTALL_RESTART = "Claude Code を再起動して /hooks で UserPromptSubmi
 # ネイティブ版の shl.exe だけが使う文（Python 版は argparse が断る。Python 側では使わず書き出すだけ）
 SHL_UNKNOWN = "知らんコマンドやで: {cmd}（shl help で一覧）"
 SHL_NOT_YET = "{cmd} はネイティブ版（shl.exe）にまだ無いで。Python 版の shl を使ってな"
+SHL_STATE_BUSY = "いま記録のファイルを読み書きできへんかったわ（{err}）。少し待ってから状況（shl status）を確かめてな。"
 
 # ---- ネイティブ版（native/）の画面 ----
 # Python 側では使わへん。pc/tools/export_native.py が native/shared/messages.<lang>.json に書き出して、C# が読む

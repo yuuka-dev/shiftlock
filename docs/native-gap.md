@@ -306,6 +306,7 @@ D1（設計）は実装と並べて早めに始めてよい．hook（H1〜H3）�
 |---|---|---|
 | S1 | 済み（2026-11-25） | 下の「S1 の結果」 |
 | S2 | 済み（2026-11-25） | 下の「S2 の結果」 |
+| S3 | 済み（2026-11-25） | 下の「S3 の結果」 |
 
 **S1 の結果**（合成の設定のフォルダで．本番のフォルダには向けていない）
 
@@ -329,6 +330,21 @@ D1（設計）は実装と並べて早めに始めてよい．hook（H1〜H3）�
 - Python 版との違い（S1 の分に加えて）: 設定が無い・壊れているときは理由を 1 行で標準エラーに出して 1（Python 版はトレースバック）／`status`・`yotei`・`kakunin` に余分な引数があれば断る／強制モードの宣言の中身が読めないときは例外で 1（Python 版も例外で落ちる．文は違う）．
 - 壊れたファイルの扱いは Python 版とそろえていない（ベクタにも無い）: `calendar.json` の `sources` が辞書でないとき C# は「未」と出す（Python 版は落ちる）／宣言の `runs` が配列でないとき C# は例外で 1（Python 版は長さを出す）／`state.json` が JSON として読めないとき C# は読めない旨で 1（Python 版は空として進む）．
 - 古い宣言（`action` が無い）の行は Python 版と同じく `None` と出る（文をそろえることを優先して，そのまま移した）．直すなら Python 版と一緒に直す【未決】．
+
+**S3 の結果**（合成の設定のフォルダで．本番のフォルダには向けていない）
+
+- `okita`・`neru`・`itte`（引数なし），`yasumi`・`deru`（日付なし＝「今日休む」「やっぱ出る」，日付つき＝事後報告，「有給」「有給なし」の印），`day off|work|rm <日付> [メモ]` が動く．組み立ては Core の `Commands.Record`・`Commands.Day`，`ShlCli` は設定を読んで出すだけ【確認】．
+- Python 版は `cli.py` の `main` の中にあった分岐を `record_cmd`・`day_cmd` に取り出した（動きは変えていない）．ベクタはこの 2 つを通した結果なので，`main` と同じ道を見ている．
+- `docs/test-vectors/commands.json` に `cmd_keyword` 41 件・`late_report` 31 件・`days_set` 18 件を足した．返事の文・終わったあとの `state.json`・`events.log` の行・`days.json` を比べる【確認】．
+- 発行した `shl.exe` と Python 版（WSL）を同じ合成のフォルダに向けて，18 個のコマンドを順に通し，標準出力（バイト単位）・終了コード・`events.log`（バイト単位）・`state.json`・`days.json`（中身）が同じ【確認】．
+- NativeAOT の発行は今回も警告なし（`Records`・`LateReport` が届く範囲に入った）【確認】．
+- 終了コードは Python 版と同じ: 記録のコマンドは断ったとき（早すぎる出発・強制中の起きた・もう記録がある・先の日付，など）も 0 で，返事は標準出力．`day` は日付が無いときだけ 1．
+- `events.log` の出所（§2.1 の【未確認】の答え）: `yasumi`・`deru` は `shl`．`okita`・`neru` は Python 版が `claude` と書く（`cmd_keyword` が `do_neru` に出所を渡していない）ので，C# も `claude` と書く．直すなら Python 版と一緒に直す【未決】．
+- `Records` は画面用（出所 `app`・どの記録でも undo を残す・先頭の `[shiftlock] ` を外す・失敗は文で返す）と shl 用（`Cli*`．`cmd_keyword` と同じ形）で同じ判断を使う．undo を残すのは Python 版と同じく `itte` と事後報告だけ．
+- 書き出す文面に `CMD_BAD_DATE`・`CMD_NO_PLAN`・`CMD_YASUMI`・`CMD_YASUMI_PAID`・`CMD_UNDO`・`CMD_UNDO_WORKED`・`CMD_UNDO_YASUMI` と，shl.exe だけの `SHL_STATE_BUSY` を足した．`CMD_` の残り（`CMD_DAY_SET`・`CMD_DAY_KIND_LABEL`・`CMD_SCHEDULE`）は hook 用なので H1 で足す（`CMD_DAY_KIND_LABEL` はキーに `None` があり，今の書き出しの形に乗らない）．`RECORDS_LEARNED_*` も H1．
+- 時刻つきの `okita <時刻>`・`neru <時刻>` は S4．それまでは「まだ無い」で 1（何も書かない）．
+- Python 版との違い（S1・S2 の分に加えて）: `itte` に余分な引数があれば断る／`day off|work|rm` の日付が読めないときは `CMD_BAD_DATE` を標準エラーに出して 1（Python 版はトレースバック）／日付が読めないときの理由の文（`{err}`）は C# の文（Python 版は Python の例外の文）／`state.json`・`days.json` が JSON として読めない・掴まれているときは `SHL_STATE_BUSY` で 1 にして書き直さない（Python 版は空として書き直す）／全角の数字の日付（`１２／９`）は読めない（Python 版は読める）【未決】．
+- 今月の休みの回数は「いまの月」で数えるので，年始に去年の 12 月を事後報告すると「0 回目」と出る（Python 版と同じ．ベクタに入っている）【未決】．
 
 ## 6. 一本化しても Python に残るもの
 

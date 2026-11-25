@@ -2116,5 +2116,4272 @@
     "state": null
    }
   }
+ ],
+ "cmd_keyword": [
+  {
+   "name": "neru",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T08:10",
+    "cmd": "neru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おやすみ。08:10 から数えるよ。6h 以上寝てから PC を触ったら自動で『起きた』にするし、起きたら『おきた』でもいいよ。出発目安 16:00（最終 16:30）。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T08:10\t2026-12-10\tsleep_at\tclaude 2026-12-10T08:10"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "neru: auto_wake_hours 3.5",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "auto_wake_hours": 3.5
+    }
+   },
+   "input": {
+    "now": "2026-12-10T08:10",
+    "cmd": "neru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おやすみ。08:10 から数えるよ。3.5h 以上寝てから PC を触ったら自動で『起きた』にするし、起きたら『おきた』でもいいよ。出発目安 16:00（最終 16:30）。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T08:10\t2026-12-10\tsleep_at\tclaude 2026-12-10T08:10"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "neru: 乗務の無い日",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-12T18:00",
+    "cmd": "neru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おやすみ。24時間以内に乗務はないので、記録だけしておいたよ。",
+    "state": null,
+    "events": [
+     "2026-12-12T18:00\t-\tneru\tfree-day"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "neru: 取り消し用の undo は書かない（前の undo が残る）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "undo": {
+      "day": "2026-12-10",
+      "prev": {},
+      "at": "2026-12-10T08:00",
+      "what": [
+       "kitaku"
+      ]
+     },
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:05"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T08:10",
+    "cmd": "neru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おやすみ。08:10 から数えるよ。6h 以上寝てから PC を触ったら自動で『起きた』にするし、起きたら『おきた』でもいいよ。出発目安 16:00（最終 16:30）。",
+    "state": {
+     "undo": {
+      "day": "2026-12-10",
+      "prev": {},
+      "at": "2026-12-10T08:00",
+      "what": [
+       "kitaku"
+      ]
+     },
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:05",
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T08:10\t2026-12-10\tsleep_at\tclaude 2026-12-10T08:10"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 記録なし",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。ロック解除、出発目安は 16:00（最終 16:30）。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "okita",
+       "at": "2026-12-10T14:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T14:00\t2026-12-10\tokita\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 寝た記録あり",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:30",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。08:10〜14:30（6時間20分）寝ていたよ。ロック解除、出発目安は 16:00（最終 16:30）。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T08:10",
+       "status": "okita",
+       "at": "2026-12-10T14:30"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T14:30\t2026-12-10\tokita\tneru 08:10-14:30"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 寝た時間が最低ラインに届かない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T10:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。10:00〜14:00（4時間0分）寝ていたよ。ロック解除、出発目安は 16:00（最終 16:30）。 ……最低ライン（6h）には届いていないよ。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T10:00",
+       "status": "okita",
+       "at": "2026-12-10T14:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T14:00\t2026-12-10\tokita\tneru 10:00-14:00"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 離席の記録が空（確かめる文が付く）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "usage-pc.json": {
+     "gaps": []
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。ロック解除、出発目安は 16:00（最終 16:30）。 ……でもPCの記録だとまとまって離席していないみたいだよ。本当に寝た？",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "okita",
+       "at": "2026-12-10T14:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T14:00\t2026-12-10\tokita\tno-gap"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 休みの乗務（寝た記録あり．休みのまま）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T06:00",
+       "paid": true,
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:30",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。08:10〜14:30（6時間20分）寝ていたよ。12/10 の乗務は休みのままにしておくよ。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T06:00",
+       "paid": true,
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T14:30\t2026-12-10\tokita\tneru 08:10-14:30"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 出発済みの乗務（寝た記録なし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "worked",
+       "at": "2026-12-10T16:10"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T16:40",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。記録だけしておいたよ。12/10 の乗務は出勤のままにしておくよ。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "worked",
+       "at": "2026-12-10T16:10"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T16:40\t2026-12-10\tokita\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 強制中は記録しない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "usage-pc.json": {
+     "gaps": []
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:00",
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T11:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 強制中は寝た記録（『ねる』か 2.5 時間以上の離席）が要るよ。本当に緊急なら kaijo.cmd か STOP.txt。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:00",
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    },
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 強制中でも STOP.txt があれば記録する",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "usage-pc.json": {
+     "gaps": []
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:00",
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    },
+    "STOP.txt": true
+   },
+   "input": {
+    "now": "2026-12-10T11:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。ロック解除、出発目安は 16:00（最終 16:30）。 ……でもPCの記録だとまとまって離席していないみたいだよ。本当に寝た？",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:00",
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       },
+       "status": "okita",
+       "at": "2026-12-10T11:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T11:00\t2026-12-10\tokita\tno-gap"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "okita: 乗務の無い日",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-12T18:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。24時間以内に乗務はないので、記録だけしておいたよ。",
+    "state": null,
+    "events": [
+     "2026-12-12T18:00\t-\tokita\tfree-day"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "itte: 早すぎる",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T13:59",
+    "cmd": "itte",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] まだ早いよ（12/10 の出発目安 16:00）。出発の 2 時間前からにしてね。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "itte: 出発の 2 時間前から（undo を残す）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "okita",
+       "at": "2026-12-10T13:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:00",
+    "cmd": "itte",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 行ってらっしゃい。12/10 の乗務を出発済みにしたよ（通知とロックは止まる）。帰ったら『ただいま』、結局休んだなら『今日休む』。違ったら『今のなし』か『やっぱ出る』。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "worked",
+       "at": "2026-12-10T14:00"
+      }
+     },
+     "undo": {
+      "day": "2026-12-10",
+      "prev": {
+       "status": "okita",
+       "at": "2026-12-10T13:00"
+      },
+      "at": "2026-12-10T14:00",
+      "what": [
+       "worked"
+      ]
+     }
+    },
+    "events": [
+     "2026-12-10T14:00\t2026-12-10\tworked\tshuppatsu"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "itte: 乗務の無い日",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-12T18:00",
+    "cmd": "itte",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 24時間以内に乗務の予定はないよ。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 次の乗務を休みにする",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 1 回目）",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T07:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tyasumi\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "yasumi",
+    "words": [
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 1 回目）（有給）",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T07:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tyasumi\t",
+     "2026-12-10T07:00\t2026-12-10\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有休（空白まじり）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "yasumi",
+    "words": [
+     " 有　休 "
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 1 回目）（有給）",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T07:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tyasumi\t",
+     "2026-12-10T07:00\t2026-12-10\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給なし（印は付けない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "yasumi",
+    "words": [
+     "有給なし"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 1 回目）",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T07:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tyasumi\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 今月 2 回目",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "yasumi",
+       "at": "2026-12-03T07:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 2 回目）",
+    "state": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "yasumi",
+       "at": "2026-12-03T07:00"
+      },
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T07:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tyasumi\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 出庫の最終を過ぎたら今日の乗務（事後報告）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T18:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10(木) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-10",
+      "prev": {},
+      "at": "2026-12-10T18:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T18:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T18:00\t2026-12-10\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給: 出庫の最終を過ぎたら今日の乗務（事後報告）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T17:30",
+    "cmd": "yasumi",
+    "words": [
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10(木) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。（有給）",
+    "state": {
+     "undo": {
+      "day": "2026-12-10",
+      "prev": {},
+      "at": "2026-12-10T17:30",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T17:30",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T17:30\t2026-12-10\tyasumi\tlate shl",
+     "2026-12-10T17:30\t2026-12-10\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 24 時間以内に乗務が無い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-12T18:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 24時間以内に乗務の予定はないよ。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 日曜の夜は月曜の乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-13T18:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/14 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 1 回目）",
+    "state": {
+     "shifts": {
+      "2026-12-14": {
+       "status": "yasumi",
+       "at": "2026-12-13T18:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-13T18:00\t2026-12-14\tyasumi\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 当日欠勤の目安に達した（これから休む乗務も数える）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "absence": {
+      "window_shifts": 6,
+      "warn_at": 2
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T07:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-13T18:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/14 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 2 回目） ！ 直近 6 乗務で当日欠勤 2 回（有給は除く）。目安の 2 回に達しているよ。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T07:00"
+      },
+      "2026-12-14": {
+       "status": "yasumi",
+       "at": "2026-12-13T18:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-13T18:00\t2026-12-14\tyasumi\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給: 目安には数えない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "absence": {
+      "window_shifts": 6,
+      "warn_at": 2
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T07:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-13T18:00",
+    "cmd": "yasumi",
+    "words": [
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/14 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 2 回目）（有給）",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T07:00"
+      },
+      "2026-12-14": {
+       "status": "yasumi",
+       "at": "2026-12-13T18:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-13T18:00\t2026-12-14\tyasumi\t",
+     "2026-12-13T18:00\t2026-12-14\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 休みにしても宣言は残る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-14": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-13T18:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/14 は休みにしたよ。ロックも警告も解除。会社への連絡だけ忘れないでね。（今月の休み 1 回目）",
+    "state": {
+     "shifts": {
+      "2026-12-14": {
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       },
+       "status": "yasumi",
+       "at": "2026-12-13T18:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-13T18:00\t2026-12-14\tyasumi\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru: 休みを取り消す（有給の印も消える）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T06:00",
+       "paid": true
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "deru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 の休みを取り消したよ。",
+    "state": {
+     "shifts": {}
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tundo\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru: 出発済みを取り消す（ほかの記録は残る）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "worked",
+       "at": "2026-12-10T14:10",
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:20",
+    "cmd": "deru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 の出発済みを取り消したよ。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T14:20\t2026-12-10\tundo\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru: 記録が無くても行は残る",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "deru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 の休みを取り消したよ。",
+    "state": {
+     "shifts": {}
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tundo\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru 有給（印は関係ない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T06:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "deru",
+    "words": [
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 の休みを取り消したよ。",
+    "state": {
+     "shifts": {}
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tundo\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru: 24 時間以内に乗務が無い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-12T18:00",
+    "cmd": "deru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 24時間以内に乗務の予定はないよ。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: neru",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T08:10",
+    "cmd": "neru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おやすみ。08:10 から数えるで。6h 以上寝てから PC を触ったら自動で『起きた』にするし、起きたら『おきた』でもええよ。出発目安 16:00（最終 16:30）。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T08:10"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T08:10\t2026-12-10\tsleep_at\tclaude 2026-12-10T08:10"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: okita",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T10:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] おはよう。10:00〜14:00（4時間0分）寝てたで。ロック解除、出発目安は 16:00（最終 16:30）。 ……最低ライン（6h）には届いてへんで。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "sleep_at": "2026-12-10T10:00",
+       "status": "okita",
+       "at": "2026-12-10T14:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T14:00\t2026-12-10\tokita\tneru 10:00-14:00"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: okita 強制中",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "usage-pc.json": {
+     "gaps": []
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:00",
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T11:00",
+    "cmd": "okita",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 強制中は寝た記録（『ねる』か 2.5 時間以上の離席）が要るで。ほんまに緊急なら kaijo.cmd か STOP.txt。",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "kitaku": "2026-12-10T07:00",
+       "enforce": {
+        "action": "lock",
+        "duration_hours": 2,
+        "declared_at": "2026-12-07T06:00",
+        "consented_at": "2026-12-07T06:00",
+        "via": "shl",
+        "runs": [],
+        "grace_minutes": 15,
+        "relock_minutes": 5,
+        "max_runs": 6,
+        "boot_grace_minutes": 15
+       }
+      }
+     }
+    },
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: itte",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T15:00",
+    "cmd": "itte",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 行ってらっしゃい。12/10 の乗務を出発済みにしたで（通知とロックは止まる）。帰ったら『ただいま』、結局休んだなら『今日休む』。違ったら『今のなし』か『やっぱ出る』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-10",
+      "prev": {},
+      "at": "2026-12-10T15:00",
+      "what": [
+       "worked"
+      ]
+     },
+     "shifts": {
+      "2026-12-10": {
+       "status": "worked",
+       "at": "2026-12-10T15:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T15:00\t2026-12-10\tworked\tshuppatsu"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: itte 早すぎる",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T09:00",
+    "cmd": "itte",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] まだ早いで（12/10 の出発目安 16:00）。出発の 2 時間前からにしてな。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: yasumi 有給",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T07:00",
+    "cmd": "yasumi",
+    "words": [
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 は休みにしたで。ロックも警告も解除。会社への連絡だけ忘れんとってな。（今月の休み 1 回目）（有給）",
+    "state": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "yasumi",
+       "at": "2026-12-10T07:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T07:00\t2026-12-10\tyasumi\t",
+     "2026-12-10T07:00\t2026-12-10\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: deru",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-10": {
+       "status": "worked",
+       "at": "2026-12-10T14:10"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T14:20",
+    "cmd": "deru",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10 の出発済みを取り消したで。",
+    "state": {
+     "shifts": {}
+    },
+    "events": [
+     "2026-12-10T14:20\t2026-12-10\tundo\t"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: 乗務が無い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-12T18:00",
+    "cmd": "yasumi",
+    "words": []
+   },
+   "expect": {
+    "text": "[shiftlock] 24時間以内に乗務の予定はないで。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  }
+ ],
+ "late_report": [
+  {
+   "name": "yasumi 12/9",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 昨日 有給",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "昨日",
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。（有給）",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl",
+     "2026-12-10T12:00\t2026-12-09\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給 12/09（語の順が逆）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "有給",
+     "12/09"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。（有給）",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl",
+     "2026-12-10T12:00\t2026-12-09\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 12／9（全角の斜線）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12／9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 2026-12-09",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "2026-12-09"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 一昨日 有給なし（印は付けない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "一昨日",
+     "有給なし"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/08(火) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-08",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-08": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-08\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: もう休みになっている",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) はもう休みになっているよ。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00"
+      }
+     }
+    },
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給: もう休みなら印だけ付ける",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9",
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) の休みを有給にしたよ（当日欠勤には数えない）。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給なし: もう休みなら印だけ外す",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00",
+       "paid": true
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9",
+     "有給なし"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) の休みの有給を外したよ（当日欠勤に数える）。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tpaid\toff shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 有給なし: 印を外して目安に達した",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "absence": {
+      "window_shifts": 6,
+      "warn_at": 1
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n",
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00",
+       "paid": true
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9",
+     "有給なし"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) の休みの有給を外したよ（当日欠勤に数える）。 ！ 直近 6 乗務で当日欠勤 1 回（有給は除く）。目安の 1 回に達しているよ。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tpaid\toff shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 出たことになっている乗務を休みに直す（undo に前の状態）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-09T16:05",
+       "sleep_at": "2026-12-09T08:10"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00",
+       "sleep_at": "2026-12-09T08:10"
+      }
+     },
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {
+       "status": "worked",
+       "at": "2026-12-09T16:05",
+       "sleep_at": "2026-12-09T08:10"
+      },
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 目安に達した",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "absence": {
+      "window_shifts": 6,
+      "warn_at": 1
+     }
+    },
+    "log/pc-2026-12.jsonl": "{\"t\": \"2026-12-01T09:00\", \"idle\": 30, \"game\": 0}\n"
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。 ！ 直近 6 乗務で当日欠勤 1 回（有給は除く）。目安の 1 回に達しているよ。",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 今月 2 回目",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "yasumi",
+       "at": "2026-12-03T07:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたよ（事後報告）。今月の休み 2 回目。違ったら『今のなし』。",
+    "state": {
+     "shifts": {
+      "2026-12-03": {
+       "status": "yasumi",
+       "at": "2026-12-03T07:00"
+      },
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00"
+      }
+     },
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 今日: まだ始まっていない乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "今日"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10(木) の乗務はまだ終わっていないよ。休むなら『今日休む』、出発するなら『行ってきます』。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 明日: 先の日付",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "明日"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/11(金) は未来だよ。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 12/5: 休みの日は休めない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/5"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/05(土) はもともと休みだよ。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 古すぎる日付",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2027-03-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "2026-12-01"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/01(火) は古すぎて記録できない（60 日より前）。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi: 保持期間を変える（ちょうど境目は記録する）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40,
+     "retention": {
+      "days_keep": 9,
+      "log_keep_days": 180,
+      "events_keep_days": 365
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/1"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/01(火) は休んだことにしたよ（事後報告）。今月の休み 1 回目。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-01",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-01": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-01\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "yasumi 12/30: 年始に書いた 12 月は去年",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2027-01-05T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/30"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/30(水) は休んだことにしたよ（事後報告）。今月の休み 0 回目。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-30",
+      "prev": {},
+      "at": "2027-01-05T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-30": {
+       "status": "yasumi",
+       "at": "2027-01-05T12:00"
+      }
+     }
+    },
+    "events": [
+     "2027-01-05T12:00\t2026-12-30\tyasumi\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru 12/9",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は出たことにしたよ。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "worked"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tworked\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru 12/9 有給（印は関係ない）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "12/9",
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は出たことにしたよ。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "worked"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tworked\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru: もう出たことになっている",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-09T16:05"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) はもう出たになっているよ。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-09T16:05"
+      }
+     }
+    },
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "deru: 休みを出たに直す（有給の印は消える）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00",
+       "paid": true
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は出たことにしたよ。違ったら『今のなし』。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-10T12:00"
+      }
+     },
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00",
+       "paid": true
+      },
+      "at": "2026-12-10T12:00",
+      "what": [
+       "worked"
+      ],
+      "days_work_added": false
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tworked\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "deru 12/5: 休みの日に出た（出勤の例外日も足す）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "12/5"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/05(土) は出たことにしたよ。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-05",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "worked"
+      ],
+      "days_work_added": true
+     },
+     "shifts": {
+      "2026-12-05": {
+       "status": "worked",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-05\tworked\tlate shl"
+    ],
+    "days": {
+     "off": {},
+     "work": {
+      "2026-12-05": "事後報告"
+     }
+    }
+   }
+  },
+  {
+   "name": "deru 12/5: 手動の休みを出勤に置き換える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-05": "用事",
+      "2026-12-11": "通院"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "12/5"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/05(土) は出たことにしたよ。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-05",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "worked"
+      ],
+      "days_work_added": true
+     },
+     "shifts": {
+      "2026-12-05": {
+       "status": "worked",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-05\tworked\tlate shl"
+    ],
+    "days": {
+     "off": {
+      "2026-12-11": "通院"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     },
+     "work": {
+      "2026-12-05": "事後報告"
+     }
+    }
+   }
+  },
+  {
+   "name": "deru 今日: まだ始まっていない乗務",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "今日"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/10(木) の乗務はまだ終わっていないよ。休むなら『今日休む』、出発するなら『行ってきます』。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: yasumi 昨日 有給",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "昨日",
+     "有給"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は休んだことにしたで（事後報告）。今月の休み 1 回目。違ったら『今のなし』。（有給）",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "yasumi"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-10T12:00",
+       "paid": true
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl",
+     "2026-12-10T12:00\t2026-12-09\tpaid\ton shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: deru 12/9",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) は出たことにしたで。違ったら『今のなし』。",
+    "state": {
+     "undo": {
+      "day": "2026-12-09",
+      "prev": {},
+      "at": "2026-12-10T12:00",
+      "what": [
+       "worked"
+      ],
+      "days_work_added": false
+     },
+     "shifts": {
+      "2026-12-09": {
+       "status": "worked",
+       "at": "2026-12-10T12:00"
+      }
+     }
+    },
+    "events": [
+     "2026-12-10T12:00\t2026-12-09\tworked\tlate shl"
+    ],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: もう休みになっている",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "state.json": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/9"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/09(水) はもう休みになってるで。",
+    "state": {
+     "shifts": {
+      "2026-12-09": {
+       "status": "yasumi",
+       "at": "2026-12-09T18:00"
+      }
+     }
+    },
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: 休みの日は休めない",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "yasumi",
+    "words": [
+     "12/5"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/05(土) はもともと休みやで。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  },
+  {
+   "name": "関西弁: 先の日付",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "cmd": "deru",
+    "words": [
+     "明日"
+    ]
+   },
+   "expect": {
+    "text": "[shiftlock] 12/11(金) は未来やで。",
+    "state": null,
+    "events": [],
+    "days": null
+   }
+  }
+ ],
+ "days_set": [
+  {
+   "name": "off 12/11（メモは空白でつなぐ）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "12/11",
+    "note": [
+     "通院",
+     "予約"
+    ]
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金休（通院 予約）  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-11": "通院 予約"
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "work 12/12（メモなし）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "work",
+    "date": "12/12",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土出*  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {},
+     "work": {
+      "2026-12-12": ""
+     }
+    }
+   }
+  },
+  {
+   "name": "rm 12/11（ほかの例外と times は残る）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院"
+     },
+     "work": {
+      "2026-12-12": "振替"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "rm",
+    "date": "12/11",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土出（振替）  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {},
+     "work": {
+      "2026-12-12": "振替"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "rm: 例外の無い日（days.json は空で作られる）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "rm",
+    "date": "12/15",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {},
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "off 12/12: 出勤の例外を休みに置き換える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院"
+     },
+     "work": {
+      "2026-12-12": "振替"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "12/12",
+    "note": [
+     "やっぱり休み"
+    ]
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金休（通院）  12/12土休（やっぱり休み）  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-11": "通院",
+      "2026-12-12": "やっぱり休み"
+     },
+     "work": {},
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "work 12/11: 休みの例外を出勤に置き換える",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院"
+     },
+     "work": {
+      "2026-12-12": "振替"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "work",
+    "date": "12/11",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出*  12/12土出（振替）  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {},
+     "work": {
+      "2026-12-12": "振替",
+      "2026-12-11": ""
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "off 明日",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "明日",
+    "note": [
+     "用事"
+    ]
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金休（用事）  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-11": "用事"
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "off 今日",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "今日",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木休*  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-10": ""
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "off 2026-12-18",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "2026-12-18",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金休*  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-18": ""
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "off 12／16（全角の斜線）",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "12／16",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水休*\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-16": ""
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "off 12/3: 7 日前までは今年",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "12/3",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-03": ""
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "off 12/2: 8 日より前は来年",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "12/2",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2027-12-02": ""
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "work 1/4: 年またぎ",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-28T12:00",
+    "action": "work",
+    "date": "1/4",
+    "note": []
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/28月出  12/29火出  12/30水出  12/31木出  01/01金出  01/02土休  01/03日休\n  01/04月出*  01/05火出  01/06水出  01/07木出  01/08金出  01/09土休  01/10日休",
+    "days": {
+     "off": {},
+     "work": {
+      "2027-01-04": ""
+     }
+    }
+   }
+  },
+  {
+   "name": "work 12/16: カレンダーの休みを出勤にする",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "calendar.json": {
+     "sources": {
+      "A": {
+       "off": {
+        "2026-12-16": "公休"
+       },
+       "work": {}
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "work",
+    "date": "12/16",
+    "note": [
+     "振替"
+    ]
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金出  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出（振替）\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {},
+     "work": {
+      "2026-12-16": "振替"
+     }
+    }
+   }
+  },
+  {
+   "name": "日付が無い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": null,
+    "note": []
+   },
+   "expect": {
+    "code": 1,
+    "text": "日付が要るよ（例: day off 11/5 通院）",
+    "days": null
+   }
+  },
+  {
+   "name": "日付が空",
+   "files": {
+    "shifts.json": {
+     "lang": "ja",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    },
+    "days.json": {
+     "off": {
+      "2026-12-11": "通院"
+     },
+     "work": {
+      "2026-12-12": "振替"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "rm",
+    "date": "",
+    "note": []
+   },
+   "expect": {
+    "code": 1,
+    "text": "日付が要るよ（例: day off 11/5 通院）",
+    "days": {
+     "off": {
+      "2026-12-11": "通院"
+     },
+     "work": {
+      "2026-12-12": "振替"
+     },
+     "times": {
+      "2026-12-14": {
+       "start_target": "18:00"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "関西弁",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "off",
+    "date": "12/11",
+    "note": [
+     "通院"
+    ]
+   },
+   "expect": {
+    "code": 0,
+    "text": "  12/10木出  12/11金休（通院）  12/12土休  12/13日休  12/14月出  12/15火出  12/16水出\n  12/17木出  12/18金出  12/19土休  12/20日休  12/21月出  12/22火出  12/23水出",
+    "days": {
+     "off": {
+      "2026-12-11": "通院"
+     },
+     "work": {}
+    }
+   }
+  },
+  {
+   "name": "関西弁: 日付が無い",
+   "files": {
+    "shifts.json": {
+     "lang": "ja_kansai",
+     "work_weekdays": [
+      "mon",
+      "tue",
+      "wed",
+      "thu",
+      "fri"
+     ],
+     "start_target": "17:00",
+     "start_latest": "17:30",
+     "prep_minutes": 60,
+     "sleep_target_hours": 8,
+     "sleep_min_hours": 6,
+     "lastcall_minutes": 40
+    }
+   },
+   "input": {
+    "now": "2026-12-10T12:00",
+    "action": "work",
+    "date": null,
+    "note": []
+   },
+   "expect": {
+    "code": 1,
+    "text": "日付がいるで（例: day off 11/5 通院）",
+    "days": null
+   }
+  }
  ]
 }

@@ -129,7 +129,7 @@ public sealed class ShlCliTests : IDisposable
     }
 
     [Theory]
-    [InlineData("okita")]
+    [InlineData("sync")]
     [InlineData("enforce", "on")]
     [InlineData("app", "limit", "add", "x.exe")]
     [InlineData("kaijo")]
@@ -269,12 +269,12 @@ public sealed class ShlCliTests : IDisposable
     }
 
     [Theory]
-    [InlineData("SHL_NOT_YET", "day off", "day", "off", "12/11")]
-    [InlineData("SHL_NOT_YET", "day work", "day", "work", "12/12")]
-    [InlineData("SHL_NOT_YET", "day rm", "day", "rm", "12/11")]
     [InlineData("SHL_UNKNOWN", "day", "day")]
     [InlineData("SHL_UNKNOWN", "day nanika", "day", "nanika")]
-    public void Day_OtherActions_AreRefused_AndWriteNothing(string key, string shown, params string[] args)
+    [InlineData("SHL_UNKNOWN", "extra", "itte", "extra")]
+    [InlineData("SHL_NOT_YET", "okita 7:00", "okita", "7:00")]
+    [InlineData("SHL_NOT_YET", "neru 12/9", "neru", "12/9", "23:30")]
+    public void OtherForms_AreRefused_AndWriteNothing(string key, string shown, params string[] args)
     {
         var path = Config(Base);
         var r = Run([.. args, "--config", path]);
@@ -282,6 +282,182 @@ public sealed class ShlCliTests : IDisposable
         Assert.Equal("", r.Out);
         Assert.Equal(Messages.Load("ja").Format(key, ("cmd", shown)) + "\n", r.Err);
         Assert.Equal([path], Directory.GetFiles(Path.GetDirectoryName(path)!));
+    }
+
+    // ---- 記録のコマンド（okita・neru・itte・yasumi・deru・day off|work|rm）----
+
+    private string[] Names(string path) =>
+        [.. Directory.GetFiles(Path.GetDirectoryName(path)!).Select(f => Path.GetFileName(f)!).Order(StringComparer.Ordinal)];
+
+    private static string[] Lines(string path, string name) =>
+        File.ReadAllText(Path.Combine(Path.GetDirectoryName(path)!, name)).Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+    [Fact]
+    public void Neru_Okita_Itte_RecordAndPrint()
+    {
+        var path = Config(Base);
+        var m = Messages.Load("ja");
+
+        var neru = Run(["neru", "--config", path], now: new DateTime(2026, 12, 10, 8, 10, 0));
+        Assert.Equal(0, neru.Code);
+        Assert.StartsWith(m["PREFIX"], neru.Out);
+        Assert.EndsWith("\n", neru.Out);
+        Assert.Equal("", neru.Err);
+
+        var okita = Run(["okita"], envDir: Path.GetDirectoryName(path), now: new DateTime(2026, 12, 10, 14, 30, 0));
+        Assert.Equal(0, okita.Code);
+        Assert.Contains("08:10〜14:30", okita.Out);
+
+        var itte = Run(["itte", "--config", path], now: new DateTime(2026, 12, 10, 16, 0, 0));
+        Assert.Equal(new Result(0, m.Format("RECORDS_SHUPPATSU", ("day", "12/10")) + "\n", ""), itte);
+
+        Assert.Equal(["events.log", "shifts.json", "state.json"], Names(path));
+        Assert.Equal(
+        [
+            "2026-12-10T08:10\t2026-12-10\tsleep_at\tclaude 2026-12-10T08:10",
+            "2026-12-10T14:30\t2026-12-10\tokita\tneru 08:10-14:30",
+            "2026-12-10T16:00\t2026-12-10\tworked\tshuppatsu",
+        ], Lines(path, "events.log"));
+    }
+
+    [Fact]
+    public void Itte_TooEarly_PrintsRefusal_WithZero_AndWritesNothing()
+    {
+        // 断ったときも返事は標準出力・終了コードは 0（Python 版と同じ）
+        var path = Config(Base);
+        var r = Run(["itte", "--config", path]);
+        Assert.Equal(new Result(0,
+            Messages.Load("ja").Format("RECORDS_SHUPPATSU_EARLY", ("day", "12/10"), ("depart", "16:00")) + "\n", ""), r);
+        Assert.Equal(["shifts.json"], Names(path));
+    }
+
+    [Fact]
+    public void Yasumi_Deru_WithoutDate_SetAndClearNextShift()
+    {
+        var path = Config(Base);
+        var m = Messages.Load("ja");
+        var early = new DateTime(2026, 12, 10, 7, 0, 0);
+
+        var yasumi = Run(["yasumi", "有給", "--config", path], now: early);
+        Assert.Equal(new Result(0, m.Format("CMD_YASUMI", ("day", "12/10"), ("n", 1)) + m["CMD_YASUMI_PAID"] + "\n", ""), yasumi);
+
+        var deru = Run(["deru", "--config", path], now: early.AddMinutes(5));
+        Assert.Equal(new Result(0, m.Format("CMD_UNDO", ("day", "12/10"), ("what", m["CMD_UNDO_YASUMI"])) + "\n", ""), deru);
+
+        Assert.Equal(
+        [
+            "2026-12-10T07:00\t2026-12-10\tyasumi\t",
+            "2026-12-10T07:00\t2026-12-10\tpaid\ton shl",
+            "2026-12-10T07:05\t2026-12-10\tundo\t",
+        ], Lines(path, "events.log"));
+    }
+
+    [Fact]
+    public void Yasumi_Deru_WithDate_ReportPastShift()
+    {
+        var path = Config(Base);
+        var m = Messages.Load("ja");
+
+        var yasumi = Run(["yasumi", "昨日", "--config", path]);
+        Assert.Equal(new Result(0, m.Format("RECORDS_LATE_YASUMI", ("label", "12/09(水)"), ("n", 1)) + "\n", ""), yasumi);
+
+        var deru = Run(["deru", "12/9", "--config", path]);
+        Assert.Equal(new Result(0, m.Format("RECORDS_LATE_WORKED", ("label", "12/09(水)")) + "\n", ""), deru);
+
+        // 読めない日付は，断る文を標準出力に出して 0（Python 版と同じ．理由の文だけ違う）
+        var bad = Run(["yasumi", "あさって", "--config", path]);
+        Assert.Equal(0, bad.Code);
+        Assert.StartsWith(m["RECORDS_LATE_BAD_DATE"].Split('{')[0], bad.Out);
+
+        Assert.Equal(
+        [
+            "2026-12-10T12:00\t2026-12-09\tyasumi\tlate shl",
+            "2026-12-10T12:00\t2026-12-09\tworked\tlate shl",
+        ], Lines(path, "events.log"));
+    }
+
+    [Fact]
+    public void Day_Off_Work_Rm_WriteDaysJson_AndPrintSchedule()
+    {
+        var path = Config(Base);
+        var today = DateOnly.FromDateTime(Noon);
+
+        var off = Run(["day", "off", "12/11", "通院", "予約", "--config", path]);
+        var (cfg, _) = Loaded(path);
+        Assert.Equal(new Result(0, Commands.ScheduleText(cfg, cfg.Msg, today) + "\n", ""), off);
+        Assert.Contains("12/11金休（通院 予約）", off.Out);
+
+        var work = Run(["day", "work", "明日", "--config", path]);
+        Assert.Contains("12/11金出*", work.Out);
+
+        var rm = Run(["day", "rm", "2026-12-11", "--config", path]);
+        Assert.Contains("12/11金出  ", rm.Out);
+
+        Assert.Equal(["days.json", "shifts.json"], Names(path));
+    }
+
+    [Fact]
+    public void Day_WithoutDate_SaysNeedDate_OnStdout_WithOne()
+    {
+        var path = Config(Base);
+        var r = Run(["day", "off", "--config", path]);
+        Assert.Equal(new Result(1, Messages.Load("ja")["CLI_DAY_NEED_DATE"] + "\n", ""), r);
+        Assert.Equal(["shifts.json"], Names(path));
+    }
+
+    [Theory]
+    [InlineData("あさって")]
+    [InlineData("13/1")]
+    [InlineData("2/30")]
+    [InlineData("12/")]
+    [InlineData("2026-13-01")]
+    public void Day_BadDate_IsOneWithReason_AndWritesNothing(string date)
+    {
+        var path = Config(Base);
+        var r = Run(["day", "off", date, "--config", path]);
+        Assert.Equal(1, r.Code);
+        Assert.Equal("", r.Out);
+        Assert.StartsWith(Messages.Load("ja")["CMD_BAD_DATE"].Split('{')[0], r.Err);
+        Assert.Equal(["shifts.json"], Names(path));
+    }
+
+    [Theory]
+    [InlineData("okita")]
+    [InlineData("neru")]
+    [InlineData("itte")]
+    [InlineData("yasumi")]
+    [InlineData("deru", "12/9")]
+    [InlineData("day", "off", "12/11")]
+    public void Record_WithoutConfig_SaysNoConfig(params string[] args)
+    {
+        var missing = Path.Combine(_dir, "none", "shifts.json");
+        var r = Run([.. args, "--config", missing]);
+        Assert.Equal(1, r.Code);
+        Assert.Equal("", r.Out);
+        Assert.Equal(Messages.Load("ja").Format("APP_NO_CONFIG", ("path", missing)) + "\n", r.Err);
+        Assert.False(Directory.Exists(Path.GetDirectoryName(missing)));
+    }
+
+    [Theory]
+    [InlineData("neru")]
+    [InlineData("okita")]
+    [InlineData("yasumi")]
+    [InlineData("deru")]
+    [InlineData("yasumi", "12/9")]
+    public void Record_WithBrokenState_IsOne_AndKeepsTheFile(params string[] args)
+    {
+        // 読めない state.json を空として書き直さない（Python 版は書き直す）
+        var path = Config(Base.Replace("\"ja\"", "\"ja_kansai\""));
+        var state = Path.Combine(Path.GetDirectoryName(path)!, "state.json");
+        File.WriteAllText(state, "{");
+
+        var r = Run([.. args, "--config", path], now: new DateTime(2026, 12, 10, 14, 0, 0));
+
+        Assert.Equal(1, r.Code);
+        Assert.Equal("", r.Out);
+        Assert.StartsWith(Messages.Load("ja_kansai")["SHL_STATE_BUSY"].Split('{')[0], r.Err);
+        Assert.Equal("{", File.ReadAllText(state));
+        Assert.Equal(["shifts.json", "state.json"], Names(path));
     }
 
     [Fact]

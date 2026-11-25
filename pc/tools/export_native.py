@@ -42,6 +42,8 @@ VECTORS = REPO / "docs" / "test-vectors"
 EXACT = ("PREFIX", "INTENT_LABEL", "INTENT_LABEL_SEP",
          # 見張り（shiftlock.Agent）が使う文
          "PHONE_LATE_PREFIX", "PHONE_OKITA", "RECORDS_YASUMI_PAID",
+         # shl.exe の記録のコマンド（yasumi・deru・day）が使う文。CMD_ の残り（CMD_DAY_*・CMD_SCHEDULE）は hook 用で、まだ持っていかない
+         "CMD_BAD_DATE", "CMD_NO_PLAN", "CMD_YASUMI", "CMD_YASUMI_PAID", "CMD_UNDO", "CMD_UNDO_WORKED", "CMD_UNDO_YASUMI",
          # 強制モードは発動と解除で使う文だけ（宣言・状態表示の文は持っていかない。C# に宣言の入口を作らない）
          "ENFORCE_LABEL", "ENFORCE_SUFFIX", "ENFORCE_SUFFIX_STOP", "ENFORCE_SUFFIX_LIMIT", "ENFORCE_WARN", "ENFORCE_WARN_SOON", "ENFORCE_REWARN",
          "ENFORCE_RUN", "ENFORCE_RELEASED", "ENFORCE_RELEASE_ALREADY")
@@ -1257,6 +1259,201 @@ def _schedule_rows() -> list:
     ]
 
 
+# ---- 記録のコマンド（shl okita / neru / itte / yasumi / deru，shl day off|work|rm）----
+# cmd_keyword・late_report: input {"now", "cmd", "words"}、expect {"text", "state", "events", "days"}
+#   cmd_keyword は語に日付が無いもの（cli.record_cmd → commands.cmd_keyword）、late_report は日付つき（→ records.late_report）
+# days_set: input {"now", "action", "date", "note"}、expect {"code", "text", "days"}
+#   state は終わったあとの state.json、days は days.json（無ければ null）、events は events.log の行
+
+def _json_or_none(store, name: str):
+    path = store.p(name)
+    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
+
+
+def _expect_record_cmd(cfg, store, inp) -> dict:
+    from shiftlock import cli
+    text = cli.record_cmd(inp["cmd"], list(inp["words"]), cfg, store, datetime.fromisoformat(inp["now"]))
+    return {"text": text, "state": _json_or_none(store, "state.json"), "events": _event_lines(store),
+            "days": _json_or_none(store, "days.json")}
+
+
+def _expect_day_cmd(cfg, store, inp) -> dict:
+    from shiftlock import cli
+    code, text = cli.day_cmd(inp["action"], inp["date"], list(inp["note"]), store.p("shifts.json"), store,
+                             datetime.fromisoformat(inp["now"]))
+    return {"code": code, "text": text, "days": _json_or_none(store, "days.json")}
+
+
+def _cmd_keyword_rows() -> list:
+    """乗務日は 2026-12-10（木）。就寝目安 08:00・最低ライン 10:30・出発 16:00／16:30・出庫 17:00／17:30。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**over)}
+
+    b = cfg()
+    k = cfg(lang="ja_kansai")
+    d = "2026-12-10"
+    sat, sun, mon = "2026-12-12", "2026-12-13", "2026-12-14"
+
+    def at(hm, day=d):
+        return f"{day}T{hm}"
+
+    def run(cmd, hm, *words, day=d):
+        return {"now": at(hm, day), "cmd": cmd, "words": list(words)}
+
+    def state(day=d, **rec):
+        return {"state.json": _state(day, **rec)}
+
+    no_gap = {"usage-pc.json": {"gaps": []}}
+    log = {"log/pc-2026-12.jsonl": _pc_log("2026-12-01T09:00")}
+    gate = {**b, **no_gap, "state.json": _state(d, kitaku=at("07:00"), enforce=_declared_enforce())}
+    return [
+        ("neru", b, run("neru", "08:10")),
+        ("neru: auto_wake_hours 3.5", cfg(auto_wake_hours=3.5), run("neru", "08:10")),
+        ("neru: 乗務の無い日", b, run("neru", "18:00", day=sat)),
+        ("neru: 取り消し用の undo は書かない（前の undo が残る）",
+         {**b, "state.json": {"undo": {"day": d, "prev": {}, "at": at("08:00"), "what": ["kitaku"]},
+                              "shifts": {d: {"kitaku": at("07:05")}}}}, run("neru", "08:10")),
+        ("okita: 記録なし", b, run("okita", "14:00")),
+        ("okita: 寝た記録あり", {**b, **state(sleep_at=at("08:10"))}, run("okita", "14:30")),
+        ("okita: 寝た時間が最低ラインに届かない", {**b, **state(sleep_at=at("10:00"))}, run("okita", "14:00")),
+        ("okita: 離席の記録が空（確かめる文が付く）", {**b, **no_gap}, run("okita", "14:00")),
+        ("okita: 休みの乗務（寝た記録あり．休みのまま）",
+         {**b, **state(status="yasumi", at=at("06:00"), paid=True, sleep_at=at("08:10"))}, run("okita", "14:30")),
+        ("okita: 出発済みの乗務（寝た記録なし）", {**b, **state(status="worked", at=at("16:10"))}, run("okita", "16:40")),
+        ("okita: 強制中は記録しない", gate, run("okita", "11:00")),
+        ("okita: 強制中でも STOP.txt があれば記録する", {**gate, "STOP.txt": True}, run("okita", "11:00")),
+        ("okita: 乗務の無い日", b, run("okita", "18:00", day=sat)),
+        ("itte: 早すぎる", b, run("itte", "13:59")),
+        ("itte: 出発の 2 時間前から（undo を残す）", {**b, **state(status="okita", at=at("13:00"))}, run("itte", "14:00")),
+        ("itte: 乗務の無い日", b, run("itte", "18:00", day=sat)),
+        ("yasumi: 次の乗務を休みにする", b, run("yasumi", "07:00")),
+        ("yasumi 有給", b, run("yasumi", "07:00", "有給")),
+        ("yasumi 有休（空白まじり）", b, run("yasumi", "07:00", " 有　休 ")),
+        ("yasumi 有給なし（印は付けない）", b, run("yasumi", "07:00", "有給なし")),
+        ("yasumi: 今月 2 回目", {**b, **state("2026-12-03", status="yasumi", at="2026-12-03T07:00")}, run("yasumi", "07:00")),
+        ("yasumi: 出庫の最終を過ぎたら今日の乗務（事後報告）", b, run("yasumi", "18:00")),
+        ("yasumi 有給: 出庫の最終を過ぎたら今日の乗務（事後報告）", b, run("yasumi", "17:30", "有給")),
+        ("yasumi: 24 時間以内に乗務が無い", b, run("yasumi", "18:00", day=sat)),
+        ("yasumi: 日曜の夜は月曜の乗務", b, run("yasumi", "18:00", day=sun)),
+        ("yasumi: 当日欠勤の目安に達した（これから休む乗務も数える）",
+         {**cfg(absence={"window_shifts": 6, "warn_at": 2}), **log,
+          **state("2026-12-09", status="yasumi", at="2026-12-09T07:00")}, run("yasumi", "18:00", day=sun)),
+        ("yasumi 有給: 目安には数えない",
+         {**cfg(absence={"window_shifts": 6, "warn_at": 2}), **log,
+          **state("2026-12-09", status="yasumi", at="2026-12-09T07:00")}, run("yasumi", "18:00", "有給", day=sun)),
+        ("yasumi: 休みにしても宣言は残る", {**b, **state(mon, enforce=_declared_enforce())}, run("yasumi", "18:00", day=sun)),
+        ("deru: 休みを取り消す（有給の印も消える）",
+         {**b, **state(status="yasumi", at=at("06:00"), paid=True)}, run("deru", "07:00")),
+        ("deru: 出発済みを取り消す（ほかの記録は残る）",
+         {**b, **state(status="worked", at=at("14:10"), sleep_at=at("08:10"))}, run("deru", "14:20")),
+        ("deru: 記録が無くても行は残る", b, run("deru", "07:00")),
+        ("deru 有給（印は関係ない）", {**b, **state(status="yasumi", at=at("06:00"))}, run("deru", "07:00", "有給")),
+        ("deru: 24 時間以内に乗務が無い", b, run("deru", "18:00", day=sat)),
+        ("関西弁: neru", k, run("neru", "08:10")),
+        ("関西弁: okita", {**k, **state(sleep_at=at("10:00"))}, run("okita", "14:00")),
+        ("関西弁: okita 強制中", {**gate, **k}, run("okita", "11:00")),
+        ("関西弁: itte", k, run("itte", "15:00")),
+        ("関西弁: itte 早すぎる", k, run("itte", "09:00")),
+        ("関西弁: yasumi 有給", k, run("yasumi", "07:00", "有給")),
+        ("関西弁: deru", {**k, **state(status="worked", at=at("14:10"))}, run("deru", "14:20")),
+        ("関西弁: 乗務が無い", k, run("yasumi", "18:00", day=sat)),
+    ]
+
+
+def _late_report_rows() -> list:
+    """いまは 2026-12-10（木）12:00。昨日 12/09（水）は乗務、12/05（土）は休み。"""
+    def cfg(**over):
+        return {"shifts.json": _base(**over)}
+
+    b = cfg()
+    k = cfg(lang="ja_kansai")
+    now = "2026-12-10T12:00"
+    y = "2026-12-09"
+    log = {"log/pc-2026-12.jsonl": _pc_log("2026-12-01T09:00")}
+
+    def run(cmd, *words, at=now):
+        return {"now": at, "cmd": cmd, "words": list(words)}
+
+    def state(day=y, **rec):
+        return {"state.json": _state(day, **rec)}
+
+    yasumi = state(status="yasumi", at=f"{y}T18:00")
+    return [
+        ("yasumi 12/9", b, run("yasumi", "12/9")),
+        ("yasumi 昨日 有給", b, run("yasumi", "昨日", "有給")),
+        ("yasumi 有給 12/09（語の順が逆）", b, run("yasumi", "有給", "12/09")),
+        ("yasumi 12／9（全角の斜線）", b, run("yasumi", "12／9")),
+        ("yasumi 2026-12-09", b, run("yasumi", "2026-12-09")),
+        ("yasumi 一昨日 有給なし（印は付けない）", b, run("yasumi", "一昨日", "有給なし")),
+        ("yasumi: もう休みになっている", {**b, **yasumi}, run("yasumi", "12/9")),
+        ("yasumi 有給: もう休みなら印だけ付ける", {**b, **yasumi}, run("yasumi", "12/9", "有給")),
+        ("yasumi 有給なし: もう休みなら印だけ外す",
+         {**b, **state(status="yasumi", at=f"{y}T18:00", paid=True)}, run("yasumi", "12/9", "有給なし")),
+        ("yasumi 有給なし: 印を外して目安に達した",
+         {**cfg(absence={"window_shifts": 6, "warn_at": 1}), **log, **state(status="yasumi", at=f"{y}T18:00", paid=True)},
+         run("yasumi", "12/9", "有給なし")),
+        ("yasumi: 出たことになっている乗務を休みに直す（undo に前の状態）",
+         {**b, **state(status="worked", at=f"{y}T16:05", sleep_at=f"{y}T08:10")}, run("yasumi", "12/9")),
+        ("yasumi: 目安に達した", {**cfg(absence={"window_shifts": 6, "warn_at": 1}), **log}, run("yasumi", "12/9")),
+        ("yasumi: 今月 2 回目", {**b, **state("2026-12-03", status="yasumi", at="2026-12-03T07:00")}, run("yasumi", "12/9")),
+        ("yasumi 今日: まだ始まっていない乗務", b, run("yasumi", "今日")),
+        ("yasumi 明日: 先の日付", b, run("yasumi", "明日")),
+        ("yasumi 12/5: 休みの日は休めない", b, run("yasumi", "12/5")),
+        ("yasumi: 古すぎる日付", b, run("yasumi", "2026-12-01", at="2027-03-10T12:00")),
+        ("yasumi: 保持期間を変える（ちょうど境目は記録する）", cfg(retention={"days_keep": 9, "log_keep_days": 180, "events_keep_days": 365}),
+         run("yasumi", "12/1")),
+        ("yasumi 12/30: 年始に書いた 12 月は去年", b, run("yasumi", "12/30", at="2027-01-05T12:00")),
+        ("deru 12/9", b, run("deru", "12/9")),
+        ("deru 12/9 有給（印は関係ない）", b, run("deru", "12/9", "有給")),
+        ("deru: もう出たことになっている", {**b, **state(status="worked", at=f"{y}T16:05")}, run("deru", "12/9")),
+        ("deru: 休みを出たに直す（有給の印は消える）",
+         {**b, **state(status="yasumi", at=f"{y}T18:00", paid=True)}, run("deru", "12/9")),
+        ("deru 12/5: 休みの日に出た（出勤の例外日も足す）", b, run("deru", "12/5")),
+        ("deru 12/5: 手動の休みを出勤に置き換える",
+         {**b, "days.json": {"off": {"2026-12-05": "用事", "2026-12-11": "通院"}, "times": {"2026-12-14": {"start_target": "18:00"}}}},
+         run("deru", "12/5")),
+        ("deru 今日: まだ始まっていない乗務", b, run("deru", "今日")),
+        ("関西弁: yasumi 昨日 有給", k, run("yasumi", "昨日", "有給")),
+        ("関西弁: deru 12/9", k, run("deru", "12/9")),
+        ("関西弁: もう休みになっている", {**k, **yasumi}, run("yasumi", "12/9")),
+        ("関西弁: 休みの日は休めない", k, run("yasumi", "12/5")),
+        ("関西弁: 先の日付", k, run("deru", "明日")),
+    ]
+
+
+def _days_set_rows() -> list:
+    """いまは 2026-12-10（木）。"""
+    b = {"shifts.json": _base()}
+    now = "2026-12-10T12:00"
+
+    def run(action, date=None, *note, at=now):
+        return {"now": at, "action": action, "date": date, "note": list(note)}
+
+    days = {"days.json": {"off": {"2026-12-11": "通院"}, "work": {"2026-12-12": "振替"},
+                          "times": {"2026-12-14": {"start_target": "18:00"}}}}
+    return [
+        ("off 12/11（メモは空白でつなぐ）", b, run("off", "12/11", "通院", "予約")),
+        ("work 12/12（メモなし）", b, run("work", "12/12")),
+        ("rm 12/11（ほかの例外と times は残る）", {**b, **days}, run("rm", "12/11")),
+        ("rm: 例外の無い日（days.json は空で作られる）", b, run("rm", "12/15")),
+        ("off 12/12: 出勤の例外を休みに置き換える", {**b, **days}, run("off", "12/12", "やっぱり休み")),
+        ("work 12/11: 休みの例外を出勤に置き換える", {**b, **days}, run("work", "12/11")),
+        ("off 明日", b, run("off", "明日", "用事")),
+        ("off 今日", b, run("off", "今日")),
+        ("off 2026-12-18", b, run("off", "2026-12-18")),
+        ("off 12／16（全角の斜線）", b, run("off", "12／16")),
+        ("off 12/3: 7 日前までは今年", b, run("off", "12/3")),
+        ("off 12/2: 8 日より前は来年", b, run("off", "12/2")),
+        ("work 1/4: 年またぎ", b, run("work", "1/4", at="2026-12-28T12:00")),
+        ("work 12/16: カレンダーの休みを出勤にする",
+         {**b, "calendar.json": {"sources": {"A": {"off": {"2026-12-16": "公休"}, "work": {}}}}}, run("work", "12/16", "振替")),
+        ("日付が無い", b, run("off")),
+        ("日付が空", {**b, **days}, run("rm", "")),
+        ("関西弁", {"shifts.json": _base(lang="ja_kansai")}, run("off", "12/11", "通院")),
+        ("関西弁: 日付が無い", {"shifts.json": _base(lang="ja_kansai")}, run("work")),
+    ]
+
+
 def build_vectors() -> dict:
     """テストベクタの ファイル名 → 中身。合成の設定・状態・時刻を Python 版に通した結果。"""
     def day(inp):
@@ -1293,6 +1490,9 @@ def build_vectors() -> dict:
             "status_text": _cases(_status_rows(), _expect_status_text),
             "schedule_text": _cases(_schedule_rows(), _expect_schedule_text),
             "kakunin_text": _cases(_kakunin_rows(), _expect_kakunin_text),
+            "cmd_keyword": _cases(_cmd_keyword_rows(), _expect_record_cmd),
+            "late_report": _cases(_late_report_rows(), _expect_record_cmd),
+            "days_set": _cases(_days_set_rows(), _expect_day_cmd),
         },
     }
 

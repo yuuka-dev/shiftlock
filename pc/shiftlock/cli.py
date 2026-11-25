@@ -45,6 +45,33 @@ def _app_limit(a, now: datetime) -> tuple[int, str]:
     return 1, M.APPS_LIMIT_USAGE
 
 
+# サブコマンド → hook と同じキーワード（入力の語彙。cmd_keyword が KW_* と照合する）
+RECORD_KEYWORD = {"okita": "起きた", "neru": "ねる", "itte": "行ってきます", "yasumi": "今日休む", "deru": "やっぱ出る"}
+
+
+def record_cmd(cmd: str, words: list[str], cfg: dict, store: Store, now: datetime) -> str:
+    """shl okita / neru / itte（語なし）と shl yasumi [11/3] [有給|有給なし] / shl deru [11/3] の返事。
+    yasumi・deru は日付があれば事後報告、無ければ『今日休む』『やっぱ出る』。『有給』は休みに有給の印（deru には無関係）。"""
+    if cmd not in ("yasumi", "deru"):
+        return cmd_keyword(RECORD_KEYWORD[cmd], cfg, store, now, via="shl")
+    words = [w for w in words if w]
+    paid = next((paid_flag(w) for w in words if paid_flag(w) is not None), None)
+    date = next((w for w in words if paid_flag(w) is None), None)
+    kind = "yasumi" if cmd == "yasumi" else "worked"
+    if date:
+        return late_report(cfg, store, now, kind, date, via="shl", paid=paid if kind == "yasumi" else None)
+    return cmd_keyword(RECORD_KEYWORD[cmd], cfg, store, now, paid=bool(paid) and kind == "yasumi", via="shl")
+
+
+def day_cmd(action: str, date: str | None, note: list[str], cfg_path: Path, store: Store, now: datetime) -> tuple[int, str]:
+    """shl day off|work|rm <日付> [メモ]: 例外日を書いて、書いたあとの 2 週間の表を返す。(終了コード, 表示文)。"""
+    if not date:
+        return 1, M.CLI_DAY_NEED_DATE
+    d = parse_day(date, now.date())
+    days_set(store, d, {"off": "off", "work": "work", "rm": None}[action], " ".join(note))
+    return 0, schedule_text(load_config(cfg_path), now.date())
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="shiftlock")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -130,13 +157,9 @@ def main(argv: list[str] | None = None) -> int:
         if a.action == "list":
             print(schedule_text(cfg, now.date(), 28))
             return 0
-        if not a.date:
-            print(M.CLI_DAY_NEED_DATE)
-            return 1
-        d = parse_day(a.date, now.date())
-        days_set(store, d, {"off": "off", "work": "work", "rm": None}[a.action], " ".join(a.note))
-        print(schedule_text(load_config(a.config), now.date()))
-        return 0
+        code, out = day_cmd(a.action, a.date, a.note, a.config, store, now)
+        print(out)
+        return code
     if a.cmd == "learned":
         print(learned_text(store))
         return 0
@@ -172,23 +195,12 @@ def main(argv: list[str] | None = None) -> int:
     elif a.cmd == "yotei":
         print(schedule_text(cfg, now.date(), 14))
     elif a.cmd in ("yasumi", "deru"):
-        # shl yasumi [11/3] [有給|有給なし]: 日付があれば事後報告、無ければ『今日休む』。『有給』は休みに有給の印（deru には無関係）
-        words = [w for w in [a.date, *a.note] if w]
-        paid = next((paid_flag(w) for w in words if paid_flag(w) is not None), None)
-        date = next((w for w in words if paid_flag(w) is None), None)
-        kind = "yasumi" if a.cmd == "yasumi" else "worked"
-        if date:
-            print(late_report(cfg, store, now, kind, date, via="shl", paid=paid if kind == "yasumi" else None))
-        else:
-            kw = {"yasumi": "今日休む", "deru": "やっぱ出る"}[a.cmd]   # hook と同じキーワード（入力の語彙）
-            print(cmd_keyword(kw, cfg, store, now, paid=bool(paid) and kind == "yasumi", via="shl"))
+        print(record_cmd(a.cmd, [a.date, *a.note], cfg, store, now))
     elif a.cmd in ("okita", "neru") and a.words:
         # shl neru 23:30 / shl okita 11/7 7:00 [取消]: 後から足す睡眠の記録（レポート用。乗務の状態・ロックは変えない）
         print(record_sleep(cfg, store, now, a.cmd, a.words))
     elif a.cmd in ("okita", "neru", "itte"):
-        # サブコマンド → hook と同じキーワード（入力の語彙。cmd_keyword が KW_* と照合する）
-        kw = {"okita": "起きた", "neru": "ねる", "itte": "行ってきます"}[a.cmd]
-        print(cmd_keyword(kw, cfg, store, now, via="shl"))
+        print(record_cmd(a.cmd, [], cfg, store, now))
     elif a.cmd == "kakunin":
         print(kakunin_text(cfg, store, now))
     elif a.cmd == "report":

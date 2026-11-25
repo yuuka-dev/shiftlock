@@ -7,7 +7,7 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 | プロジェクト | 役割 | 段階 |
 |---|---|---|
 | `shiftlock.Core` | ロジック層（逆算・フェーズ・意図判定・睡眠推定・レポート生成・設定の読み書き）．Windows API を呼ばない | v12-α |
-| `shl` | CLI（`shl.exe`，NativeAOT）．Claude Code hook・コマンド・ダブルクリック用．いま動くのは `help` と，見るだけの `status`・`yotei`・`day list`・`kakunin`（`hook` は何もしないで 0 を返す．ほかのコマンドは「まだ無い」と出して 1）．引数の解釈は Core の `ShlCli`．順番は [docs/native-gap.md](../docs/native-gap.md) §5 | v12-α |
+| `shl` | CLI（`shl.exe`，NativeAOT）．Claude Code hook・コマンド・ダブルクリック用．いま動くのは `help`，見るだけの `status`・`yotei`・`day list`・`kakunin`，記録の `okita`・`neru`・`itte`・`yasumi`・`deru`・`day off|work|rm`（`hook` は何もしないで 0 を返す．時刻つきの `okita`・`neru` と，ほかのコマンドは「まだ無い」と出して 1）．引数の解釈は Core の `ShlCli`．順番は [docs/native-gap.md](../docs/native-gap.md) §5 | v12-α |
 | `shiftlock.Core.Tests` | Core のテスト．`docs/test-vectors/*.json` を読んで Python 版と同じ結果になることを確かめる（`pc/tools/export_native.py` が作るケース別のベクタと，`pc/tools/make_test_vectors.py` が作る逆算・フェーズのシナリオ `plan-scenarios.json`） | v12-α |
 | `shiftlock.Agent` | トレイ常駐．実行ファイル名は `shiftlock-agent.exe`．5 分おきの見張り（判断は Core の `Tick.Run`）・通知・宣言済みの強制の実行・カレンダー同期・緊急解除．Windows に触る部分（値を取る・知らせる・止める）はインターフェースの裏．Windows Forms（トレイ）と WinRT（トースト・通知音） | 区切り 2 |
 | `shiftlock.Agent.Tests` | Agent のテスト．Windows 側を差し替えて見張りの流れ・通知の順番・切り替えを確かめる | 区切り 2 |
