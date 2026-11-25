@@ -38,12 +38,13 @@
             IsBackButtonVisible="Collapsed"
             IsPaneToggleButtonVisible="False"
             IsSettingsVisible="False"
-            OpenPaneLength="132"
+            OpenPaneLength="160"
             PaneDisplayMode="Left"
             SelectionChanged="OnNavChanged">
             <NavigationView.MenuItems>
                 <NavigationViewItem x:Name="NavNow" Icon="Home" />
                 <NavigationViewItem x:Name="NavSchedule" Icon="Calendar" />
+                <NavigationViewItem x:Name="NavReport" Icon="Flag" />
             </NavigationView.MenuItems>
             <Grid>
                 <Grid.RowDefinitions>
@@ -136,6 +137,9 @@
 
                 <!-- 予定（28 日）と例外日 -->
                 <local:SchedulePage x:Name="SchedulePage" Grid.Row="1" Visibility="Collapsed" />
+
+                <!-- 事後報告（出た・休んだ）と，今日休む・やっぱ出る -->
+                <local:ReportPage x:Name="ReportPage" Grid.Row="1" Visibility="Collapsed" />
             </Grid>
         </NavigationView>
     </Grid>

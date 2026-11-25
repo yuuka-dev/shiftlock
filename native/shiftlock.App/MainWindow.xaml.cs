@@ -12,7 +12,7 @@ namespace Shiftlock.App;
 
 /// <summary>
 /// ただ 1 つのウィンドウ．左のメニューでページを切り替える: 「いま」（いまの状態・記録のボタン 4 つ・取り消す・予定）と
-/// 「予定」（28 日の表と例外日．SchedulePage）．
+/// 「予定」（28 日の表と例外日．SchedulePage），「休み・報告」（事後報告と今日休む・やっぱ出る．ReportPage）．
 /// ここに書くのは表示・ボタン・読み直しだけで，判断は Core（Snapshot・Records）に置く．
 /// 強制モードの宣言・解除・設定は置かない．
 /// </summary>
@@ -60,6 +60,8 @@ public sealed partial class MainWindow : Window
 
         Nav.SelectedItem = NavNow;
         SchedulePage.Changed += Reload;
+        ReportPage.ShiftsJson = _shiftsJson;
+        ReportPage.Changed += Reload;
 
         _refresher = new Refresher(AppPaths.DataDir, DispatcherQueue);
         _refresher.Changed += Reload;
@@ -104,6 +106,11 @@ public sealed partial class MainWindow : Window
             _configOk = true;
             ShowStatus(snapshot);
             SchedulePage.Show(cfg, _store, now);
+            // 未確認の乗務の件数をメニューに出す（読めなかったときは前のまま）
+            if (ReportPage.Show(cfg, _store, now) is { } unconfirmed)
+            {
+                NavReport.InfoBadge = unconfirmed > 0 ? new InfoBadge { Value = unconfirmed } : null;
+            }
         }
         catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
@@ -200,14 +207,18 @@ public sealed partial class MainWindow : Window
         ConfigError.IsOpen = true;
         StatusPanel.Visibility = ShiftCard.Visibility = ScheduleCard.Visibility = Visibility.Collapsed;
         SchedulePage.Clear();
+        ReportPage.Clear();
+        NavReport.InfoBadge = null;
     }
 
     /// <summary>左のメニューで選んだページだけを出す．</summary>
     private void OnNavChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
     {
         var schedule = ReferenceEquals(args.SelectedItem, NavSchedule);
-        NowView.Visibility = schedule ? Visibility.Collapsed : Visibility.Visible;
+        var report = ReferenceEquals(args.SelectedItem, NavReport);
+        NowView.Visibility = schedule || report ? Visibility.Collapsed : Visibility.Visible;
         SchedulePage.Visibility = schedule ? Visibility.Visible : Visibility.Collapsed;
+        ReportPage.Visibility = report ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>ボタンの名前と，押せるか・出すかを今の状態に合わせる．</summary>
@@ -215,6 +226,7 @@ public sealed partial class MainWindow : Window
     {
         NavNow.Content = _m["APP_NAV_NOW"];
         NavSchedule.Content = _m["APP_NAV_SCHEDULE"];
+        NavReport.Content = _m["APP_NAV_REPORT"];
         NeruButton.Content = _m["APP_BTN_NERU"];
         OkitaButton.Content = _m["APP_BTN_OKITA"];
         ShuppatsuButton.Content = _m["APP_BTN_SHUPPATSU"];

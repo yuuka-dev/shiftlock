@@ -642,6 +642,17 @@ APP_BTN_DAY_WORK = "乗務にする"
 APP_BTN_DAY_RM = "例外を取り消す"
 APP_DAY_SET = "{day} を{kind}にしたよ。"
 APP_DAY_RM_DONE = "{day} の例外を取り消したよ。"
+APP_NAV_REPORT = "休み・報告"
+APP_REPORT_TITLE = "まだ確認していない乗務"
+APP_REPORT_HINT = "出たか休んだかを押してね。押し間違えたら、すぐ下の「取り消す」で戻せるよ。"
+APP_BTN_WORKED = "出た"
+APP_BTN_YASUMI = "休んだ"
+APP_BTN_YASUMI_PAID = "休んだ（有給）"
+APP_NEXT_TITLE = "次の乗務を休む"
+APP_NEXT_HINT = "24 時間以内に始まる乗務を休みにするよ。「やっぱ出る」で元に戻せる。"
+APP_BTN_YASUMI_NEXT = "今日休む"
+APP_BTN_YASUMI_NEXT_PAID = "今日休む（有給）"
+APP_BTN_DERU = "やっぱ出る"
 
 # ================================================================ agent（ネイティブ版の常駐。native/shiftlock.Agent）
 # Python 側では使わず、tools/export_native.py が JSON に書き出す。トレイのメニュー・確認・知らせ。
