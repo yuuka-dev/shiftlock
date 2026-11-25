@@ -308,6 +308,7 @@ D1（設計）は実装と並べて早めに始めてよい．hook（H1〜H3）�
 | S2 | 済み（2026-11-25） | 下の「S2 の結果」 |
 | S3 | 済み（2026-11-25） | 下の「S3 の結果」 |
 | U1a | 済み（2026-11-25） | 下の「U1a の結果」．U1 を 2 本に割った前半 |
+| U1b | 済み（2026-11-25） | 下の「U1b の結果」．U1 の後半 |
 
 **S1 の結果**（合成の設定のフォルダで．本番のフォルダには向けていない）
 
@@ -357,6 +358,19 @@ D1（設計）は実装と並べて早めに始めてよい．hook（H1〜H3）�
 - 文面は `APP_NAV_*`・`APP_SCHEDULE_LONG`・`APP_SCHEDULE_HINT`・`APP_DAY_MEMO`・`APP_DAY_FROM_CALENDAR`・`APP_BTN_DAY_*`・`APP_DAY_SET`・`APP_DAY_RM_DONE` を足した．
 - 確かめ方: 合成のフォルダ（`SHIFTLOCK_DIR`）に向けて Debug のビルドを起動し，UI Automation でメニュー・日・小窓のボタンを押して，画面の写しと `days.json` を見た（休み → 乗務＋メモ／例外の取り消し／休みの追加）．`deploy.ps1` と同じ引数で発行したものでも小窓まで開く【確認】．
 - 確かめていないこと: 明るい配色，拡大率 100% 以外，キーボードだけの操作，カレンダーから来た例外日の注記の見た目【未確認】．
+
+**U1b の結果**（合成の設定のフォルダで．本番のフォルダには向けていない）
+
+- 左のメニューに 3 つ目のページ「休み・報告」（`ReportPage`）を足した．「予定」のページに詰めず分けたのは Claude の判断（未確認の件数をメニューに出せるため）．メニューの幅は 160 に広げた．
+- 未確認の乗務の一覧: `shl kakunin` と同じ集まり（`Confirm.Unconfirmed`．聞いた乗務も含む）を新しい順に並べ，1 件ごとに「出た」「休んだ」「休んだ（有給）」．書くのは `shl deru <日付>`・`shl yasumi <日付> [有給]` と同じ `LateReport.Report`（`events.log` の出所は `app`）．件数はメニューの項目に数字で出す．
+- 押し間違いは，返事の横の「取り消す」で戻せる（`Records.Undo`．`LateReport.Report` が `state.json` の `undo` に残した分だけ．60 分以内で，ほかの書き手が `undo` を書き換えていたら出さない）．
+- 「今日休む」「今日休む（有給）」「やっぱ出る」: `shl yasumi [有給]`・`shl deru`（日付なし）と同じ処理．ボタンは同じ見た目で並べ，相手の乗務が無いときも押せる（Core の返事「乗務が無い」をそのまま出す）．
+- Core の変更: `Commands.YasumiNext`・`UndoNext` を外から呼べるようにし，`YasumiNext` に出所の引数を足した（既定は今までどおり `shl`．テストあり）．§5.1 の「画面の PR は Core を変えない」から外れるが，組み立てを画面に写さないため．
+- 一覧を読むとき，未確認の扱いを始めた日（`confirm_since`）が無ければ `state.json` に書く（`shl status`・`kakunin` と同じ）．
+- 文面は `APP_NAV_REPORT`・`APP_REPORT_TITLE`・`APP_REPORT_HINT`・`APP_BTN_WORKED`・`APP_BTN_YASUMI`・`APP_BTN_YASUMI_PAID`・`APP_NEXT_TITLE`・`APP_NEXT_HINT`・`APP_BTN_YASUMI_NEXT`・`APP_BTN_YASUMI_NEXT_PAID`・`APP_BTN_DERU` を足した．返事は Core の文（`RECORDS_LATE_*`・`CMD_*`）から先頭の `[shiftlock] ` を外して出す．
+- 確かめ方: 合成のフォルダに向けて Debug のビルドを起動し，UI Automation で押して画面の写し・`state.json`・`events.log` を見た（休んだ（有給）→ 取り消す／出た／今日休む（有給）→ やっぱ出る）【確認】．
+- 画面に無いもの: 報告済みの乗務の直し（出た ⇄ 休んだ，有給の印を外す）．60 分を過ぎたら `shl yasumi <日付> 有給なし`・`shl deru <日付>` で直す．休みの日に出た報告（一覧に出ない日）も `shl deru <日付>`．
+- 確かめていないこと: U1a と同じ（明るい配色，拡大率 100% 以外，キーボードだけの操作）．発行したもの（Release）では動かしていない．言語を切り替えた直後は，一覧のボタンの文が次に件数が変わるまで前の言語のまま【未確認・未対応】．返事の文にある『今のなし』は Claude Code への言い方で，画面では「取り消す」のこと【未決．文を画面用に分けるか】．
 
 ## 6. 一本化しても Python に残るもの
 

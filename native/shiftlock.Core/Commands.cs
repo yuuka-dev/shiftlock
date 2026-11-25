@@ -242,13 +242,14 @@ public static class Commands
     /// <summary>
     /// 「今日休む」（cmd_keyword）: 次の乗務（24 時間以内）を休みにする．
     /// 今日の乗務の出庫の最終を過ぎていたら，翌日ではなく今日の乗務の事後報告にする．
+    /// via は events.log のメモに書く出所（画面からは Records.Via）．
     /// </summary>
-    private static string YasumiNext(ShiftConfig cfg, Store store, Messages m, DateTime now, bool paid)
+    public static string YasumiNext(ShiftConfig cfg, Store store, Messages m, DateTime now, bool paid, string via = Via)
     {
         var today = DateOnly.FromDateTime(now);
         if (Planner.IsWorkday(cfg, today) && Planner.MakePlan(cfg, today).StartLatest <= now)
         {
-            return LateReport.Report(cfg, store, m, now, "yasumi", "今日", via: Via, paid: paid ? true : null).Text;
+            return LateReport.Report(cfg, store, m, now, "yasumi", "今日", via: via, paid: paid ? true : null).Text;
         }
         if (Planner.TargetPlan(cfg, now) is not { } p)
         {
@@ -257,7 +258,7 @@ public static class Commands
         store.SetShiftStatus(p.Day, "yasumi", now);
         if (paid)
         {
-            store.SetPaid(p.Day, true, now, Via);
+            store.SetPaid(p.Day, true, now, via);
         }
         var n = LateReport.MonthYasumiCount(store, now);
         var upto = DateOnly.ParseExact(p.Day, "yyyy'-'MM'-'dd", CultureInfo.InvariantCulture);
@@ -267,7 +268,7 @@ public static class Commands
     }
 
     /// <summary>「やっぱ出る」（cmd_keyword）: 次の乗務（24 時間以内）の休み・出発済みを取り消す．</summary>
-    private static string UndoNext(ShiftConfig cfg, Store store, Messages m, DateTime now)
+    public static string UndoNext(ShiftConfig cfg, Store store, Messages m, DateTime now)
     {
         if (Planner.TargetPlan(cfg, now) is not { } p)
         {

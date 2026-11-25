@@ -209,6 +209,30 @@ public sealed class CommandsTests
         Assert.Null(LateReport.ManualDay(new Store(folder.Dir), new DateOnly(2026, 12, 10)));
     }
 
+    [Fact]
+    public void YasumiNext_Via_GoesToEventsLog()
+    {
+        // 画面から呼ぶとき: 出所を渡すと有給の印のメモに入る．「やっぱ出る」で休みも印も消える
+        var shifts = JsonNode.Parse("""
+            {"lang": "ja", "work_weekdays": ["mon", "tue", "wed", "thu", "fri"], "start_target": "17:00",
+             "start_latest": "17:30", "prep_minutes": 60, "sleep_target_hours": 8, "sleep_min_hours": 6, "lastcall_minutes": 40}
+            """);
+        using var folder = Vectors.Materialize(new JsonObject { ["shifts.json"] = shifts });
+        var cfg = ShiftConfig.Load(folder.ShiftsJson);
+        var store = new Store(folder.Dir);
+        var now = new DateTime(2026, 12, 1, 10, 0, 0);
+
+        var text = Commands.YasumiNext(cfg, store, cfg.Msg, now, paid: true, via: Records.Via);
+        Assert.Equal(cfg.Msg.Format("CMD_YASUMI", ("day", "12/01"), ("n", 1)) + cfg.Msg["CMD_YASUMI_PAID"], text);
+        var shift = store.ShiftStatus()["2026-12-01"]!.AsObject();
+        Assert.Equal("yasumi", shift["status"]!.GetValue<string>());
+        Assert.True(shift["paid"]!.GetValue<bool>());
+        Assert.Contains(EventLines(folder), line => line.Contains("paid") && line.EndsWith("on app", StringComparison.Ordinal));
+
+        Commands.UndoNext(cfg, store, cfg.Msg, now);
+        Assert.False(store.ShiftStatus().ContainsKey("2026-12-01"));
+    }
+
     /// <summary>終わったあとの state.json が Python 版と同じ（書かないケースでは無いまま）．</summary>
     private static void AssertState(VectorCase c, TempFolder folder) => AssertJsonFile(c.Expect["state"], folder, "state.json");
 

@@ -11,7 +11,7 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 | `shiftlock.Core.Tests` | Core のテスト．`docs/test-vectors/*.json` を読んで Python 版と同じ結果になることを確かめる（`pc/tools/export_native.py` が作るケース別のベクタと，`pc/tools/make_test_vectors.py` が作る逆算・フェーズのシナリオ `plan-scenarios.json`） | v12-α |
 | `shiftlock.Agent` | トレイ常駐．実行ファイル名は `shiftlock-agent.exe`．5 分おきの見張り（判断は Core の `Tick.Run`）・通知・宣言済みの強制の実行・カレンダー同期・緊急解除．Windows に触る部分（値を取る・知らせる・止める）はインターフェースの裏．Windows Forms（トレイ）と WinRT（トースト・通知音） | 区切り 2 |
 | `shiftlock.Agent.Tests` | Agent のテスト．Windows 側を差し替えて見張りの流れ・通知の順番・切り替えを確かめる | 区切り 2 |
-| `shiftlock.App` | ウィンドウ（WinUI 3，非パッケージ）．実行ファイル名は `shiftlock.exe`．同時に動くのは 1 つだけ．いまの状態・記録のボタン 4 つ（寝る・起きた・行ってきます・帰ってきた）・取り消す・14 日の予定．左のメニューの「予定」に 28 日の表と例外日（休みにする・乗務にする・例外を取り消す） | 区切り 1 |
+| `shiftlock.App` | ウィンドウ（WinUI 3，非パッケージ）．実行ファイル名は `shiftlock.exe`．同時に動くのは 1 つだけ．いまの状態・記録のボタン 4 つ（寝る・起きた・行ってきます・帰ってきた）・取り消す・14 日の予定．左のメニューの「予定」に 28 日の表と例外日（休みにする・乗務にする・例外を取り消す），「休み・報告」に未確認の乗務の報告（出た・休んだ・有給）と今日休む・やっぱ出る | 区切り 1 |
 
 - フォルダ名・ソリューション名は計画書どおり小文字（`shiftlock.Core`），名前空間とアセンブリ名は C# の慣習で `Shiftlock.Core`．`shl` の名前空間は `Shiftlock.Cli`，実行ファイル名は `shl.exe`．`shiftlock.App` の名前空間は `Shiftlock.App`，実行ファイル名は `shiftlock.exe`．
 - 共通設定（`net10.0`・Nullable・警告をエラー扱い）は `Directory.Build.props`．
@@ -28,6 +28,10 @@ PC 版（`pc/`，Python + PowerShell）をネイティブアプリとして作�
 - 左のメニューでページを切り替える．「予定」は今日から 28 日の表で，日を押すとその日だけの例外日を変えられる（メモつき．`shl day off|work|rm` と同じ処理）．カレンダーから来た例外日は上書きだけできる．
 
 ![予定のページ（合成データ）](./SampleImage/schedule-page.png)
+
+- 「休み・報告」は，終わった乗務で「出た／休んだ」がまだ無いものを新しい順に並べる（件数はメニューに出る）．「出た」「休んだ」「休んだ（有給）」で記録し，押し間違いは 60 分以内なら「取り消す」で戻せる（`shl deru <日付>`・`shl yasumi <日付> [有給]` と同じ処理）．下の「今日休む」「やっぱ出る」は 24 時間以内に始まる乗務が相手（`shl yasumi`・`shl deru` と同じ）．
+
+![休み・報告のページ（合成データ）](./SampleImage/report-page.png)
 
 - ボタン: 寝る・起きた・行ってきます・帰ってきた．判断と返事は Python 版と同じ（`docs/test-vectors/*.json` で確かめている）．`events.log` の出所は `app`．
 - 取り消す: このアプリが最後に書いた記録を 60 分以内なら戻せる．Python 版の「今のなし」でも戻せる．
