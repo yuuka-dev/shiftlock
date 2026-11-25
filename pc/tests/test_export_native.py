@@ -29,8 +29,12 @@ def test_messages_have_app_keys_in_both_langs():
     assert set(ja["APP_PHASE"]) == {"free", "lastcall", "soft", "hard", "go", "go_last"}
     assert ja["RECORDS_KITAKU"].startswith("[shiftlock] ")
     assert list(ja) == sorted(ja)
-    # 画面に要らない文（設定メニューや CLI の説明）は書き出さない
-    assert not any(k.startswith(("CLI_", "SETTINGS_")) for k in ja)
+    # 要らない文（設定メニュー）は書き出さない。CLI_ は shl.exe が使う
+    assert not any(k.startswith(("MENU_", "SETTINGS_")) for k in ja)
+    assert ja["CLI_HELP"].startswith("shiftlock の使い方") and "{cmd}" in ja["SHL_UNKNOWN"] and "{cmd}" in ja["SHL_NOT_YET"]
+    # 見るだけのコマンド（shl status / yotei / day list / kakunin）の文。Claude 向けの文（_CTX）は持っていかない
+    assert {"STATUS_HEAD", "STATUS_ENFORCE_ITEM_LIMIT", "DAYS_CELL", "DAYS_WORK", "CONFIRM_KAKUNIN_HEAD", "CONFIRM_USER"} <= set(ja)
+    assert not any(k.endswith("_CTX") for k in ja)
     assert "INTENT_LABEL_SEP" in ja and "INTENT_LABEL" in ja
     assert all(k in ("INTENT_LABEL", "INTENT_LABEL_SEP") for k in ja if k.startswith("INTENT_"))
 
@@ -457,3 +461,55 @@ def test_enforce_declare_and_claude_context_are_not_exported():
     for k in ("ENFORCE_TERMS", "ENFORCE_DECLARED", "PHASE_SOFT_CTX"):
         assert k not in ja, k
     assert {k for k in ja if k.startswith("ENFORCE_")} == ENFORCE_EXPORTED
+
+
+def test_record_command_vectors():
+    """shl の記録のコマンドのベクタ: 出所は yasumi・deru が shl、okita・neru は claude（cmd_keyword が渡さない）。app は混ざらない"""
+    body = ex.build_vectors()["commands.json"]
+    kw, late, days = body["cmd_keyword"], body["late_report"], body["days_set"]
+    assert len(kw) >= 35 and len(late) >= 25 and len(days) >= 15
+    for c in kw + late:
+        assert c["input"]["cmd"] in ("okita", "neru", "itte", "yasumi", "deru"), c["name"]
+        assert c["expect"]["text"].startswith(M.PREFIX), c["name"]
+        for line in c["expect"]["events"]:
+            memo = line.split("\t")[3]
+            assert "app" not in memo and "phone" not in memo, c["name"]
+            if line.split("\t")[2] == "sleep_at":
+                assert memo.startswith("claude "), c["name"]
+            if memo.startswith(("late", "on ", "off ")):
+                assert memo.endswith(" shl"), c["name"]
+    # 日付つきは事後報告（記録したら undo を残す）。日付なしの okita・neru は undo を書かない
+    assert all(not c["input"]["words"] or c["input"]["cmd"] in ("yasumi", "deru") for c in kw)
+    assert any((c["expect"]["state"] or {}).get("undo", {}).get("days_work_added") for c in late)
+    for c in kw:
+        if c["input"]["cmd"] in ("okita", "neru") and "undo" not in c["files"].get("state.json", {}):
+            assert "undo" not in (c["expect"]["state"] or {}), c["name"]
+    # 断るケース（何も書かない）と書くケースの両方がある
+    assert any(not c["expect"]["events"] for c in kw) and any(not c["expect"]["events"] for c in late)
+    assert {c["expect"]["code"] for c in days} == {0, 1}
+    assert all((c["expect"]["code"] == 0) == bool(c["input"]["date"]) for c in days)
+
+
+def test_record_cmd_matches_main(tmp_path, capsys):
+    """cli.main の yasumi・day は record_cmd・day_cmd を通る（ベクタが main と同じ道を見ている）"""
+    import shiftlock as sl
+    from datetime import datetime
+    before = M.LANG
+    try:
+        for name in ("a", "b"):
+            (tmp_path / name).mkdir()
+            (tmp_path / name / "shifts.json").write_text(json.dumps(ex.BASE), encoding="utf-8")
+        a, b = tmp_path / "a" / "shifts.json", tmp_path / "b" / "shifts.json"
+        assert sl.main(["day", "off", "明日", "用事", "--config", str(a)]) == 0
+        out = capsys.readouterr().out
+        code, text = sl.day_cmd("off", "明日", ["用事"], b, sl.Store(b), datetime.now())
+        assert (code, text + "\n") == (0, out)
+        assert (tmp_path / "a" / "days.json").read_text(encoding="utf-8") == (tmp_path / "b" / "days.json").read_text(encoding="utf-8")
+        assert sl.main(["day", "rm", "--config", str(a)]) == 1
+        assert capsys.readouterr().out == M.CLI_DAY_NEED_DATE + "\n"
+        assert sl.main(["yasumi", "明日", "--config", str(a)]) == 0   # 先の日付は断る（何も書かない）
+        out = capsys.readouterr().out
+        assert out == sl.record_cmd("yasumi", [None, "明日"], sl.load_config(b), sl.Store(b), datetime.now()) + "\n"
+        assert not (tmp_path / "a" / "state.json").exists()
+    finally:
+        M.set_lang(before)

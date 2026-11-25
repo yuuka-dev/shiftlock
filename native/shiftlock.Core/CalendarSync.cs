@@ -205,6 +205,9 @@ public static class CalendarSync
         return Encoding.UTF8.GetString(buffer.GetBuffer(), 0, (int)buffer.Length);
     }
 
+    /// <summary>同期するカレンダーの名前（calendar.json のキー）．設定の順．</summary>
+    public static IReadOnlyList<string> SourceNames(ShiftConfig cfg) => [.. Sources(cfg.Section("calendar")).Select(s => s.Name)];
+
     /// <summary>
     /// 同期するカレンダーの一覧（config.calendar_sources）．旧形式 ics_url（1 本）が先頭，続けて sources．
     /// 同じ URL は 1 本にまとめる．名前が重なれば ' を足す．名前が無ければ「カレンダー＋番号」．

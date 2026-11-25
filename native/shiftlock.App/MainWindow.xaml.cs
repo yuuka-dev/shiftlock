@@ -11,15 +11,16 @@ using WinRT.Interop;
 namespace Shiftlock.App;
 
 /// <summary>
-/// ただ 1 つのウィンドウ: いまの状態・記録のボタン 4 つ・取り消す・予定．
+/// ただ 1 つのウィンドウ．左のメニューでページを切り替える: 「いま」（いまの状態・記録のボタン 4 つ・取り消す・予定）と
+/// 「予定」（28 日の表と例外日．SchedulePage），「休み・報告」（事後報告と今日休む・やっぱ出る．ReportPage）．
 /// ここに書くのは表示・ボタン・読み直しだけで，判断は Core（Snapshot・Records）に置く．
 /// 強制モードの宣言・解除・設定は置かない．
 /// </summary>
 public sealed partial class MainWindow : Window
 {
     /// <summary>ウィンドウの大きさ（拡大率 100% のときのピクセル）．</summary>
-    private const int WidthDip = 520;
-    private const int HeightDip = 600;
+    private const int WidthDip = 700;
+    private const int HeightDip = 640;
 
     /// <summary>予定の 1 行に並べる日数．</summary>
     private const int ScheduleColumns = 7;
@@ -56,6 +57,11 @@ public sealed partial class MainWindow : Window
         // AppWindow.Resize は物理ピクセルなので，画面の拡大率を掛ける
         var scale = GetDpiForWindow(WindowNative.GetWindowHandle(this)) / 96.0;
         AppWindow.Resize(new SizeInt32((int)(WidthDip * scale), (int)(HeightDip * scale)));
+
+        Nav.SelectedItem = NavNow;
+        SchedulePage.Changed += Reload;
+        ReportPage.ShiftsJson = _shiftsJson;
+        ReportPage.Changed += Reload;
 
         _refresher = new Refresher(AppPaths.DataDir, DispatcherQueue);
         _refresher.Changed += Reload;
@@ -99,6 +105,12 @@ public sealed partial class MainWindow : Window
             _m = cfg.Msg;
             _configOk = true;
             ShowStatus(snapshot);
+            SchedulePage.Show(cfg, _store, now);
+            // 未確認の乗務の件数をメニューに出す（読めなかったときは前のまま）
+            if (ReportPage.Show(cfg, _store, now) is { } unconfirmed)
+            {
+                NavReport.InfoBadge = unconfirmed > 0 ? new InfoBadge { Value = unconfirmed } : null;
+            }
         }
         catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
@@ -194,11 +206,27 @@ public sealed partial class MainWindow : Window
         ConfigError.Message = _m.Format(key, args);
         ConfigError.IsOpen = true;
         StatusPanel.Visibility = ShiftCard.Visibility = ScheduleCard.Visibility = Visibility.Collapsed;
+        SchedulePage.Clear();
+        ReportPage.Clear();
+        NavReport.InfoBadge = null;
+    }
+
+    /// <summary>左のメニューで選んだページだけを出す．</summary>
+    private void OnNavChanged(NavigationView sender, NavigationViewSelectionChangedEventArgs args)
+    {
+        var schedule = ReferenceEquals(args.SelectedItem, NavSchedule);
+        var report = ReferenceEquals(args.SelectedItem, NavReport);
+        NowView.Visibility = schedule || report ? Visibility.Collapsed : Visibility.Visible;
+        SchedulePage.Visibility = schedule ? Visibility.Visible : Visibility.Collapsed;
+        ReportPage.Visibility = report ? Visibility.Visible : Visibility.Collapsed;
     }
 
     /// <summary>ボタンの名前と，押せるか・出すかを今の状態に合わせる．</summary>
     private void ShowButtons(DateTime now)
     {
+        NavNow.Content = _m["APP_NAV_NOW"];
+        NavSchedule.Content = _m["APP_NAV_SCHEDULE"];
+        NavReport.Content = _m["APP_NAV_REPORT"];
         NeruButton.Content = _m["APP_BTN_NERU"];
         OkitaButton.Content = _m["APP_BTN_OKITA"];
         ShuppatsuButton.Content = _m["APP_BTN_SHUPPATSU"];

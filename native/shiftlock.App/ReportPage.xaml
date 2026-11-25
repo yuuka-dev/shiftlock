@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<UserControl
+    x:Class="Shiftlock.App.ReportPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- 文面はここに書かない（コードから Core の文面を入れる）．色は標準のテーマ資源だけを使う． -->
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel x:Name="Body" Padding="20,12,20,20" Spacing="12">
+
+            <!-- 終わった乗務で「出た／休んだ」がまだ無いもの（新しい順）．1 件 1 行で，ボタンは同じ見た目 -->
+            <StackPanel Spacing="2">
+                <TextBlock x:Name="ListTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock
+                    x:Name="ListHint"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <Border
+                Padding="16,12"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1"
+                CornerRadius="{StaticResource OverlayCornerRadius}">
+                <StackPanel x:Name="Rows" Spacing="8" />
+            </Border>
+
+            <!-- 直前の操作の返事と「取り消す」（事後報告だけ） -->
+            <Grid x:Name="ResultRow" ColumnSpacing="12" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock
+                    x:Name="ResultText"
+                    VerticalAlignment="Center"
+                    IsTextSelectionEnabled="True"
+                    TextWrapping="Wrap" />
+                <Button
+                    x:Name="UndoButton"
+                    Grid.Column="1"
+                    VerticalAlignment="Top"
+                    Click="OnUndo"
+                    Visibility="Collapsed" />
+            </Grid>
+
+            <!-- 次の乗務（24 時間以内）を休む・やっぱ出る．3 つとも同じ見た目 -->
+            <StackPanel Margin="0,8,0,0" Spacing="2">
+                <TextBlock x:Name="NextTitle" Style="{StaticResource SubtitleTextBlockStyle}" />
+                <TextBlock
+                    x:Name="NextHint"
+                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                    Style="{StaticResource CaptionTextBlockStyle}"
+                    TextWrapping="Wrap" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button x:Name="YasumiButton" Click="OnYasumi" />
+                <Button x:Name="YasumiPaidButton" Click="OnYasumiPaid" />
+                <Button x:Name="DeruButton" Click="OnDeru" />
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

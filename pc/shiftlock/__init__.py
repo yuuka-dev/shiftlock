@@ -46,7 +46,7 @@ from .phone import (PHONE_MARKS, read_phone_marks, import_phone_marks, mood_str,
 from .sleeplog import (SLEEP_PAIR_MAX_HOURS, SLEEP_REDO_HOURS, sleep_marks, sleep_sessions, parse_clock, record_sleep)
 from .hook import (run_hook)
 from .tick import (run_tick)
-from .cli import (main)
+from .cli import (day_cmd, main, RECORD_KEYWORD, record_cmd)
 from .report import (closing_period, build_report, report_name, write_period_reports, cleanup_reports)
 from .report_html import (render_report)
 from .calendar_sync import (parse_ics, sync_calendar)
@@ -210,6 +210,9 @@ __all__ = [
     "record_sleep",
     "run_hook",
     "run_tick",
+    "RECORD_KEYWORD",
+    "record_cmd",
+    "day_cmd",
     "main",
     "closing_period",
     "build_report",

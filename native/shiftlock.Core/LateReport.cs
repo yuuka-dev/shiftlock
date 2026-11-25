@@ -3,6 +3,9 @@ using System.Text.Json.Nodes;
 
 namespace Shiftlock.Core;
 
+/// <summary>当日欠勤の目安の数（attendance.absence_stats）．Limit が 0 なら目安なし．</summary>
+public sealed record AbsenceCount(int Limit, int Shifts, int Absent, int Paid, bool Over);
+
 /// <summary>
 /// 終わった乗務の事後報告（「休んだ」「出た」）と，それが使う部品（pc/shiftlock/records.py の _late_report・
 /// resolve_past_day・month_yasumi_count，timeutil.parse_day，days.days_set，attendance.absence_note，
@@ -104,10 +107,11 @@ public static class LateReport
     }
 
     /// <summary>
-    /// 日付の書き方を読む（timeutil.parse_day の past=True）: "12/2"・"2026-12-02"・今日・昨日・一昨日・明日．
-    /// 月日だけで未来になる場合，年始（1〜2 月）に 11〜12 月を書いたときは去年とみなす．読めなければ FormatException．
+    /// 日付の書き方を読む（timeutil.parse_day）: "12/2"・"2026-12-02"・今日・昨日・一昨日・明日．読めなければ FormatException．
+    /// past が true（事後報告）: 月日だけで未来になる場合，年始（1〜2 月）に 11〜12 月を書いたときは去年とみなす．
+    /// past が false（例外日の登録）: 月日だけで 7 日より前になる場合は来年とみなす．
     /// </summary>
-    public static DateOnly ParseDay(string text, DateOnly today)
+    public static DateOnly ParseDay(string text, DateOnly today, bool past = true)
     {
         var t = text.Trim().Replace('／', '/');
         switch (t)
@@ -137,13 +141,22 @@ public static class LateReport
             throw new FormatException($"日付として読めない: {text}");
         }
         var cand = new DateOnly(today.Year, month, day);
-        if (cand > today && today.Month <= 2 && month >= 11)
+        var year = today.Year;
+        if (past && cand > today && today.Month <= 2 && month >= 11)
         {
-            return day <= DateTime.DaysInMonth(today.Year - 1, month)
-                ? new DateOnly(today.Year - 1, month, day)
-                : throw new FormatException($"日付として読めない: {text}");
+            year--;
         }
-        return cand;
+        else if (!past && cand < today.AddDays(-7))
+        {
+            year++;
+        }
+        if (year == today.Year)
+        {
+            return cand;
+        }
+        return day <= DateTime.DaysInMonth(year, month)
+            ? new DateOnly(year, month, day)
+            : throw new FormatException($"日付として読めない: {text}");
     }
 
     /// <summary>手動の例外日（days.json）を書く（days.days_set）．kind は "off"・"work"・null（手動の例外を消す）．</summary>
@@ -177,6 +190,24 @@ public static class LateReport
         }
     }
 
+    /// <summary>
+    /// その日の手動の例外日（days.json）．Kind は "off"・"work"，Note はメモ．手動の例外が無ければ null
+    /// （カレンダーから来た例外日は入らない）．画面が「例外を取り消す」を出すか決めるのに使う．
+    /// </summary>
+    public static (string Kind, string Note)? ManualDay(Store store, DateOnly d)
+    {
+        var data = store.ReadJson("days.json");
+        var ds = Planner.DayKey(d);
+        foreach (var kind in (string[])["off", "work"])
+        {
+            if (data[kind] is JsonObject o && o.TryGetPropertyValue(ds, out var note))
+            {
+                return (kind, JsonX.Str(note) ?? "");
+            }
+        }
+        return null;
+    }
+
     /// <summary>今月（now の月）に休みにした乗務の数（records.month_yasumi_count）．</summary>
     public static int MonthYasumiCount(Store store, DateTime now)
     {
@@ -189,7 +220,17 @@ public static class LateReport
     /// 当日欠勤の目安に達していれば注意の一文（attendance.absence_note）．達していなければ空．
     /// 直近 window_shifts 乗務（記録開始日以降）のうち，有給の印が無い休みが warn_at 回以上．
     /// </summary>
-    public static string AbsenceNote(ShiftConfig cfg, Store store, Messages m, DateTime now)
+    public static string AbsenceNote(ShiftConfig cfg, Store store, Messages m, DateTime now, DateOnly? upto = null)
+    {
+        var s = AbsenceStats(cfg, store, now, upto);
+        return s.Over ? m.Format("ABSENCE_OVER", ("n", s.Absent), ("shifts", s.Shifts), ("limit", s.Limit)) : "";
+    }
+
+    /// <summary>
+    /// upto（既定は今日）までの直近 window_shifts 乗務日の数（attendance.absence_stats）．記録開始日より前の乗務日は数えない．
+    /// Absent は有給の印が無い休み，Paid は有給の印がある休み．Over は Limit が 1 以上で Absent がそれ以上．
+    /// </summary>
+    public static AbsenceCount AbsenceStats(ShiftConfig cfg, Store store, DateTime now, DateOnly? upto = null)
     {
         var a = cfg.Section("absence");
         var window = Num(a["window_shifts"], 24, 1, 365);
@@ -197,16 +238,14 @@ public static class LateReport
         var since = store.FirstLogDate();
         var status = store.ShiftStatus();
         // 週 1 乗務でも窓が埋まるように，乗務日の 7 倍の日数をさかのぼる
-        var days = Planner.Plans(cfg, DateOnly.FromDateTime(now), back: window * 7 + 14, fwd: 0)
+        var days = Planner.Plans(cfg, upto ?? DateOnly.FromDateTime(now), back: window * 7 + 14, fwd: 0)
             .Select(p => p.Day)
             .Where(day => since is not { } s || string.CompareOrdinal(day, Planner.DayKey(s)) >= 0)
             .TakeLast(window)
             .ToList();
         var yasumi = days.Select(day => status[day] as JsonObject).Where(v => JsonX.Str(v?["status"]) == "yasumi").ToList();
         var absent = yasumi.Count(v => !JsonX.Truthy(v?["paid"]));
-        return limit > 0 && absent >= limit
-            ? m.Format("ABSENCE_OVER", ("n", absent), ("shifts", days.Count), ("limit", limit))
-            : "";
+        return new AbsenceCount(limit, days.Count, absent, yasumi.Count - absent, limit > 0 && absent >= limit);
 
         // 無い・壊れている（文字列・inf・nan）・範囲外のときは既定（任意機能の設定ミスで記録を止めない）
         static int Num(JsonNode? v, int fallback, int lo, int hi) =>
