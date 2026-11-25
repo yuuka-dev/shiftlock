@@ -631,6 +631,17 @@ APP_CONFIG_BAD_JSON = "JSON の書き方がおかしいよ（{err}）"
 APP_CONFIG_BAD_VALUE = "{key} の書き方がおかしいよ: {value}"
 APP_STATE_BUSY = "いま記録のファイルを読み書きできなかったよ。もう一度押してね。"
 APP_LOG_BUSY = "（履歴の events.log には書けなかったよ。記録そのものは残っているから、押し直さなくていいよ。）"
+APP_NAV_NOW = "いま"
+APP_NAV_SCHEDULE = "予定"
+APP_SCHEDULE_LONG = "この先 4 週間の予定"
+APP_SCHEDULE_HINT = "日を押すと、その日だけ休み・乗務に変えられるよ（* は例外日）。"
+APP_DAY_MEMO = "メモ（任意）"
+APP_DAY_FROM_CALENDAR = "カレンダーから来た例外日だよ。ここで上書きはできるけど、取り消すのはカレンダーの側でね。"
+APP_BTN_DAY_OFF = "休みにする"
+APP_BTN_DAY_WORK = "乗務にする"
+APP_BTN_DAY_RM = "例外を取り消す"
+APP_DAY_SET = "{day} を{kind}にしたよ。"
+APP_DAY_RM_DONE = "{day} の例外を取り消したよ。"
 
 # ================================================================ agent（ネイティブ版の常駐。native/shiftlock.Agent）
 # Python 側では使わず、tools/export_native.py が JSON に書き出す。トレイのメニュー・確認・知らせ。

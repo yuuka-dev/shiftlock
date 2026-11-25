@@ -190,6 +190,24 @@ public static class LateReport
         }
     }
 
+    /// <summary>
+    /// その日の手動の例外日（days.json）．Kind は "off"・"work"，Note はメモ．手動の例外が無ければ null
+    /// （カレンダーから来た例外日は入らない）．画面が「例外を取り消す」を出すか決めるのに使う．
+    /// </summary>
+    public static (string Kind, string Note)? ManualDay(Store store, DateOnly d)
+    {
+        var data = store.ReadJson("days.json");
+        var ds = Planner.DayKey(d);
+        foreach (var kind in (string[])["off", "work"])
+        {
+            if (data[kind] is JsonObject o && o.TryGetPropertyValue(ds, out var note))
+            {
+                return (kind, JsonX.Str(note) ?? "");
+            }
+        }
+        return null;
+    }
+
     /// <summary>今月（now の月）に休みにした乗務の数（records.month_yasumi_count）．</summary>
     public static int MonthYasumiCount(Store store, DateTime now)
     {

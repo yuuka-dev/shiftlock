@@ -178,6 +178,37 @@ public sealed class CommandsTests
             () => Commands.StatusText(cfg, new Store(folder.Dir), cfg.Msg, new DateTime(2026, 12, 10, 12, 0, 0)));
     }
 
+    [Fact]
+    public void ManualDay_ReadsOnlyDaysJson()
+    {
+        // 手動の例外日だけを返す．カレンダーから来た例外日・例外の無い日は null
+        var files = new JsonObject
+        {
+            ["shifts.json"] = new JsonObject { ["lang"] = "ja" },
+            ["days.json"] = JsonNode.Parse("""{"off": {"2026-12-10": "通院"}, "work": {"2026-12-12": ""}}"""),
+            ["calendar.json"] = JsonNode.Parse("""{"off": {"2026-12-11": "祝日"}, "work": {}}"""),
+        };
+        using var folder = Vectors.Materialize(files);
+        var store = new Store(folder.Dir);
+        Assert.Equal(("off", "通院"), LateReport.ManualDay(store, new DateOnly(2026, 12, 10)));
+        Assert.Equal(("work", ""), LateReport.ManualDay(store, new DateOnly(2026, 12, 12)));
+        Assert.Null(LateReport.ManualDay(store, new DateOnly(2026, 12, 11)));
+        Assert.Null(LateReport.ManualDay(store, new DateOnly(2026, 12, 13)));
+
+        // DaysSet で書いたものが読め，消したら null に戻る
+        LateReport.DaysSet(store, new DateOnly(2026, 12, 13), "work", "代わりの乗務");
+        Assert.Equal(("work", "代わりの乗務"), LateReport.ManualDay(store, new DateOnly(2026, 12, 13)));
+        LateReport.DaysSet(store, new DateOnly(2026, 12, 13), null);
+        Assert.Null(LateReport.ManualDay(store, new DateOnly(2026, 12, 13)));
+    }
+
+    [Fact]
+    public void ManualDay_NoFile_IsNull()
+    {
+        using var folder = Vectors.Materialize(new JsonObject { ["shifts.json"] = new JsonObject { ["lang"] = "ja" } });
+        Assert.Null(LateReport.ManualDay(new Store(folder.Dir), new DateOnly(2026, 12, 10)));
+    }
+
     /// <summary>終わったあとの state.json が Python 版と同じ（書かないケースでは無いまま）．</summary>
     private static void AssertState(VectorCase c, TempFolder folder) => AssertJsonFile(c.Expect["state"], folder, "state.json");
 
